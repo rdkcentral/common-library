@@ -211,4 +211,51 @@ typedef struct _ipc_msg_payload_t
 	ipc_ihc_data_t ihcData;
     }data;
 } ipc_msg_payload_t;
+
+
+typedef struct _DHCP_MGR_IPV4_MSG
+{
+    char ifname[BUFLEN_64]; 
+    char address[BUFLEN_32];     
+    char netmask[BUFLEN_32];   
+    char gateway[BUFLEN_32];
+    char dnsServer[BUFLEN_64];
+    char dnsServer1[BUFLEN_64];
+    char timeZone[BUFLEN_64];
+    uint32_t mtuSize;          
+    int32_t timeOffset;        
+    bool isTimeOffsetAssigned; 
+    uint32_t upstreamCurrRate; 
+    uint32_t downstreamCurrRate;
+} DHCP_MGR_IPV4_MSG;
+
+typedef struct _DHCP_MGR_IPV6_MSG
+{
+   char ifname[BUFLEN_32];			
+   char address[BUFLEN_48];      
+   char nameserver[BUFLEN_128];  
+   char nameserver1[BUFLEN_128]; 
+   char domainName[BUFLEN_64];  
+   char sitePrefix[BUFLEN_48];  
+   uint32_t prefixPltime; 		
+   uint32_t prefixVltime;		
+   bool addrAssigned;	
+   bool prefixAssigned; 
+   bool domainNameAssigned; 
+   uint32_t ipv6_TimeOffset;
+#if defined(FEATURE_MAPT) || defined(MAPT_UNIFICATION_ENABLED)
+   bool maptAssigned;	
+   ipc_mapt_data_t mapt;
+#endif
+} DHCP_MGR_IPV6_MSG;
+
+typedef enum {
+    DHCP_CLIENT_STARTED,
+    DHCP_CLIENT_STOPPED,
+    DHCP_CLIENT_FAILED,
+    DHCP_LEASE_UPDATE, // New lease or change in the Lease value
+    DHCP_LEASE_DEL,    // Lease Expired, Released
+    DHCP_LEASE_RENEW,  // Lease Renewed
+} DHCP_MESSAGE_TYPE;
+
 #endif
