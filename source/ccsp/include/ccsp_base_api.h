@@ -1275,6 +1275,11 @@ int CcspBaseIf_SendSignal(
     char *event
 );
 
+int CcspBaseIf_SendSignal_WithData_rbus(
+    void * bus_handle,
+    char *eventName,
+    char* eventData
+);
 
 int CcspBaseIf_SendSignal_WithData(
     void * bus_handle,
