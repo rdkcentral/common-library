@@ -633,10 +633,24 @@ int CcspBaseIf_getParameterValues_rbus(
                     val[i] = bus_info->mallocfunc(sizeof(parameterValStruct_t));
                     memset(val[i], 0, sizeof(parameterValStruct_t));
                     /*Get Name */
-                    len = strlen(rbusProperty_GetName(next));
+                    const char* pname = rbusProperty_GetName(next);
+                    if(!pname)
+                    {
+                        CcspTraceError(("Property name is NULL at index %d\n", i));
+                        ret = CCSP_Message_Bus_ERROR;
+                        break;
+                    }
+                    len = strlen(pname);
                     val[i]->parameterName = bus_info->mallocfunc(len + 1);
                     memcpy(val[i]->parameterName, rbusProperty_GetName(next), len + 1);
                     rbusValue_t value = rbusProperty_GetValue(next);
+                    if(!value)
+                    {
+                        CcspTraceError(("Property value is NULL at index %d\n", i));
+                        ret = CCSP_ERR_INVALID_PARAMETER_VALUE;
+                        break;
+                    }
+
                     /*Get Type*/
                     rbusValueType_t rbus_type = rbusValue_GetType(value);
                     rbus_type_to_ccsp_type(rbus_type, &val[i]->type);
@@ -672,6 +686,26 @@ int CcspBaseIf_getParameterValues_rbus(
         }
     }
     *parameterval = val;
+    /* Upon failure, when the loop exits by break statement, the val[i] is already allocated; so we must free all the entries from 0 to i.
+     * The null pointer check val[j] below will take care if it is allocation failure.
+     */
+    if(ret != CCSP_SUCCESS)
+    {
+        if(val)
+        {
+            for(int j = 0; j <= i; j++) {
+                if(val[j]) {
+                    if(val[j]->parameterName)
+                       bus_info->freefunc(val[j]->parameterName);
+                    if(val[j]->parameterValue)
+                       bus_info->freefunc(val[j]->parameterValue);
+                    bus_info->freefunc(val[j]);
+                }
+            }
+            bus_info->freefunc(val);
+            val = NULL;
+        }
+    }
     return ret;
 }
 
