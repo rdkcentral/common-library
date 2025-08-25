@@ -2333,7 +2333,7 @@ static int thread_path_message_func_rbus(const char * destination, const char * 
                    rbusValue_SetInt32(value_size, size);
                    rbusObject_SetValue(outParams, "size", value_size);
                    rbusObject_t child_obj = NULL, previous = NULL;
-                   for (int i = 0; i <size; i++)
+                   for (i = 0; i <size; i++)
                    {
                        rbusObject_t Object = NULL;
                        rbusObject_Init(&Object, val[i]->parameterName);
