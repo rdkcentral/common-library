@@ -299,11 +299,13 @@ int PSM_Set_Record_Value_rbus
 )
 {
     int ret = -1;
+    int i;
+
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     rbusObject_t inParams = NULL, outParams = NULL;
     rbusObject_Init(&inParams, NULL);
     rbusProperty_t list = NULL;
-    for(int i = 0; i < size; i++)
+    for(i = 0; i < size; i++)
     {
         rbusProperty_t prop;
         rbusValue_t value = NULL;
@@ -934,9 +936,11 @@ int CcspBaseIf_getParameterAttributes_rbus(
     rbusProperty_t list = NULL;
     char methodName[RBUS_MAX_NAME_LENGTH] = {0};
     parameterAttributeStruct_t **val = 0;
+    int i;
+
     *val_size = 0;
     rbusObject_Init(&inParams, NULL);
-    for(int i = 0; i < size; i++)
+    for(i = 0; i < size; i++)
     {
         rbusProperty_t prop;
         rbusProperty_Init(&prop, parameterNames[i], NULL);
@@ -978,7 +982,7 @@ int CcspBaseIf_getParameterAttributes_rbus(
             memset(val, 0, *val_size*sizeof(parameterAttributeStruct_t *));
 
             rbusObject_t child = rbusObject_GetChildren(outParams);
-            for (int i = 0; i < param_size; i++)
+            for (i = 0; i < param_size; i++)
             {
                 if (child)
                 {
