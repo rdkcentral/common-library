@@ -299,11 +299,13 @@ int PSM_Set_Record_Value_rbus
 )
 {
     int ret = -1;
+    int i;
+
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     rbusObject_t inParams = NULL, outParams = NULL;
     rbusObject_Init(&inParams, NULL);
     rbusProperty_t list = NULL;
-    for(int i = 0; i < size; i++)
+    for(i = 0; i < size; i++)
     {
         rbusProperty_t prop;
         rbusValue_t value = NULL;
@@ -633,10 +635,24 @@ int CcspBaseIf_getParameterValues_rbus(
                     val[i] = bus_info->mallocfunc(sizeof(parameterValStruct_t));
                     memset(val[i], 0, sizeof(parameterValStruct_t));
                     /*Get Name */
-                    len = strlen(rbusProperty_GetName(next));
+                    const char* pname = rbusProperty_GetName(next);
+                    if(!pname)
+                    {
+                        CcspTraceError(("Property name is NULL at index %d\n", i));
+                        ret = CCSP_Message_Bus_ERROR;
+                        break;
+                    }
+                    len = strlen(pname);
                     val[i]->parameterName = bus_info->mallocfunc(len + 1);
                     memcpy(val[i]->parameterName, rbusProperty_GetName(next), len + 1);
                     rbusValue_t value = rbusProperty_GetValue(next);
+                    if(!value)
+                    {
+                        CcspTraceError(("Property value is NULL at index %d\n", i));
+                        ret = CCSP_ERR_INVALID_PARAMETER_VALUE;
+                        break;
+                    }
+
                     /*Get Type*/
                     rbusValueType_t rbus_type = rbusValue_GetType(value);
                     rbus_type_to_ccsp_type(rbus_type, &val[i]->type);
@@ -672,6 +688,26 @@ int CcspBaseIf_getParameterValues_rbus(
         }
     }
     *parameterval = val;
+    /* Upon failure, when the loop exits by break statement, the val[i] is already allocated; so we must free all the entries from 0 to i.
+     * The null pointer check val[j] below will take care if it is allocation failure.
+     */
+    if(ret != CCSP_SUCCESS)
+    {
+        if(val)
+        {
+            for(int j = 0; j <= i; j++) {
+                if(val[j]) {
+                    if(val[j]->parameterName)
+                       bus_info->freefunc(val[j]->parameterName);
+                    if(val[j]->parameterValue)
+                       bus_info->freefunc(val[j]->parameterValue);
+                    bus_info->freefunc(val[j]);
+                }
+            }
+            bus_info->freefunc(val);
+            val = NULL;
+        }
+    }
     return ret;
 }
 
@@ -900,9 +936,11 @@ int CcspBaseIf_getParameterAttributes_rbus(
     rbusProperty_t list = NULL;
     char methodName[RBUS_MAX_NAME_LENGTH] = {0};
     parameterAttributeStruct_t **val = 0;
+    int i;
+
     *val_size = 0;
     rbusObject_Init(&inParams, NULL);
-    for(int i = 0; i < size; i++)
+    for(i = 0; i < size; i++)
     {
         rbusProperty_t prop;
         rbusProperty_Init(&prop, parameterNames[i], NULL);
@@ -944,7 +982,7 @@ int CcspBaseIf_getParameterAttributes_rbus(
             memset(val, 0, *val_size*sizeof(parameterAttributeStruct_t *));
 
             rbusObject_t child = rbusObject_GetChildren(outParams);
-            for (int i = 0; i < param_size; i++)
+            for (i = 0; i < param_size; i++)
             {
                 if (child)
                 {
@@ -1334,14 +1372,19 @@ CcspBaseIf_GetNextLevelInstances
 )
 {
     parameterInfoStruct_t **parameter;
-    int size;
-    unsigned int*val = 0;
+    int size = 0;
+    unsigned int* val = NULL;
+    rbusError_t rc = RBUS_ERROR_SUCCESS;
+    rbusRowName_t* rows = NULL;
     char buf[CCSP_BASE_PARAM_LENGTH];
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
-    int i;
-    int inst_num;
+    int i = 0;
+    int inst_num = 0;
+    int ret = CCSP_FAILURE;
 
-    int ret = CcspBaseIf_getParameterNames(
+    if (dst_component_id && (strstr(dst_component_id, ".psm")))
+    {
+        ret = CcspBaseIf_getParameterNames(
                   bus_handle,
                   dst_component_id,
                   dbus_path,
@@ -1351,28 +1394,62 @@ CcspBaseIf_GetNextLevelInstances
                   &parameter
               );
 
-    if( ret != CCSP_SUCCESS)
-        return ret;
+        if( ret != CCSP_SUCCESS)
+            return ret;
 
-    *pNums = 0;
-    for(i = 0; i < size; i++)
-    {
-        if(CcspBaseIf_getObjType(pObjectName, parameter[i]->parameterName, &inst_num, buf) == CCSP_BASE_INSTANCE)
-            *pNums= *pNums + 1;
-    }
-    if(*pNums)
-        val = bus_info->mallocfunc(*pNums*sizeof(unsigned int));
-
-    *pNums = 0;
-    for(i = 0; i < size; i++)
-    {
-        if(CcspBaseIf_getObjType(pObjectName, parameter[i]->parameterName, &inst_num, buf) == CCSP_BASE_INSTANCE)
+        *pNums = 0;
+        for(i = 0; i < size; i++)
         {
-            val[*pNums] = inst_num;
-            *pNums = *pNums + 1;
+            if(CcspBaseIf_getObjType(pObjectName, parameter[i]->parameterName, &inst_num, buf) == CCSP_BASE_INSTANCE)
+                *pNums= *pNums + 1;
         }
+
+        if(*pNums)
+            val = bus_info->mallocfunc(*pNums*sizeof(unsigned int));
+
+        *pNums = 0;
+        for(i = 0; i < size; i++)
+        {
+            if(CcspBaseIf_getObjType(pObjectName, parameter[i]->parameterName, &inst_num, buf) == CCSP_BASE_INSTANCE)
+            {
+                val[*pNums] = inst_num;
+                *pNums = *pNums + 1;
+            }
+        }
+
+        free_parameterInfoStruct_t(bus_handle, size, parameter);
     }
-    free_parameterInfoStruct_t(bus_handle, size, parameter);
+    else
+    {
+        rc = rbusTable_getRowNames(bus_info->rbus_handle, pObjectName, &rows);
+        if ((RBUS_ERROR_SUCCESS == rc) && rows)
+        {
+            rbusRowName_t* row = rows;
+            while(row)
+            {
+                row = row->next;
+                size++;
+            }
+            if(size)
+            {
+                val = (unsigned int*)bus_info->mallocfunc(size*sizeof(unsigned int));
+                if (NULL == val)
+                {
+                     CcspTraceError(("No memory\n"));
+                     return CCSP_ERR_MEMORY_ALLOC_FAIL;
+                }
+                row = rows;
+                while(row)
+                {
+                    val[i++] = row->instNum;
+                    row = row->next;
+                }
+                rbusTable_freeRowNames(bus_info->rbus_handle, rows);
+            }
+        }
+        *pNums = size;
+        ret = Rbus2_to_CCSP_error_mapper(rc);
+    }
     * pNumArray = val;
     return ret;
 }
