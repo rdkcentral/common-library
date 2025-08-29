@@ -2746,7 +2746,6 @@ int CcspBaseIf_SendSignal(
     return CcspBaseIf_SendSignal_rbus(bus_handle, event);
 }
 
-#if 0
 int CcspBaseIf_SendSignal_WithData_rbus(
     void * bus_handle,
     char *eventName,
@@ -2768,14 +2767,14 @@ int CcspBaseIf_SendSignal_WithData_rbus(
     event.type = RBUS_EVENT_GENERAL;
     ret = rbusEvent_Publish(bus_handle, &event);
     if(ret != RBUS_ERROR_SUCCESS) {
-        CcspTraceInfo(("provider: rbusEvent_Publish Event failed: %d\n", ret));
+        CcspTraceError(("provider: rbusEvent_Publish Event failed: %d\n", ret));
     }
-
+    else{
+        CcspTraceInfo(("provider: rbusEvent_Publish Event success: %d\n", ret));
+    }
     rbusValue_Release(value);
     return Rbus2_to_CCSP_error_mapper(ret);
 }
-
-#endif
 
 int CcspBaseIf_SendSignal_WithData(
     void * bus_handle,
