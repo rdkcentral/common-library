@@ -21,6 +21,9 @@
 COUNTER=0
 MAXTRIES=10
 
+syscfg set OAUTHAuthMode sso
+syscfg commit
+
 while [ "`sysevent get gw_prov-status`" != "up" -a $COUNTER -lt $MAXTRIES -a ! -e /tmp/OS_WANMANAGER_ENABLED ] ; do
   echo "Waiting for gw_prov application to be ready... $COUNTER/$MAXTRIES"
   sleep 1
