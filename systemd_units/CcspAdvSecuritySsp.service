@@ -28,6 +28,12 @@ Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/advsec
 ExecStartPre=/bin/sh -c "sleep 30"
+ExecStartPre=/bin/sh -c 'touch /tmp/.cujo-agent-rules'
+ExecStartPre=/bin/sh -c 'touch /tmp/.cujo-agent-rules_v6'
+ExecStartPre=/bin/sh -c 'touch /tmp/advsec_nflua_loaded'
+ExecStartPre=/bin/sh -c 'touch /tmp/advsec_df_enabled'
+ExecStartPre=/bin/sh -c 'touch /tmp/advsec_raptr_enabled'
+ExecStartPre=/bin/sh -c 'sysctl -w net.core.optmem_max=65536'
 ExecStart=/bin/sh -c '/usr/bin/CcspAdvSecuritySsp -subsys $Subsys'
 ExecStop=/bin/sh -c '/usr/ccsp/advsec/start_adv_security.sh -disable'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspAdvSecuritySsp" >> ${PROCESS_RESTART_LOG}'
