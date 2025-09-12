@@ -25,9 +25,9 @@ After=CcspPandMSsp.service
 Type=forking
 Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
-Environment="LD_PRELOAD=/usr/lib/librdkb_interceptor.so"
-Environment="WHITELIST_FILE=/var/tmp/whitelist.json"
-Environment="RDKB_INTERCEPTOR_LOGFILE=/rdklogs/logs/INTERCEPTOR.txt"
+Environment="LD_PRELOAD=/usr/lib/librdkb_acl.so"
+Environment="ACL_FILE=/var/tmp/acl.json"
+Environment="RDKB_ACL_LOGFILE=/rdklogs/logs/ACL.txt"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/webpa
 ExecStart=/bin/sh -c 'source /etc/utopia/service.d/log_env_var.sh;/usr/bin/webpa -subsys $Subsys'
