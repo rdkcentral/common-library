@@ -2014,6 +2014,14 @@ static int thread_path_message_func_rbus(const char * destination, const char * 
             rbusMessage_Init(response);
             tmp = result;
             rbusMessage_SetInt32(*response, tmp); //result
+            if (tmp == CCSP_SUCCESS && cachedParameterNames != NULL)
+            {
+                for (i = 0; i < param_size; i++)
+                {
+                    int ret = rbus_setPropertyChangeComponent(bus_info->rbus_handle, cachedParameterNames[i], writeID_str);
+                    CcspTraceWarning(("rbus_setPropertyChangeComponent error %d \n", ret));
+                }
+            }
             if (result == CCSP_SUCCESS && ret_code == CCSP_SUCCESS)
             {
                 for(i =0; i < size; i++)

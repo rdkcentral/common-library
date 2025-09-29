@@ -229,7 +229,8 @@ static void rbusValueChange_handlePublish(ValueChangeRecord* rec, parameterValSt
 {
     rbusMessage msg;
     rbusCoreError_t err;
-
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)rec->handle;
+    char buff[128] = {0};
     /*construct a message just like rbus would construct it*/
     rbusMessage_Init(&msg);
 
@@ -247,6 +248,13 @@ static void rbusValueChange_handlePublish(ValueChangeRecord* rec, parameterValSt
     rbusMessage_SetString(msg, "oldValue");
     rbusMessage_SetInt32(msg, val->type);/*alternavitely we could use the true rbus type/value currently stored in oldVal*/
     rbusMessage_SetString(msg, rec->value);
+    
+    int ret = rbus_getPropertyChangeComponent(bus_info->rbus_handle, rec->parameter, buff);
+    CcspTraceError(("<%s>: %d VC detected provider-side value-change by comp %s\n", __FUNCTION__, ret, buff));
+    rbusMessage_SetString(msg, "by");
+    rbusMessage_SetInt32(msg, ccsp_string);
+    rbusMessage_SetString(msg, buff);
+
     //prop 3: filter
     if(filterResult != -1)
     {
