@@ -239,7 +239,7 @@ static void rbusValueChange_handlePublish(ValueChangeRecord* rec, parameterValSt
     rbusMessage_SetInt32(msg, 1); /*hasEventData*/
     rbusMessage_SetString(msg, NULL);/*object name*/
     rbusMessage_SetInt32(msg, RBUS_OBJECT_SINGLE_INSTANCE);/*object type*/
-    rbusMessage_SetInt32(msg, filterResult == -1 ? 2 : 3);/*number properties*/
+    rbusMessage_SetInt32(msg, filterResult == -1 ? 3 : 4);/*number properties*/
     //prop 1: value
     rbusMessage_SetString(msg, "value");
     rbusMessage_SetInt32(msg, val->type);/*alternavitely we could use the true rbus type/value currently stored in newVal*/
