@@ -192,6 +192,8 @@ typedef enum
     IPOE_MSG_IHC_ECHO_IPV6_UP,
     IPOE_MSG_IHC_ECHO_IPV4_IDLE,
     IPOE_MSG_IHC_ECHO_IPV6_IDLE,
+    IPOE_MSG_IHC_ECHO_IPV4_IDLE,
+    IPOE_MSG_IHC_ECHO_IPV6_IDLE,
 }ipoe_msg_type_t;
 
 typedef struct
