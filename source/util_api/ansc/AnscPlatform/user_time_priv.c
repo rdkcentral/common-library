@@ -89,7 +89,7 @@ key_t shemkey= 100;
 key_t semKey = 2000;
 
 void
-UserGetNtpTime(time_t*  ltime)
+UserGetNtpTime(time64_t*  ltime)
 {
 
 	time(ltime);
@@ -358,7 +358,7 @@ UserSetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
 }
 
 struct tm *
-UserGetTimeNow(time_t *timeNow, struct tm *Tm)
+UserGetTimeNow(time64_t *timeNow, struct tm *Tm)
 {
 	UserGetNtpTime(timeNow);
 	return localtime_r(timeNow,Tm);

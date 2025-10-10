@@ -1742,6 +1742,7 @@ AnscReleaseBdo
          * race condition may occur for the queue size, but it can only make the
          * pool a little bit over-limit and should not matter.
          */
+	    AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
         if ( AnscSListQueryDepth(&g_qBdoPoolList) >= g_ulMaxBdoPoolSize )
         {
 #ifdef _ANSC_TRACE_PACKET_
@@ -2167,16 +2168,19 @@ AnscFreeSonBdo
          * race condition may occur for the queue size, but it can only make the
          * pool a little bit over-limit and should not matter.
          */
+        AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
         if ( AnscSListQueryDepth(&g_qBdoPoolList) >= g_ulMaxBdoPoolSize )
         {
 #ifdef _ANSC_TRACE_PACKET_
             AnscTraceWarning(("@@ AnscPacket: Bdo pool over limit %d !!! -- Size limt %d.\n", 
                 ++g_ulFreeBdo, g_ulMaxBdoPoolSize));
 #endif
+            AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
             AnscFreeMemory(pSonBdo);
         }
         else
         {
+            AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
             AnscBdoClean((ANSC_HANDLE)pSonBdo);
 
             AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
@@ -2505,9 +2509,9 @@ AnscPacketCleanup
         AnscFreePdo2(pPdo);
     }
     AnscSListInitializeHeader(&g_qPdoPoolList);
+    g_bPdoPoolInitialized = FALSE;
     AnscReleaseSpinLock(&g_qPdoPoolSpinLock);
     AnscFreeSpinLock(&g_qPdoPoolSpinLock);
-    g_bPdoPoolInitialized = FALSE;
 
 
     /*
@@ -2525,9 +2529,9 @@ AnscPacketCleanup
         AnscFreeMemory(pBdo);
     }
     AnscSListInitializeHeader(&g_qBdoPoolList);
+    g_bBdoPoolInitialized = FALSE;
     AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
     AnscFreeSpinLock(&g_qBdoPoolSpinLock);
-    g_bBdoPoolInitialized = FALSE;
 
 #ifdef _ANSC_TRACE_PACKET_    
     g_ulAllocPdo    = 0;

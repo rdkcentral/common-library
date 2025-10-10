@@ -127,7 +127,7 @@ UserGetTickInMilliSeconds2();
 void UserSetDelta (void);
 
 void
-UserGetNtpTime(time_t*  ltime);
+UserGetNtpTime(time64_t*  ltime);
 void
 UserGetSystemTime(USER_SYSTEM_TIME*  pSystemTime);
 #define UserGetUtcTime UserGetSystemTime

@@ -332,14 +332,14 @@ AnscAllocateMemoryCountSize
 {
     void*                           pMemoryPointer = NULL;
 
+    AnscInitializeSpinLock(&g_tCountSizeSpinLock);
+    AnscAcquireSpinLock(&g_tCountSizeSpinLock);
     if ( !g_bCountSizeInitialized )
     {
-        AnscInitializeSpinLock(&g_tCountSizeSpinLock);
 
-        AnscAcquireSpinLock(&g_tCountSizeSpinLock);
         g_bCountSizeInitialized     = TRUE;
-        AnscReleaseSpinLock(&g_tCountSizeSpinLock);
     }
+    AnscReleaseSpinLock(&g_tCountSizeSpinLock);
 
     pMemoryPointer = AnscAllocateMemoryOrig(ulMemorySize + sizeof(ULONG));
 
@@ -1022,23 +1022,23 @@ AnscAllocateMemoryRecordDetail
                     " AnscAllocateMemoryRecordDetail 1 \n"
                 ));*/
 
+    AnscInitializeSpinLock(&g_tCountSizeSpinLock);
+
+    AnscAcquireSpinLock(&g_tCountSizeSpinLock);
     if ( !g_bCountSizeInitialized )
     {
-        AnscInitializeSpinLock(&g_tCountSizeSpinLock);
-
-        AnscAcquireSpinLock(&g_tCountSizeSpinLock);
         g_bCountSizeInitialized     = TRUE;
-        AnscReleaseSpinLock(&g_tCountSizeSpinLock);
     }
+    AnscReleaseSpinLock(&g_tCountSizeSpinLock);
+    AnscInitializeSpinLock(&g_tRecordDetailSpinLock);
+    AnscInitializeMemoryAllocTable();
+
+    AnscAcquireSpinLock(&g_tRecordDetailSpinLock);
     if ( !g_bRecordDetailInitialized )
     {
-        AnscInitializeSpinLock(&g_tRecordDetailSpinLock);
-        AnscInitializeMemoryAllocTable();
-
-        AnscAcquireSpinLock(&g_tRecordDetailSpinLock);
         g_bRecordDetailInitialized     = TRUE;
-        AnscReleaseSpinLock(&g_tRecordDetailSpinLock);
     }
+    AnscReleaseSpinLock(&g_tRecordDetailSpinLock);
                 /*CcspTraceError
                 ((
                     " AnscAllocateMemoryRecordDetail 2 \n"
