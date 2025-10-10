@@ -139,12 +139,15 @@ SysRfoSortFolderByTime
         pMyObject->FolderSortingType = SYS_RFO_SORTING_TYPE_BYTIME;
     }
 
+    AnscAcquireLock(&pMyObject->FolderTableLock);
     if ( !pMyObject->FolderArray || (pMyObject->FolderArrayCurLen == 0) )
     {
+        AnscReleaseLock(&pMyObject->FolderTableLock);
         return  ANSC_STATUS_SUCCESS;
     }
     else
     {
+        AnscReleaseLock(&pMyObject->FolderTableLock);
         pTmpFolderArray = (ANSC_HANDLE*)AnscAllocateMemory(sizeof(ANSC_HANDLE) * pMyObject->FolderArrayMaxLen);
 
         if ( !pTmpFolderArray )
@@ -250,12 +253,15 @@ SysRfoSortFolderByName
         pMyObject->FolderSortingType = SYS_RFO_SORTING_TYPE_BYNAME;
     }
 
+    AnscAcquireLock(&pMyObject->FolderTableLock);
     if ( !pMyObject->FolderArray || (pMyObject->FolderArrayCurLen == 0) )
     {
+        AnscReleaseLock(&pMyObject->FolderTableLock);
         return  ANSC_STATUS_SUCCESS;
     }
     else
     {
+        AnscReleaseLock(&pMyObject->FolderTableLock);
         pTmpFolderArray = (ANSC_HANDLE*)AnscAllocateMemory(sizeof(ANSC_HANDLE) * pMyObject->FolderArrayMaxLen);
 
         if ( !pTmpFolderArray )
@@ -365,12 +371,15 @@ SysRfoSortRecordByTime
         pMyObject->RecordSortingType = SYS_RFO_SORTING_TYPE_BYTIME;
     }
 
+    AnscAcquireLock(&pMyObject->RecordTableLock);
     if ( !pMyObject->RecordArray || (pMyObject->RecordArrayCurLen == 0) )
     {
+	AnscReleaseLock(&pMyObject->RecordTableLock);
         return  ANSC_STATUS_SUCCESS;
     }
     else
     {
+	AnscReleaseLock(&pMyObject->RecordTableLock);
         pTmpRecordArray = (ANSC_HANDLE*)AnscAllocateMemory(sizeof(ANSC_HANDLE) * pMyObject->RecordArrayMaxLen);
 
         if ( !pTmpRecordArray )
@@ -380,7 +389,6 @@ SysRfoSortRecordByTime
     }
 
     AnscAcquireLock(&pMyObject->RecordTableLock);
-
     for ( k = 0; k < pMyObject->RecordArrayCurLen; k++ )
     {
         pTbsRecord = (PSYS_REPOSITORY_RECORD_OBJECT)pMyObject->RecordArray[k];

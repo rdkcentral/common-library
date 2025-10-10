@@ -8101,6 +8101,10 @@ HttpSmpoParseCookie
     {
         ulCount --;
     }
+    else
+    {
+	return (ANSC_HANDLE)pHfoCookie;
+    }
 
     pHfoCookie =
         (PHTTP_HFO_COOKIE)AnscAllocateMemory
