@@ -50,7 +50,7 @@
 #include "ccsp_rbus_intervalsubscription.h"
 #include "ccsp_rbus_subscription.h"
 #include "safec_lib_common.h"
-
+#include <rtmessage/rtVector.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -135,6 +135,7 @@ static int               thread_path_message_func_rbus(const char * destination,
 static int               analyze_reply(DBusMessage*, DBusMessage*, DBusMessage**);
 static void Ccsp_Rbus_ReadPayload(rbusMessage payload, int32_t* componentId, int32_t* interval, int32_t* duration, rbusFilter_t* filter);
 extern void rbusPropertyList_appendToMessage(rbusProperty_t prop, rbusMessage msg);
+extern bool _isSubscribed(const char* parameter);
 
 // External Interface, defined in ccsp_message_bus.h
 /*
@@ -170,6 +171,79 @@ static rbusValueType_t rbus_GetDataType(enum dataType_e dt)
      case ccsp_none:
      default: return RBUS_NONE;
      }
+}
+
+static pthread_mutex_t recordListMutex = PTHREAD_MUTEX_INITIALIZER;
+#define LockMutex() pthread_mutex_lock(&recordListMutex)
+#define UnlockMutex() pthread_mutex_unlock(&recordListMutex)
+
+typedef struct PropertyRecord
+{
+    char* parameter;
+    char* requestedComponent;
+} PropertyRecord;
+
+static rtVector PropertyRecordList = NULL;
+
+static void property_record_free(void* p)
+{
+    PropertyRecord* rec = (PropertyRecord*)p;
+    if(rec->parameter)
+        free(rec->parameter);
+    if(rec->requestedComponent)
+        free(rec->requestedComponent);
+    free(rec);
+}
+
+void deletePropertyRecord(const char* parameter)
+{
+   LockMutex();
+       rtVector_RemoveItemByCompare(PropertyRecordList, parameter, rtVector_Compare_String, property_record_free);
+   if(rtVector_Size(PropertyRecordList) == 0)
+   {
+       rtVector_Destroy(PropertyRecordList, NULL);
+   }
+   UnlockMutex();
+}
+
+void _getPropertyChangeComponent(const char* parameter, char* componentName)
+{
+    LockMutex();
+    PropertyRecord* rec = rtVector_Find(PropertyRecordList, parameter, rtVector_Compare_String);
+    if (rec && componentName)
+    {
+        strncpy(componentName, rec->requestedComponent, RBUS_MAX_NAME_LENGTH - 1);
+    }
+    UnlockMutex();
+}
+
+void _setPropertyChangeComponent(const char* parameter, const char* writeID)
+{
+    if (writeID == NULL)
+    {
+        return;
+    }
+
+    if (PropertyRecordList == NULL)
+        rtVector_Create(&PropertyRecordList);
+
+    LockMutex();
+    PropertyRecord* rec = rtVector_Find(PropertyRecordList, parameter, rtVector_Compare_String);
+    if (rec == NULL)
+    {
+        rec = (PropertyRecord*)malloc(sizeof(PropertyRecord));
+        if (rec)
+        {
+            rec->parameter = strdup(parameter);
+            rec->requestedComponent = strdup(writeID);
+            rtVector_PushBack(PropertyRecordList, rec);
+        }
+    }
+    else
+    {
+        strncpy(rec->requestedComponent, writeID, RBUS_MAX_NAME_LENGTH - 1);
+    }
+    UnlockMutex();
 }
 
 /* Helper function to calculate a timeout based on monotonic clock if available */
@@ -1995,6 +2069,16 @@ static int thread_path_message_func_rbus(const char * destination, const char * 
                  }
             }
             result = func->setParameterValues(sessionId, writeID, parameterVal, param_size, commit,&invalidParameterName, func->setParameterValues_data);
+            if (result == CCSP_SUCCESS)
+            {
+                for(int i=0; i < size; i++)
+                {
+                    if (_isSubscribed(parameterVal[i].parameterName) == true)
+                    {
+                        _setPropertyChangeComponent(parameterVal[i].parameterName, writeID_str);
+                    }
+                }
+            }
             if(result != CCSP_SUCCESS)
                 CcspTraceWarning(("setParameterValues failed with result %d\n", result));
             // Based on study done on RDKB-58643, Rolling back values only if error is CCSP_ERR_INVALID_PARAMETER_VALUE.

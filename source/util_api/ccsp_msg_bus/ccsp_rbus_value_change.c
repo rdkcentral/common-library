@@ -107,6 +107,24 @@ static void vcParams_Free(void* p)
     free(rec);
 }
 
+bool _isSubscribed(const char* parameter)
+{
+
+    VC_LOCK()
+    for(size_t i=0; i < rtVector_Size(vcparams); ++i)
+    {
+        ValueChangeRecord* rec = (ValueChangeRecord*)rtVector_At(vcparams, i);
+
+        if( rec && strcmp(rec->parameter, parameter) == 0)
+        {
+            VC_UNLOCK()
+            return true;
+        }
+    }
+    VC_UNLOCK()
+    return false;
+}
+
 static ValueChangeRecord* vcParams_Find(void* handle, const char* listener, const char* parameter,  const char* eventName, int32_t componentId, rbusFilter_t filter)
 {
     size_t i;
@@ -224,12 +242,13 @@ static int rbusValueChange_getFilterResult(ValueChangeRecord* rec, parameterValS
 }
 
 void rbusFilter_AppendToMessage(rbusFilter_t filter, rbusMessage msg);/*from librbus.so*/
-
+extern void deletePropertyRecord(const char* parameter);
+extern void _getPropertyChangeComponent(const char* parameter, char* componentName);
 static void rbusValueChange_handlePublish(ValueChangeRecord* rec, parameterValStruct_t* val, int filterResult)
 {
+    char buff[RBUS_MAX_NAME_LENGTH] = {0};
     rbusMessage msg;
     rbusCoreError_t err;
-
     /*construct a message just like rbus would construct it*/
     rbusMessage_Init(&msg);
 
@@ -238,7 +257,7 @@ static void rbusValueChange_handlePublish(ValueChangeRecord* rec, parameterValSt
     rbusMessage_SetInt32(msg, 1); /*hasEventData*/
     rbusMessage_SetString(msg, NULL);/*object name*/
     rbusMessage_SetInt32(msg, RBUS_OBJECT_SINGLE_INSTANCE);/*object type*/
-    rbusMessage_SetInt32(msg, filterResult == -1 ? 2 : 3);/*number properties*/
+    rbusMessage_SetInt32(msg, filterResult == -1 ? 3 : 4);/*number properties*/
     //prop 1: value
     rbusMessage_SetString(msg, "value");
     rbusMessage_SetInt32(msg, val->type);/*alternavitely we could use the true rbus type/value currently stored in newVal*/
@@ -247,7 +266,13 @@ static void rbusValueChange_handlePublish(ValueChangeRecord* rec, parameterValSt
     rbusMessage_SetString(msg, "oldValue");
     rbusMessage_SetInt32(msg, val->type);/*alternavitely we could use the true rbus type/value currently stored in oldVal*/
     rbusMessage_SetString(msg, rec->value);
-    //prop 3: filter
+    //prop 3: by
+    _getPropertyChangeComponent(rec->parameter, buff);
+    CcspTraceInfo(("<%s>: VC detected provider-side value-change by comp %s\n", __FUNCTION__, buff));
+    rbusMessage_SetString(msg, "by");
+    rbusMessage_SetInt32(msg, ccsp_string);
+    rbusMessage_SetString(msg, buff);
+    //prop 4: filter
     if(filterResult != -1)
     {
         rbusMessage_SetString(msg, "filter");
@@ -488,6 +513,7 @@ int Ccsp_RbusValueChange_Unsubscribe(
         VC_LOCK();
 
         rtVector_RemoveItem(vcparams, rec, vcParams_Free);
+        deletePropertyRecord(parameter);
 
         /* if there's nothing left to poll then shutdown the polling thread */
 
