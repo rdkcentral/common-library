@@ -213,6 +213,7 @@ void _getPropertyChangeComponent(const char* parameter, char* componentName)
     if (rec && componentName)
     {
         strncpy(componentName, rec->requestedComponent, RBUS_MAX_NAME_LENGTH - 1);
+        CcspTraceWarning(("@@@@ %s %d: %s\n", __FUNCTION__, __LINE__, componentName));
     }
     UnlockMutex();
 }
@@ -223,6 +224,8 @@ void _setPropertyChangeComponent(const char* parameter, const char* writeID)
     {
         return;
     }
+
+    CcspTraceWarning(("@@@@ %s %d\n", __FUNCTION__, __LINE__));
 
     if (PropertyRecordList == NULL)
         rtVector_Create(&PropertyRecordList);
@@ -236,12 +239,14 @@ void _setPropertyChangeComponent(const char* parameter, const char* writeID)
         {
             rec->parameter = strdup(parameter);
             rec->requestedComponent = strdup(writeID);
+             CcspTraceWarning(("@@@@ %s %d: %s\n", __FUNCTION__, __LINE__, rec->requestedComponent));
             rtVector_PushBack(PropertyRecordList, rec);
         }
     }
     else
     {
         strncpy(rec->requestedComponent, writeID, RBUS_MAX_NAME_LENGTH - 1);
+        CcspTraceWarning(("@@@@ %s %d: %s\n", __FUNCTION__, __LINE__, rec->requestedComponent));
     }
     UnlockMutex();
 }
@@ -2075,8 +2080,12 @@ static int thread_path_message_func_rbus(const char * destination, const char * 
                 {
                     if (_isSubscribed(parameterVal[i].parameterName) == true)
                     {
+                        CcspTraceWarning(("@@@@ Subscribed: %s\n", parameterVal[i].parameterName));
                         _setPropertyChangeComponent(parameterVal[i].parameterName, writeID_str);
                     }
+                    else
+                       CcspTraceWarning(("NO Subscribed: %s\n", parameterVal[i].parameterName ));
+
                 }
             }
             if(result != CCSP_SUCCESS)

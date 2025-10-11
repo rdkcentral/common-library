@@ -251,6 +251,7 @@ static void rbusValueChange_handlePublish(ValueChangeRecord* rec, parameterValSt
     rbusCoreError_t err;
     /*construct a message just like rbus would construct it*/
     rbusMessage_Init(&msg);
+    CcspTraceError(("<%s>: VC detected provider-side value-change %d\n", __FUNCTION__, __LINE__));
 
     rbusMessage_SetString(msg, rec->parameter);/*event name*/
     rbusMessage_SetInt32(msg, RBUS_EVENT_VALUE_CHANGED);/*event type*/
@@ -267,6 +268,7 @@ static void rbusValueChange_handlePublish(ValueChangeRecord* rec, parameterValSt
     rbusMessage_SetInt32(msg, val->type);/*alternavitely we could use the true rbus type/value currently stored in oldVal*/
     rbusMessage_SetString(msg, rec->value);
     //prop 3: by
+    CcspTraceError(("<%s>: VC detected provider-side value-change %d\n", __FUNCTION__, __LINE__));
     _getPropertyChangeComponent(rec->parameter, buff);
     CcspTraceInfo(("<%s>: VC detected provider-side value-change by comp %s\n", __FUNCTION__, buff));
     rbusMessage_SetString(msg, "by");
@@ -348,7 +350,7 @@ static void* rbusValueChange_pollingThreadFunc(void *userData)
                     int filterResult = -1;
                     bool publish = true;
 
-                    CcspTraceDebug (("%s: value change detected for %s\n", __FUNCTION__, rec->parameter));
+                    CcspTraceError (("%s: value change detected for %s\n", __FUNCTION__, rec->parameter));
 
                     /*check filter -- if there's a filter, we only publish if filter is triggered*/
                     if(rec->filter)
@@ -404,6 +406,7 @@ int Ccsp_RbusValueChange_Subscribe(
     ValueChangeRecord* rec;
 
     CcspTraceDebug(("%s: %s\n", __FUNCTION__, parameter));
+    CcspTraceError(("%s: %s\n", __FUNCTION__, parameter));
 
     if(!vcinit)
     {
@@ -452,6 +455,7 @@ int Ccsp_RbusValueChange_Subscribe(
         }
 
         CcspTraceDebug(("%s: %s new subscriber from listener %s componentId %d\n", __FUNCTION__, rec->parameter, rec->listener, rec->componentId));
+        CcspTraceError(("%s: %s new subscriber from listener %s componentId %d\n", __FUNCTION__, rec->parameter, rec->listener, rec->componentId));
 
         VC_LOCK();
         rtVector_PushBack(vcparams, rec);
