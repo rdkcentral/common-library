@@ -2076,16 +2076,19 @@ static int thread_path_message_func_rbus(const char * destination, const char * 
             result = func->setParameterValues(sessionId, writeID, parameterVal, param_size, commit,&invalidParameterName, func->setParameterValues_data);
             if (result == CCSP_SUCCESS)
             {
-                for(int i=0; i < size; i++)
+                for(int i=0; i < param_size; i++)
                 {
-                    if (_isSubscribed(parameterVal[i].parameterName) == true)
+                   #if 0
+					if (_isSubscribed(parameterVal[i].parameterName) == true)
                     {
                         CcspTraceWarning(("@@@@ Subscribed: %s\n", parameterVal[i].parameterName));
                         _setPropertyChangeComponent(parameterVal[i].parameterName, writeID_str);
                     }
                     else
                        CcspTraceWarning(("NO Subscribed: %s\n", parameterVal[i].parameterName ));
-
+                   #endif
+					 CcspTraceWarning(("@@@@ Subscribed: %s\n", parameterVal[i].parameterName));
+                     _setPropertyChangeComponent(parameterVal[i].parameterName, writeID_str);
                 }
             }
             if(result != CCSP_SUCCESS)
