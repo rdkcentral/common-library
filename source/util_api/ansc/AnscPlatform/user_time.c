@@ -213,7 +213,7 @@ UserGetTickInMilliSecondsAbs()
 void
 UserGetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
 {
-    time64_t          timeNow;
+    time_t          timeNow;
 	struct tm       Tm = {0};
     struct tm       *ptm = NULL;
 
@@ -236,7 +236,7 @@ UserGetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
 void
 UserGetLocalTime(USER_SYSTEM_TIME*  pSystemTime)
 {
-    time64_t          timeNow;
+    time_t          timeNow;
     struct tm       Tm = {0};
     struct tm       *ptm = NULL;
 
@@ -388,7 +388,7 @@ UserGetTzOffset( void )
 unsigned long
 UserGetUtcSeconds( void )
 {
-    time64_t          timeNow;
+    time_t          timeNow;
 
 	UserGetNtpTime(&timeNow);
 

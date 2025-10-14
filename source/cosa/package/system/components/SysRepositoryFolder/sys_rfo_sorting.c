@@ -484,12 +484,15 @@ SysRfoSortRecordByName
         pMyObject->RecordSortingType = SYS_RFO_SORTING_TYPE_BYNAME;
     }
 
+    AnscAcquireLock(&pMyObject->RecordTableLock);
     if ( !pMyObject->RecordArray || (pMyObject->RecordArrayCurLen == 0) )
     {
+        AnscReleaseLock(&pMyObject->RecordTableLock);
         return  ANSC_STATUS_SUCCESS;
     }
     else
     {
+        AnscReleaseLock(&pMyObject->RecordTableLock);
         pTmpRecordArray = (ANSC_HANDLE*)AnscAllocateMemory(sizeof(ANSC_HANDLE) * pMyObject->RecordArrayMaxLen);
 
         if ( !pTmpRecordArray )
