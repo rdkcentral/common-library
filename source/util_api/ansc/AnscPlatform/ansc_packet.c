@@ -2512,9 +2512,9 @@ AnscPacketCleanup
         AnscFreePdo2(pPdo);
     }
     AnscSListInitializeHeader(&g_qPdoPoolList);
-    g_bPdoPoolInitialized = FALSE;
     AnscReleaseSpinLock(&g_qPdoPoolSpinLock);
     AnscFreeSpinLock(&g_qPdoPoolSpinLock);
+    g_bPdoPoolInitialized = FALSE;
 
 
     /*
@@ -2532,9 +2532,9 @@ AnscPacketCleanup
         AnscFreeMemory(pBdo);
     }
     AnscSListInitializeHeader(&g_qBdoPoolList);
-    g_bBdoPoolInitialized = FALSE;
     AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
     AnscFreeSpinLock(&g_qBdoPoolSpinLock);
+    g_bBdoPoolInitialized = FALSE;
 
 #ifdef _ANSC_TRACE_PACKET_    
     g_ulAllocPdo    = 0;

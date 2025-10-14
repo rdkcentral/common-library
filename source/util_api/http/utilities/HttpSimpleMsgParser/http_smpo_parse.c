@@ -156,7 +156,7 @@ HttpSmpoParseAccept
                 break;
             }
 
-            pMediaRange = &pHfoAccept->RangeArray[pHfoAccept->RangeCount];
+            pMediaRange = &pHfoAccept->RangeArray[pHfoAccept->RangeCount ++];
 
             bSucc  = 
                 HttpSmpoUtilParseMediaRange
@@ -167,9 +167,9 @@ HttpSmpoParseAccept
                         ulTokenSize
                     );
 
-            if (bSucc)
+            if (!bSucc)
             {
-                pHfoAccept->RangeCount ++;
+                pHfoAccept->RangeCount --;
             }
             
             if (pNext)
