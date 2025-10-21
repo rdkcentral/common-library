@@ -1028,11 +1028,7 @@ DslhObjcoGetParamValueByName
     /*AnscTraceVerbose(("DslhObjcoGetParamValueByName -- name %s\n", pName));*/
     
     /* check whether it's a count of table (xxxNumberOfEntries) or not */
-#ifdef _64BIT_ARCH_SUPPORT_
     if(pSlapVariable->Syntax == (ULONG)SLAP_VAR_SYNTAX_uint32)
-#else
-    if(pSlapVariable->Syntax == SLAP_VAR_SYNTAX_uint32)
-#endif
     {
         pFind = _ansc_strstr(pName, TR69_NUMBER_OF_ENTRIES_STRING);
 
