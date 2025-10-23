@@ -39,7 +39,7 @@ if [ "$rebootReason" != "factory-reset" ]; then
          echo_t "No. of WAN Interface from $PSM_DEF_XML_CONFIG_FILE_NAME:"$wanifdefcount
          echo_t "No. of WAN Interface from $PSM_CUR_XML_CONFIG_FILE_NAME:"$wanifcount
          if [ "$wanifcount" != "$wanifdefcount" ]; then
-            delCmd=`sed -i "/dmsb.wanmanager.wan.interfacecount/d" $PSM_CUR_XML_CONFIG_FILE_NAME`
+            sed -i "/dmsb.wanmanager.wan.interfacecount/d" $PSM_CUR_XML_CONFIG_FILE_NAME
             echo_t "WAN interface count mismatched so deleting this dmsb.wanmanager.wan.interfacecount entry from $PSM_CUR_XML_CONFIG_FILE_NAME to make sure proper interface count"
          else
             echo_t "WAN interface count is same so no migration required"
@@ -55,7 +55,7 @@ if [ "$rebootReason" != "factory-reset" ]; then
          echo_t "No. of WAN Group from $PSM_DEF_XML_CONFIG_FILE_NAME:"$wangrpdefcount
          echo_t "No. of WAN Group from $PSM_CUR_XML_CONFIG_FILE_NAME:"$wangrpcount
          if [ "$wangrpcount" != "$wangrpdefcount" ]; then
-            delCmd=`sed -i "/dmsb.wanmanager.group.Count/d" $PSM_CUR_XML_CONFIG_FILE_NAME`
+            sed -i "/dmsb.wanmanager.group.Count/d" $PSM_CUR_XML_CONFIG_FILE_NAME
             echo_t "WAN group count mismatched so deleting this dmsb.wanmanager.group.Count entry from $PSM_CUR_XML_CONFIG_FILE_NAME to make sure proper group count"
          else
             echo_t "WAN group count is same so no migration required"
@@ -71,7 +71,7 @@ if [ "$rebootReason" != "factory-reset" ]; then
          echo_t "No. of DHCP MGR v4 client count from $PSM_DEF_XML_CONFIG_FILE_NAME:"$dhcpmgrCltdefcount
          echo_t "No. of DHCP MGR v4 client count from $PSM_CUR_XML_CONFIG_FILE_NAME:"$dhcpmgrCltcount
          if [ "$dhcpmgrCltcount" != "$dhcpmgrCltdefcount" ]; then
-            delCmd=`sed -i "/dmsb.dhcpmanager.ClientNoOfEntries/d" $PSM_CUR_XML_CONFIG_FILE_NAME`
+            sed -i "/dmsb.dhcpmanager.ClientNoOfEntries/d" $PSM_CUR_XML_CONFIG_FILE_NAME
             echo_t "DHCP MGR v4 client count mismatched so deleting this dmsb.dhcpmanager.ClientNoOfEntries entry from $PSM_CUR_XML_CONFIG_FILE_NAME to make sure proper v4 client count"
          else
             echo_t "DHCP MGR v4 client count is same so no migration required"
@@ -87,7 +87,7 @@ if [ "$rebootReason" != "factory-reset" ]; then
          echo_t "No. of DHCP MGR v6 client count from $PSM_DEF_XML_CONFIG_FILE_NAME:"$dhcpmgrv6Cltdefcount
          echo_t "No. of DHCP MGR v6 client count from $PSM_CUR_XML_CONFIG_FILE_NAME:"$dhcpmgrv6Cltcount
          if [ "$dhcpmgrv6Cltcount" != "$dhcpmgrv6Cltdefcount" ]; then
-            delCmd=`sed -i "/dmsb.dhcpmanager.dhcpv6.ClientNoOfEntries/d" $PSM_CUR_XML_CONFIG_FILE_NAME`
+            sed -i "/dmsb.dhcpmanager.dhcpv6.ClientNoOfEntries/d" $PSM_CUR_XML_CONFIG_FILE_NAME
             echo_t "DHCP MGR v6 client count mismatched so deleting this dmsb.dhcpmanager.dhcpv6.ClientNoOfEntries entry from $PSM_CUR_XML_CONFIG_FILE_NAME to make sure proper v6 client count"
          else
             echo_t "DHCP MGR v6 count is same so no migration required"
