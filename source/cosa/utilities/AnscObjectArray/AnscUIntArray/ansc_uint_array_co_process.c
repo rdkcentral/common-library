@@ -74,6 +74,7 @@
 
 
 #include "ansc_uint_array_co_global.h"
+#include <stdint.h>
 
 
 /**********************************************************************
@@ -275,11 +276,7 @@ AnscUIntArrayGetAt
 
         pStorage    = (PUINT)pUIntArray->hStorage;
 
-#ifdef _64BIT_ARCH_SUPPORT_
-        return (ANSC_OBJECT_ARRAY_DATA)(ULONG)pStorage[ulIndex];
-#else
-        return (ANSC_OBJECT_ARRAY_DATA)pStorage[ulIndex];
-#endif
+        return (ANSC_OBJECT_ARRAY_DATA)(uintptr_t)pStorage[ulIndex];
     }
 
     return (ANSC_OBJECT_ARRAY_DATA)NULL;
@@ -335,11 +332,7 @@ AnscUIntArraySetAt
         PUINT                       pStorage;
 
         pStorage            = (PUINT)pUIntArray->hStorage;
-#ifdef _64BIT_ARCH_SUPPORT_
-        pStorage[ulIndex]   = (ULONG)Data;
-#else
-        pStorage[ulIndex]   = (UINT)Data;
-#endif
+        pStorage[ulIndex]   = (uintptr_t)Data;
     }
 }
 
@@ -420,11 +413,7 @@ AnscUIntArrayInsertAt
 
         for (i = 0; i < ulCount; i ++)
         {
-#ifdef _64BIT_ARCH_SUPPORT_
-            pStorage[i + ulIndex]   = (ULONG)Data;
-#else
-            pStorage[i + ulIndex]   = (UINT)Data;
-#endif
+            pStorage[i + ulIndex]   = (uintptr_t)Data;
         }
     }
 }
@@ -539,11 +528,7 @@ AnscUIntArrayAdd
             PUINT                   pStorage;
 
             pStorage = (PUINT)pUIntArray->hStorage;
-#ifdef _64BIT_ARCH_SUPPORT_
-            pStorage[pUIntArray->ulItemCount ++] = (ULONG)Data;
-#else
-            pStorage[pUIntArray->ulItemCount ++] = (UINT)Data;
-#endif
+            pStorage[pUIntArray->ulItemCount ++] = (uintptr_t)Data;
 
             return pUIntArray->ulItemCount;
         }
@@ -676,11 +661,7 @@ AnscUIntArrayFind
     LONG                            Count       = pUIntArray->ulItemCount;
     LONG                            i;
     PUINT                           pStorage    = (PUINT)pUIntArray->hStorage;
-#ifdef _64BIT_ARCH_SUPPORT_
-    UINT                            uSample     = (ULONG)Data;
-#else
-    UINT                            uSample     = (UINT)Data;
-#endif
+    UINT                            uSample     = (uintptr_t)Data;
 
     for (i = 0; i < Count; i ++)
     {
