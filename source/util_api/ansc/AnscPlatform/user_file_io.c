@@ -74,6 +74,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "ansc_global.h"
 
 #include "user_base.h"
@@ -308,14 +309,9 @@ inline int
 user_get_file_size(PVOID h)
 {
 	int length = 0;
-#ifdef _64BIT_ARCH_SUPPORT_
-	length = lseek((int)(ULONG)h, 0, SEEK_END);
-	lseek((int)(ULONG)h, 0, SEEK_SET);
-#else
-	length = lseek((int)h, 0, SEEK_END);
-	lseek((int)h, 0, SEEK_SET);
-#endif
-	return length;
+	length = lseek((int)(uintptr_t)h, 0, SEEK_END);
+	lseek((int)(uintptr_t)h, 0, SEEK_SET);
+        return length;
 }
 
 /*
