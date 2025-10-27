@@ -29,7 +29,7 @@ EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/rdk/wanmanager
 ExecStartPre=/bin/touch /tmp/OS_WANMANAGER_ENABLED
 ExecStartPre=/bin/sh -c '(/usr/ccsp/utopiaInitCheck.sh)'
-ExecStart=/usr/rdk/wanmanager/wanmanager -subsys $Subsys
+ExecStart=/usr/bin/strace -f -o /tmp/WANmanager_strace.log -e trace=mknod /usr/rdk/wanmanager/wanmanager -subsys $Subsys
 ExecStop=/bin/sh -c 'echo "`date`: Stopping/Restarting RdkWanManager" >> ${PROCESS_RESTART_LOG}'
 Restart=always
 
