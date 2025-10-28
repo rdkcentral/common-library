@@ -322,7 +322,7 @@ AnscReleasePdoTrace
              * race condition may occur for the queue size, but it can only make the
              * pool a little bit over-limit and should not matter.
              */
-	    AnscAcquireSpinLock(&g_qPdoPoolSpinLock);
+    AnscAcquireSpinLock(&g_qPdoPoolSpinLock);
             if ( AnscSListQueryDepth(&g_qPdoPoolList) >= g_ulMaxPdoPoolSize )
             {
                 AnscReleaseSpinLock(&g_qPdoPoolSpinLock);
