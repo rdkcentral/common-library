@@ -374,7 +374,7 @@ SysRfoSortRecordByTime
     AnscAcquireLock(&pMyObject->RecordTableLock);
     if ( !pMyObject->RecordArray || (pMyObject->RecordArrayCurLen == 0) )
     {
-	AnscReleaseLock(&pMyObject->RecordTableLock);
+        AnscReleaseLock(&pMyObject->RecordTableLock);
         return  ANSC_STATUS_SUCCESS;
     }
     else
