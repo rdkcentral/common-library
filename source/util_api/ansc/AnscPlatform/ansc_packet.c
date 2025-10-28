@@ -1745,7 +1745,7 @@ AnscReleaseBdo
          * race condition may occur for the queue size, but it can only make the
          * pool a little bit over-limit and should not matter.
          */
-	    AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
+        AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
         if ( AnscSListQueryDepth(&g_qBdoPoolList) >= g_ulMaxBdoPoolSize )
         {
 #ifdef _ANSC_TRACE_PACKET_
