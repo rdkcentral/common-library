@@ -32,7 +32,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 **********************************************************************/
-
+#define _TIME_BITS 64
+#define _FILE_OFFSET_BITS 64
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -725,7 +726,7 @@ CcspBaseIf_Deadlock_Detection_Thread
     FILE *                        fd             = NULL;
 
     struct timespec               time1          = {0};
-    unsigned long                 currentTime    = 0;
+    time_t                        currentTime    = 0;
     unsigned long                 deadLockHappen = 0;
     
     time1.tv_sec = 3;
@@ -747,7 +748,7 @@ CcspBaseIf_Deadlock_Detection_Thread
                     info->enterTime = currentTime - info->timepassed ;
                     CcspTraceWarning((" **** info->timepassed %lu ******\n",info->timepassed));
                     CcspTraceWarning((" **** info->enterTime %lu ******\n",info->enterTime));
-                    CcspTraceWarning((" **** currentTime %lu ******\n",currentTime));
+                    CcspTraceWarning((" **** currentTime %llu ******\n",currentTime));
                 }
                 else
                 {
