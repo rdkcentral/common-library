@@ -54,6 +54,7 @@
 
 #define W_DEFAULT -1
 #define N_DEFAULT -1
+#define PARAM_TYPE_COUNT (sizeof(paramName) / sizeof(paramName[0])) /*CID: 280130, 280150 and 280152 fix for Resource leak*/
 
 typedef enum funcNameId {
   func_GetEntryCount,
@@ -216,12 +217,25 @@ PANSC_XML_DOM_NODE_OBJECT pCurrentFunctionsNode=0;
 PANSC_XML_DOM_NODE_OBJECT DMPackCreateObject(PANSC_XML_DOM_NODE_OBJECT P, int type, char* name, char* maxInstance)
 {
   PANSC_XML_DOM_NODE_OBJECT P1 = NULL;
+  /*CID: 280130 fix for Resource leak*/
+  if (!P || !name || (unsigned int)type >= PARAM_TYPE_COUNT)
+    return NULL;
 
   P1 = DMPackCreateNode(P,"object",0,0);
-  DMPackCreateNode(P1,"name",name,0);
-  DMPackCreateNode(P1,"objectType",objectType[type],objectTypeLen[type]);
-  if(maxInstance)
-    DMPackCreateNode(P1,"maxInstance",maxInstance,0);
+  if (!P1)
+    return NULL;
+
+  if (DMPackCreateNode(P1, "name", name, 0) == NULL) {
+    return NULL;
+  }
+  
+  if (DMPackCreateNode(P1, "objectType", objectType[type], objectTypeLen[type]) == NULL) {
+    return NULL;
+  }
+
+  if (maxInstance && DMPackCreateNode(P1, "maxInstance", maxInstance, 0) == NULL) {
+    return NULL;
+  }
   pCurrentFunctionsNode=0;
   return P1;
 }
@@ -269,39 +283,84 @@ void DMPackCreateFunctions(PANSC_XML_DOM_NODE_OBJECT P, char* name, int numFuncs
 
 void DMPackCreateParam(PANSC_XML_DOM_NODE_OBJECT P, char* name, int typeId)
 {
-  PANSC_XML_DOM_NODE_OBJECT P1 = DMPackCreateNode(P,"parameter",0,0);
-  DMPackCreateNode(P1,"name",name,0);
-  DMPackCreateNode(P1,"type",paramName[typeId],paramNameLen[typeId]);
-  DMPackCreateNode(P1,"syntax",paramSyntax[typeId],paramSyntaxLen[typeId]);
+  PANSC_XML_DOM_NODE_OBJECT P1 = NULL;
+  /* CID:280150 fix for Resource leak */
+  if (!P || !name || (unsigned int)typeId >= PARAM_TYPE_COUNT)
+  {
+    return;
+  }
+
+  P1 = DMPackCreateNode(P, "parameter", 0, 0);
+  if (!P1) return;
+
+  if (DMPackCreateNode(P1, "name", name, 0) == NULL) {
+    return;
+  }
+
+  if (DMPackCreateNode(P1, "type", paramName[typeId], paramNameLen[typeId]) == NULL) {
+    return;
+  }
+
+  if (DMPackCreateNode(P1, "syntax", paramSyntax[typeId], paramSyntaxLen[typeId]) == NULL) {
+    return;
+  }
 }
 
 void DMPackCreateParamEx(PANSC_XML_DOM_NODE_OBJECT P, char* name, int typeId, char* type, char* syntax, int writable, int notify)
 {
   PANSC_XML_DOM_NODE_OBJECT P1 = NULL;
+  /* CID:280152 fix for Resource leak */
+  if (!P || !name)
+  {
+	return;
+  }
 
   P1 = DMPackCreateNode(P,"parameter",0,0);
+  if (!P1) return;
 
-  DMPackCreateNode(P1,"name",name,0);
+  if (DMPackCreateNode(P1,"name",name,0) == NULL) {
+    return;
+  }
 
-  if(type)
-    DMPackCreateNode(P1,"type",type,0);
-  else
-    DMPackCreateNode(P1,"type",paramName[typeId],paramNameLen[typeId]);
+  if (type) {
+    if (DMPackCreateNode(P1,"type",type,0) == NULL) {
+        return;
+    }
+  } else if (typeId >= 0 && (unsigned int)typeId < PARAM_TYPE_COUNT) {
+    if (DMPackCreateNode(P1,"type",paramName[typeId],paramNameLen[typeId]) == NULL) {
+        return;
+    }
+  }
 
-  if(syntax)
-    DMPackCreateNode(P1,"syntax",syntax,0);
-  else
-    DMPackCreateNode(P1,"syntax",paramSyntax[typeId],paramSyntaxLen[typeId]);
+  if (syntax) {
+    if (DMPackCreateNode(P1,"syntax",syntax,0) == NULL) {
+        return;
+    }
+  } else if (typeId >= 0 && (unsigned int)typeId < PARAM_TYPE_COUNT) {
+    if (DMPackCreateNode(P1,"syntax",paramSyntax[typeId],paramSyntaxLen[typeId]) == NULL) {
+        return;
+    }
+  }
 
-  if(writable == 0)
-    DMPackCreateNode(P1,"writable","false",5);
-  else if(writable == 1)
-    DMPackCreateNode(P1,"writable","true",4);
+  if (writable == 0) {
+    if (DMPackCreateNode(P1,"writable","false",5) == NULL) {
+        return;
+    }
+  } else if (writable == 1) {
+    if (DMPackCreateNode(P1,"writable","true",4) == NULL) {
+        return;
+    }
+  }
 
-  if(notify == 0)
-    DMPackCreateNode(P1,"notify","off",3);
-  else if(notify == 1)
-    DMPackCreateNode(P1,"notify","on",2); /* CID 280129 fix */
+  if (notify == 0) {
+    if (DMPackCreateNode(P1,"notify","off",3) == NULL) {
+        return;
+    }
+  } else if (notify == 1) {
+    if (DMPackCreateNode(P1,"notify","on",2) == NULL) {
+        return; /* CID 280129 fix */
+    }
+  }
 }
 void DMPackCreateParamTSWN(PANSC_XML_DOM_NODE_OBJECT P,char* name,char* T,char* S,int W,int N)
 {
