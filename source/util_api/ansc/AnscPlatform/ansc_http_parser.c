@@ -8103,7 +8103,7 @@ HttpSmpoParseCookie
     }
     else
     {
-	return (ANSC_HANDLE)pHfoCookie;
+        return (ANSC_HANDLE)pHfoCookie;
     }
 
     pHfoCookie =
