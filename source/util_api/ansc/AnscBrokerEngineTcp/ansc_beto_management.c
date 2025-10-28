@@ -299,7 +299,7 @@ AnscBetoAddSocket
     AnscAcquireLock   (&pMyObject->SocketTableLock);
     if ( pMyObject->CurSocketCount >= pMyObject->MaxSocketCount )
     {
-	AnscReleaseLock   (&pMyObject->SocketTableLock);
+        AnscReleaseLock   (&pMyObject->SocketTableLock);
         return  (ANSC_HANDLE)NULL;
     }
     AnscReleaseLock   (&pMyObject->SocketTableLock);
