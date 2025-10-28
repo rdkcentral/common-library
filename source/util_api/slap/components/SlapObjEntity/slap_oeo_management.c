@@ -1318,7 +1318,7 @@ SlapOeoRelPooledObjRecord
     if ( AnscSListQueryDepth(&pMyObject->PooledOroSList) >= pSlapBssIf->GetDefPoolSize(pSlapBssIf->hOwnerContext) )
     {
         pSlapObjRecord->Remove((ANSC_HANDLE)pSlapObjRecord);
-	AnscReleaseLock   (&pMyObject->PooledOroSListLock);
+        AnscReleaseLock   (&pMyObject->PooledOroSListLock);
         return  ANSC_STATUS_SUCCESS;
     }
 
