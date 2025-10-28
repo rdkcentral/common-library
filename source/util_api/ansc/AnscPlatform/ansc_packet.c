@@ -1748,6 +1748,7 @@ AnscReleaseBdo
         AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
         if ( AnscSListQueryDepth(&g_qBdoPoolList) >= g_ulMaxBdoPoolSize )
         {
+            AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
 #ifdef _ANSC_TRACE_PACKET_
             AnscTraceWarning(("@@ AnscPacket: Bdo Pool over limit %d !!! -- Size limit %d.\n", 
                  ++g_ulFreeBdo, g_ulMaxBdoPoolSize));
@@ -1756,6 +1757,7 @@ AnscReleaseBdo
         }
         else
         {
+            AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
             AnscBdoClean((ANSC_HANDLE)pBdo);
 
             AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
