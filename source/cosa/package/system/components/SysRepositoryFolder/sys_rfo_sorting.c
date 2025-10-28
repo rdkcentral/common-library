@@ -379,7 +379,7 @@ SysRfoSortRecordByTime
     }
     else
     {
-	AnscReleaseLock(&pMyObject->RecordTableLock);
+        AnscReleaseLock(&pMyObject->RecordTableLock);
         pTmpRecordArray = (ANSC_HANDLE*)AnscAllocateMemory(sizeof(ANSC_HANDLE) * pMyObject->RecordArrayMaxLen);
 
         if ( !pTmpRecordArray )
