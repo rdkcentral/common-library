@@ -90,7 +90,7 @@ if [ "$rebootReason" != "factory-reset" ]; then
             sed -i "/dmsb.dhcpmanager.dhcpv6.ClientNoOfEntries/d" $PSM_CUR_XML_CONFIG_FILE_NAME
             echo_t "DHCP MGR v6 client count mismatched so deleting this dmsb.dhcpmanager.dhcpv6.ClientNoOfEntries entry from $PSM_CUR_XML_CONFIG_FILE_NAME to make sure proper v6 client count"
          else
-            echo_t "DHCP MGR v6 count is same so no migration required"
+            echo_t "DHCP MGR v6 client count is same so no migration required"
          fi
       fi
    fi
