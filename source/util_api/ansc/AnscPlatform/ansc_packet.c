@@ -2185,10 +2185,10 @@ AnscFreeSonBdo
         }
         else
         {
-            AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
             AnscBdoClean((ANSC_HANDLE)pSonBdo);
 
-            AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
+            /* Hold the lock from size check through push operation */
+            /* The lock is already held from line 2176 */
             AnscSListPushEntry(&g_qBdoPoolList, &pSonBdo->Linkage);
             AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
         }
