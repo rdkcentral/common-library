@@ -1757,10 +1757,7 @@ AnscReleaseBdo
         }
         else
         {
-            AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
             AnscBdoClean((ANSC_HANDLE)pBdo);
-
-            AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
             AnscSListPushEntry(&g_qBdoPoolList, &pBdo->Linkage);
             AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
         }
