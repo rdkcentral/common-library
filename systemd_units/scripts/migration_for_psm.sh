@@ -51,6 +51,10 @@ echo_t "**********************<Entry> Migration Handling for PSM ***************
 echo_t "Reboot Reason:<$rebootReason>"
 
 if [ "$rebootReason" != "factory-reset" ]; then
+   if [ ! -f "$PSM_CUR_XML_CONFIG_FILE_NAME" ]; then
+       echo_t "Current PSM config file not found, skipping migration"
+       exit 0
+   fi
     migrate_psm_entry "dmsb.wanmanager.wan.interfacecount" "WAN Interface"
     migrate_psm_entry "dmsb.wanmanager.group.Count" "WAN Group"
     migrate_psm_entry "dmsb.dhcpmanager.ClientNoOfEntries" "DHCP MGR v4 client count"
