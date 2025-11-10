@@ -51,6 +51,10 @@ echo_t "**********************<Entry> Migration Handling for PSM ***************
 echo_t "Reboot Reason:<$rebootReason>"
 
 if [ "$rebootReason" != "factory-reset" ]; then
+   if [ ! -f "$PSM_DEF_XML_CONFIG_FILE_NAME" ]; then
+       echo_t "Default PSM config file not found, skipping migration"
+       exit 0
+   fi
    if [ ! -f "$PSM_CUR_XML_CONFIG_FILE_NAME" ]; then
        echo_t "Current PSM config file not found, skipping migration"
        exit 0
