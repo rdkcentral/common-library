@@ -53,7 +53,7 @@ if [ "$rebootReason" != "factory-reset" ]; then
       wangrpdefcount=`sed -n "/dmsb.wanmanager.group.Count/p" $PSM_DEF_XML_CONFIG_FILE_NAME | awk -F"[><]" '{print $3}'`
       if [ "$wangrpdefcount" != "" ]; then
          echo_t "No. of WAN Group from $PSM_DEF_XML_CONFIG_FILE_NAME:"$wangrpdefcount
-         echo_t "No. of WAN Group from $PSM_CUR_XML_CONFIG_FILE_NAME:"$wangrpcount
+         echo_t "No. of WAN Group from $PSM_CUR_XML_CONFIG_FILE_NAME: "$wangrpcount
          if [ "$wangrpcount" != "$wangrpdefcount" ]; then
             sed -i "/dmsb.wanmanager.group.Count/d" $PSM_CUR_XML_CONFIG_FILE_NAME
             echo_t "WAN group count mismatched so deleting this dmsb.wanmanager.group.Count entry from $PSM_CUR_XML_CONFIG_FILE_NAME to make sure proper group count"
