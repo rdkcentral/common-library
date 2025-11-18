@@ -72,11 +72,13 @@ exec 3>&1 4>&2 >>$SELFHEALFILE 2>&1
 	fi
         killall CcspLMLite
         killall CcspXdnsSsp
+if [ "$VOICE_SUPPORTED" != "false" ]; then
 	if [ -f "/tmp/mta_initialized" ]
 	then
 		rm -rf /tmp/mta_initialized
 	fi
         killall CcspMtaAgentSsp
+fi
         killall CcspHotspot
 
 
@@ -174,6 +176,7 @@ ulimit -c unlimited
 
 	sleep 3
 	#mta
+if [ "$VOICE_SUPPORTED" != "false" ]; then
 	if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ]; then
 		echo_t "Disabling MTA for BWG "
 	else
@@ -185,7 +188,7 @@ ulimit -c unlimited
 	$BINPATH/CcspMtaAgentSsp -subsys $Subsys
         fi
 	fi
-
+fi
 	sleep 3
 	echo "[`getDateTime`] RDKB_SELFHEAL : Resetting process webpa on atom reset"
 	cd /usr/ccsp/webpa
