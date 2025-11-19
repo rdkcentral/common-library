@@ -650,11 +650,7 @@ AnscDumpMemory
         /*
          *      Print the address
          */
-#ifdef _64BIT_ARCH_SUPPORT_
         _ansc_sprintf(PrintBuffer, "%p", pCurr);
-#else
-        _ansc_sprintf(PrintBuffer, "0x%08X", (unsigned int)pCurr);
-#endif
         _ansc_strcat (PrintBuffer, ": ");
 
         /*
@@ -695,11 +691,7 @@ AnscDumpMemory
         /*
          *      Print the address
          */
-#ifdef _64BIT_ARCH_SUPPORT_
         _ansc_sprintf(PrintBuffer, "%p", pCurr);
-#else
-        _ansc_sprintf(PrintBuffer, "0x%08X", (unsigned int)pCurr);
-#endif
         _ansc_strcat (PrintBuffer, ": " );
 
         /*
