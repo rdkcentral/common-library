@@ -93,11 +93,11 @@ migrate_psm_entry() {
             echo_t "PSM_MIGRATION: No. of $description from $PSM_DEF_XML_CONFIG_FILE_NAME: $def_count"
             echo_t "PSM_MIGRATION: No. of $description from $PSM_CUR_XML_CONFIG_FILE_NAME: $cur_count"
             if [ "$cur_count" != "$def_count" ]; then
-                #copy the default config to tmp location
-                cp "$PSM_DEF_XML_CONFIG_FILE_NAME" "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME"
+                #copy the current config to tmp location
+                cp "$PSM_CUR_XML_CONFIG_FILE_NAME" "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME"
                 status=$?    # capture cp exit status
                 if [ $status -ne 0 ]; then
-                    echo_t "PSM_MIGRATION: Failed to copy $PSM_DEF_XML_CONFIG_FILE_NAME to $PSM_DUP_CUR_XML_CONFIG_FILE_NAME, cp exit status: $status"
+                    echo_t "PSM_MIGRATION: Failed to copy $PSM_CUR_XML_CONFIG_FILE_NAME to $PSM_DUP_CUR_XML_CONFIG_FILE_NAME, cp exit status: $status"
                     return 0
                 fi
                 
@@ -106,6 +106,12 @@ migrate_psm_entry() {
                 status=$?    # capture sed exit status
                 if [ $status -ne 0 ]; then
                     echo_t "PSM_MIGRATION: Failed to delete $entry_name entry from $PSM_DUP_CUR_XML_CONFIG_FILE_NAME, sed exit status: $status"
+                    
+                    #remove the tmp duplicate file
+                    if [ -f "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME" ]; then
+                        rm -f "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME"
+                    fi
+
                     return 0
                 fi
 
@@ -114,7 +120,18 @@ migrate_psm_entry() {
                 status=$?    # capture cp exit status
                 if [ $status -ne 0 ]; then
                     echo_t "PSM_MIGRATION: Failed to copy $PSM_DUP_CUR_XML_CONFIG_FILE_NAME to $PSM_CUR_XML_CONFIG_FILE_NAME, cp exit status: $status"
+                    
+                    #remove the tmp duplicate file
+                    if [ -f "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME" ]; then
+                        rm -f "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME"
+                    fi
+
                     return 0
+                fi
+
+                #remove the tmp duplicate file
+                if [ -f "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME" ]; then
+                    rm -f "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME"
                 fi
 
                 echo_t "PSM_MIGRATION: $description mismatched so deleting this $entry_name entry from $PSM_CUR_XML_CONFIG_FILE_NAME"
@@ -142,10 +159,8 @@ if [ "$rebootReason" != "factory-reset" ]; then
     migrate_psm_entry "dmsb.wanmanager.group.Count" "WAN Group"
     migrate_psm_entry "dmsb.dhcpmanager.ClientNoOfEntries" "DHCP MGR v4 client count"
     migrate_psm_entry "dmsb.dhcpmanager.dhcpv6.ClientNoOfEntries" "DHCP MGR v6 client count"
-
-    #remove the tmp duplicate file
-    if [ -f "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME" ]; then
-        rm -f "$PSM_DUP_CUR_XML_CONFIG_FILE_NAME"
-    fi
+else
+    echo_t "PSM_MIGRATION: Factory reset detected, skipping migration"      
 fi
+
 echo_t "PSM_MIGRATION: **********************<Exit> Migration Handling for PSM ******************************"
