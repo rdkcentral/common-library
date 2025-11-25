@@ -72,7 +72,7 @@
 
 
 #include "ansc_deuo_global.h"
-
+#include <stdbool.h>
 
 /**********************************************************************
 
@@ -261,7 +261,10 @@ AnscDeuoRecvTask
                         );
             }
 
-            if ( pSocket->bRecvEnabled )
+	    AnscAcquireLock(&pSocket->OpLock);
+	    bool bRecvEnabled_local = pSocket->bRecvEnabled; 
+	    AnscReleaseLock(&pSocket->OpLock);
+            if ( bRecvEnabled_local )
             {
                     pSocket->SetPacket
                         (

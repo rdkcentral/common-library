@@ -353,8 +353,10 @@ ALCERTGetCACount
     {
         return 0;
     }
-
-    return AnscSListQueryDepth(&pThisObject->sCAList);
+    AnscAcquireLock(&pThisObject->CALock);
+    ULONG caCount = AnscSListQueryDepth(&pThisObject->sCAList);
+    AnscReleaseLock(&pThisObject->CALock);
+    return caCount;
 }
 
 ULONG
@@ -803,13 +805,11 @@ ALCERTRemoveAllCAs
         }              
     }
 
-    AnscReleaseLock(&pThisObject->CALock);
-
-
     /*
      *  reset the SList;
      */
     AnscSListInitializeHeader(&pThisObject->sCAList);      
+    AnscReleaseLock(&pThisObject->CALock);
 
     return ANSC_STATUS_SUCCESS;
 }
