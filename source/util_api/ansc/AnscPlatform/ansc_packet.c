@@ -322,8 +322,10 @@ AnscReleasePdoTrace
              * race condition may occur for the queue size, but it can only make the
              * pool a little bit over-limit and should not matter.
              */
+    AnscAcquireSpinLock(&g_qPdoPoolSpinLock);
             if ( AnscSListQueryDepth(&g_qPdoPoolList) >= g_ulMaxPdoPoolSize )
             {
+                AnscReleaseSpinLock(&g_qPdoPoolSpinLock);
 #ifdef _ANSC_TRACE_PACKET_
                 AnscTraceWarning(("@@ AnscPacket: Pdo pool over limit %d !!! -- Size limit %d.\n", 
                     g_ulFreePdo ++, g_ulMaxPdoPoolSize));
@@ -332,6 +334,7 @@ AnscReleasePdoTrace
             }
             else
             {
+                AnscReleaseSpinLock(&g_qPdoPoolSpinLock);
 #ifndef _ANSC_TRACE_PACKET_
                 AnscPdoClean((ANSC_HANDLE)pPdo);
 #else
@@ -1742,8 +1745,10 @@ AnscReleaseBdo
          * race condition may occur for the queue size, but it can only make the
          * pool a little bit over-limit and should not matter.
          */
+        AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
         if ( AnscSListQueryDepth(&g_qBdoPoolList) >= g_ulMaxBdoPoolSize )
         {
+            AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
 #ifdef _ANSC_TRACE_PACKET_
             AnscTraceWarning(("@@ AnscPacket: Bdo Pool over limit %d !!! -- Size limit %d.\n", 
                  ++g_ulFreeBdo, g_ulMaxBdoPoolSize));
@@ -1753,8 +1758,6 @@ AnscReleaseBdo
         else
         {
             AnscBdoClean((ANSC_HANDLE)pBdo);
-
-            AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
             AnscSListPushEntry(&g_qBdoPoolList, &pBdo->Linkage);
             AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
         }
@@ -2167,19 +2170,22 @@ AnscFreeSonBdo
          * race condition may occur for the queue size, but it can only make the
          * pool a little bit over-limit and should not matter.
          */
+        AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
         if ( AnscSListQueryDepth(&g_qBdoPoolList) >= g_ulMaxBdoPoolSize )
         {
 #ifdef _ANSC_TRACE_PACKET_
             AnscTraceWarning(("@@ AnscPacket: Bdo pool over limit %d !!! -- Size limt %d.\n", 
                 ++g_ulFreeBdo, g_ulMaxBdoPoolSize));
 #endif
+            AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
             AnscFreeMemory(pSonBdo);
         }
         else
         {
             AnscBdoClean((ANSC_HANDLE)pSonBdo);
 
-            AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
+            /* Hold the lock from size check through push operation */
+            /* The lock is already held from line 2176 */
             AnscSListPushEntry(&g_qBdoPoolList, &pSonBdo->Linkage);
             AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
         }
