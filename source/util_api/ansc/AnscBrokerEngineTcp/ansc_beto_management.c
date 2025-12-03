@@ -296,10 +296,13 @@ AnscBetoAddSocket
 
     /*AnscTrace("AnscBetoAddSocket!\n dstinationaddress %X dst_port %X src_port %X",*(PULONG)dst_addr,dst_port,src_port);*/
 
+    AnscAcquireLock   (&pMyObject->SocketTableLock);
     if ( pMyObject->CurSocketCount >= pMyObject->MaxSocketCount )
     {
+        AnscReleaseLock   (&pMyObject->SocketTableLock);
         return  (ANSC_HANDLE)NULL;
     }
+    AnscReleaseLock   (&pMyObject->SocketTableLock);
 
     pSocket =
         (PANSC_BROKER_SOCKET_TCP_OBJECT)pMyObject->GetSocketByAddr

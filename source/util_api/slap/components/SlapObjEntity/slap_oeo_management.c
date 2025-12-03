@@ -1314,14 +1314,14 @@ SlapOeoRelPooledObjRecord
     PSLAP_BSS_INTERFACE             pSlapBssIf     = (PSLAP_BSS_INTERFACE    )pMyObject->hSlapBssIf;
     PSLAP_OBJ_RECORD_OBJECT         pSlapObjRecord = (PSLAP_OBJ_RECORD_OBJECT)hObjRecord;
 
+    AnscAcquireLock   (&pMyObject->PooledOroSListLock);
     if ( AnscSListQueryDepth(&pMyObject->PooledOroSList) >= pSlapBssIf->GetDefPoolSize(pSlapBssIf->hOwnerContext) )
     {
         pSlapObjRecord->Remove((ANSC_HANDLE)pSlapObjRecord);
-
+        AnscReleaseLock   (&pMyObject->PooledOroSListLock);
         return  ANSC_STATUS_SUCCESS;
     }
 
-    AnscAcquireLock   (&pMyObject->PooledOroSListLock);
     AnscSListPushEntry(&pMyObject->PooledOroSList, &pSlapObjRecord->Linkage);
     AnscReleaseLock   (&pMyObject->PooledOroSListLock);
 
