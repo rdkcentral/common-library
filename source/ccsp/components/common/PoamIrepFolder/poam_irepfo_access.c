@@ -279,6 +279,7 @@ PoamIrepFoGetFolderByIndex
         if(rc < EOK)
         {
            ERR_CHK(rc);
+		   AnscFreeMemory(pName); /*CID: 186266 fix for Resource leak*/
            return NULL;
         }
 
