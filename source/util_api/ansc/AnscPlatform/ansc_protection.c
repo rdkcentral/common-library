@@ -533,12 +533,13 @@ AnscResetSimEvent
         return;
     }
 
+    AnscAcquireSpinLock(&sim_event->StateSpinLock);
     if ( !sim_event->bSignalled )
     {
+        AnscReleaseSpinLock(&sim_event->StateSpinLock);
         return;
     }
 
-    AnscAcquireSpinLock(&sim_event->StateSpinLock);
     sim_event->bSignalled = FALSE;
     AnscReleaseSpinLock(&sim_event->StateSpinLock);
 
