@@ -249,6 +249,7 @@ typedef struct _DHCP_MGR_IPV6_MSG
    bool maptAssigned;	
    ipc_mapt_data_t mapt;
 #endif
+   char endpointName[BUFLEN_256];
 } DHCP_MGR_IPV6_MSG;
 
 typedef enum {
