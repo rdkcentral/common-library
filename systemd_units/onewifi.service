@@ -23,6 +23,7 @@ After=CcspPandMSsp.service
 [Service]
 Type=forking
 PIDFile=/var/tmp/OneWifi.pid
+LimitSTACK=4096K
 WorkingDirectory=/usr/ccsp/wifi
 Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
