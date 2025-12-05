@@ -38,7 +38,7 @@
 #include <sys/ioctl.h>
 #include <linux/if.h>
 #include "safec_lib_common.h"
-
+#include <limits.h>
 
 int
 _ansc_select
@@ -124,20 +124,42 @@ _ansc_socket_fd_get
 int
 send_all (int fd, char *buf, int bufsize, int c)
 {
-  int res =0;
-  while (bufsize > 0)
-  {
-	  do
-	    res = send (fd, buf, bufsize, c);
-	  while (res == -1 && errno == EINTR);
+  /*CID: 559658 fix for Overflowed integer argument*/
+	if (buf == NULL) {
+        if (bufsize == 0) return 0;  // Nothing to send
+        errno = EINVAL;
+        return -1;
+    }
 
-	  if (res <= 0)
-	  	break;
-	  buf += res;
-	  bufsize -= res;
-  }
+    if (bufsize < 0) {
+        errno = EINVAL;
+        return -1;
+    }
 
-  return res;
+    const char *p = (const char *)buf;
+    size_t remaining = (size_t)bufsize;
+
+    while (remaining > 0) {
+        size_t chunk = remaining > (size_t)SSIZE_MAX ? (size_t)SSIZE_MAX : remaining;
+
+        ssize_t n;
+        do {
+            n = send(fd, p, chunk, c);
+        } while (n == -1 && errno == EINTR);
+
+        if (n < 0) {
+            return -1;
+        }
+        if (n == 0) {
+            return -1;
+        }
+
+        p += (size_t)n;
+        remaining -= (size_t)n;
+    }
+
+    return 0;
+
 }
 
 int
