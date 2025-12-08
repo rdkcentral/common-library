@@ -2590,9 +2590,10 @@ ScliShoGetLastMatchedOptArg
     int                             nLast = -1;
 
     /*CID: 74816 Dereference after null check*/
-    if ( pReqArgMatched         || 
-        ulReqArgCount == 0      || 
-        (pReqArgMatched && pReqArgMatched[ulReqArgCount - 1].bMatched && pReqArgMatched[ulReqArgCount - 1].bValueMatched) )
+    if (pReqArgMatched == NULL ||  ulReqArgCount == 0 ||
+	    (pReqArgMatched != NULL &&
+	     pReqArgMatched[ulReqArgCount - 1].bMatched &&
+	     pReqArgMatched[ulReqArgCount - 1].bValueMatched))
     {
         int                         i;
         int                         nMaxTokenPos    = -1;

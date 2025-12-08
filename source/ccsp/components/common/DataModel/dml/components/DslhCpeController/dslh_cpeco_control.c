@@ -1342,8 +1342,17 @@ DslhCpecoRegisterDataModelInternal
             if ( ( CCSP_SUCCESS != returnStatus ) && ( CCSP_CR_ERR_NAMESPACE_OVERLAP != returnStatus ) )
              {
                 AnscTraceWarning(("!!! %s registerCapabilities failed with code %lu! Waiting for %lu seconds to retry...!!! \n", pComponentName, returnStatus, uWait));
-                AnscSleep(uWait * 1000);
-                uWait *=2;
+		/* Convert to ms safely */
+		uint64_t ms = (uint64_t)uWait * 1000ULL;
+
+		/* Clamp for AnscSleep() */
+		if (ms > ULONG_MAX)
+		    ms = ULONG_MAX;
+
+		AnscSleep((ULONG)ms);
+
+		/* Exponential backoff: still in seconds! */
+		uWait = (uWait <= (ULONG_MAX / 2000)) ? (uWait * 2) : (ULONG_MAX / 1000);
             }
             else
             {

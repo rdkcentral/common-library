@@ -1185,17 +1185,17 @@ CcspCcMbi_GetParameterNames
 
             if( i > 0 )
             {
-                for(--i; (int)i >= 0; --i)
+		for (ULONG k = i; k-- > 0; )
                 {
-                     if(ppReturnVal[i]->parameterName)
+                     if(ppReturnVal[k]->parameterName)
                      {
-                           AnscFreeMemory(ppReturnVal[i]->parameterName);
-                           ppReturnVal[i]->parameterName = NULL;
+                           AnscFreeMemory(ppReturnVal[k]->parameterName);
+                           ppReturnVal[k]->parameterName = NULL;
                      }
-                     if(ppReturnVal[i])
+                     if(ppReturnVal[k])
                      {
-                           AnscFreeMemory(ppReturnVal[i]);
-                           ppReturnVal[i] = NULL;
+                           AnscFreeMemory(ppReturnVal[k]);
+                           ppReturnVal[k] = NULL;
                      }
                 }
             }

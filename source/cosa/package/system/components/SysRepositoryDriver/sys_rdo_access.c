@@ -1147,12 +1147,16 @@ SysRdoGetRecord
 
         goto  EXIT2;
     }
+#if 0
+    /* CID 178124: Logically dead code (DEADCODE)
+    At condition pThisFolder, the value of pThisFolder cannot be NULL */
     else if ( !pThisFolder )
     {
         pThisRecord = (PSYS_REPOSITORY_RECORD_OBJECT)NULL;
 
         goto  EXIT2;
     }
+#endif
     else if ( AnscTcGetTokenCount(pTokenChain) != 1 )
     {
         pThisFolder->ReleaseAccess((ANSC_HANDLE)pThisFolder);
@@ -1318,12 +1322,16 @@ SysRdoSetRecord
 
         goto  EXIT2;
     }
+#if 0
+    /* CID 178125: Logically dead code (DEADCODE)
+    At condition pThisFolder, the value of pThisFolder cannot be NULL */
     else if ( !pThisFolder )
     {
         returnStatus = ANSC_STATUS_BAD_NAME;
 
         goto  EXIT2;
     }
+#endif
     else if ( AnscTcGetTokenCount(pTokenChain) != 1 )
     {
         pThisFolder->ReleaseAccess((ANSC_HANDLE)pThisFolder);
