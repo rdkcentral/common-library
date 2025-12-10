@@ -576,7 +576,7 @@ CcspAliasMgrFindMakeNode
             if ( !pChildNode )
             {
                 AnscTcFree((ANSC_HANDLE)pNsTokenChain);
-                pNsTokenChain = NULL; /*CID: 154673 fix for Use after free*/
+
                 CcspTraceError(("TR-069 alias mapper - failed to allocate child node %s\n", Name));
 
                 break;

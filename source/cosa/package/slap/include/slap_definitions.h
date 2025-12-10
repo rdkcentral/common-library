@@ -712,11 +712,10 @@ SLAP_PARAMETER_LIST,  *PSLAP_PARAMETER_LIST;
             SlapVhoInitParamList((ANSC_HANDLE)NULL, tbi_list);                              \
          }
 
-/*CID: 164052 and 186730 Resource leak - Free the ptr in SlapVhoCloneParamList */
-#define  SlapCloneParamList(src_list, dst_list, free_dst_list)                              \
+#define  SlapCloneParamList(src_list, dst_list)                                             \
          {                                                                                  \
             ANSC_HANDLE dst_param_list = (ANSC_HANDLE)dst_list;                             \
-            SlapVhoCloneParamList((ANSC_HANDLE)NULL, src_list, &dst_param_list, free_dst_list);            \
+            SlapVhoCloneParamList((ANSC_HANDLE)NULL, src_list, &dst_param_list);            \
          }
 
 #define  SlapCleanParamList(tbc_list)                                                       \

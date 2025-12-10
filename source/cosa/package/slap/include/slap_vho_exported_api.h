@@ -438,8 +438,7 @@ SlapVhoCloneParamList
     (
         ANSC_HANDLE                 hThisObject,
         ANSC_HANDLE                 src_param_list,
-        ANSC_HANDLE*                dst_param_list,
-		BOOL                        free_dst_list
+        ANSC_HANDLE*                dst_param_list
     );
 
 void

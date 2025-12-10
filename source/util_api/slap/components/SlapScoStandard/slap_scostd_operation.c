@@ -235,7 +235,7 @@ SlapScoStdInvokeDispatch
                 }
                 else
                 {
-                    SlapCloneParamList(pMethodDescriptor->ParamListO, pOutputParamList, FALSE); /*CID:186730 for Use after free*/
+                    SlapCloneParamList(pMethodDescriptor->ParamListO, pOutputParamList);
                 }
 
                 switch ( pMethodDescriptor->ParamListO->ParamCount )
@@ -379,7 +379,7 @@ SlapScoStdInvokeDispatch
 
                             returnStatus = ANSC_STATUS_INTERNAL_ERROR;
 
-                            goto  EXIT1;
+                            goto  EXIT2;
 
                             break;
                 }
@@ -551,7 +551,7 @@ SlapScoStdInvokeDispatch
                 }
                 else
                 {
-                    SlapCloneParamList(pMethodDescriptor->ParamListO, pOutputParamList, FALSE); /*CID:186730 for Use after free*/
+                    SlapCloneParamList(pMethodDescriptor->ParamListO, pOutputParamList);
                 }
 
                 switch ( pMethodDescriptor->ParamListI->ParamCount )
@@ -677,7 +677,7 @@ SlapScoStdInvokeDispatch
 
                             returnStatus = ANSC_STATUS_INTERNAL_ERROR;
 
-                            goto  EXIT1;
+                            goto  EXIT2;
 
                             break;
                 }
@@ -729,7 +729,7 @@ SlapScoStdInvokeDispatch
                 }
                 else
                 {
-                    SlapCloneParamList(pMethodDescriptor->ParamListO, pOutputParamList, FALSE); /*CID:186730 for Use after free*/
+                    SlapCloneParamList(pMethodDescriptor->ParamListO, pOutputParamList);
                 }
 
                 switch ( pMethodDescriptor->ParamListO->ParamCount )
@@ -873,7 +873,7 @@ SlapScoStdInvokeDispatch
 
                             returnStatus = ANSC_STATUS_INTERNAL_ERROR;
 
-                            goto  EXIT1;
+                            goto  EXIT2;
 
                             break;
                 }
@@ -1026,7 +1026,7 @@ SlapScoStdInvokeDispatch
 
                             returnStatus = ANSC_STATUS_INTERNAL_ERROR;
 
-                            goto  EXIT1; /*RDKB-6305, CID-32916, Free unused memory in case of Error*/
+                            goto  EXIT2; /*RDKB-6305, CID-32916, Free unused memory in case of Error*/
 
                             break;
                 }
@@ -1045,7 +1045,7 @@ SlapScoStdInvokeDispatch
                 }
                 else
                 {
-                    SlapCloneParamList(pMethodDescriptor->ParamListO, pOutputParamList, FALSE); /*CID:186730 for Use after free*/
+                    SlapCloneParamList(pMethodDescriptor->ParamListO, pOutputParamList);
                 }
 
                 switch ( pMethodDescriptor->ParamListI->ParamCount )
@@ -1171,7 +1171,7 @@ SlapScoStdInvokeDispatch
 
                             returnStatus = ANSC_STATUS_INTERNAL_ERROR;
 
-                            goto  EXIT1;
+                            goto  EXIT2;
 
                             break;
                 }
@@ -1191,13 +1191,22 @@ SlapScoStdInvokeDispatch
                 GRACEFUL ROLLBACK PROCEDURES AND EXIT DOORS
     ******************************************************************/
 
-EXIT1:
+EXIT2:
 
-	if ( pOutputParamList )
+    if ( pOutputParamList )
     {
         SlapFreeParamList(pOutputParamList);
     }
-	
+
+    if ( pReturnedVar )
+    {
+        SlapFreeVariable(pReturnedVar);
+	/* CID 186732 fix */
+	pReturnedVar = NULL;
+    }
+
+EXIT1:
+
     /*CID: 137471 Resource leak*/
     if ( pReturnedVar )
     {
