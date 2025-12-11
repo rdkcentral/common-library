@@ -292,7 +292,8 @@ DslhVarroIsValidIpAddRangeList
 
                     pAddrStringToken1 = AnscTcUnlinkToken(pAddrTokenChain);
 
-                    if( ! AnscIsValidIpString((PCHAR)pAddrStringToken1->Name))
+                    /*CID 57421: Dereference null return value (NULL_RETURNS)*/
+                    if( !pAddrStringToken1 || ! AnscIsValidIpString((PCHAR)pAddrStringToken1->Name))
                     {
                         bIsValid = FALSE;
 

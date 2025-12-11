@@ -874,7 +874,10 @@ NO_MORE_TRY:
         {
             BOOL                    bSucc   = FALSE;
 
-            bSucc   = pHttpSco->GetNextPeerAddr((ANSC_HANDLE)pHttpSco, &ipAddr);
+            /*CID 73058: Dereference after null check (FORWARD_NULL*/
+            if( pHttpSco ){
+                bSucc   = pHttpSco->GetNextPeerAddr((ANSC_HANDLE)pHttpSco, &ipAddr);
+            }
 
             if ( bSucc && ipAddr != 0 )
             {

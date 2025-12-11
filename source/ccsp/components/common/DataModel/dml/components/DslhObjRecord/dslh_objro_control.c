@@ -1064,7 +1064,8 @@ DslhObjroPopulateObjRecordByName
 
             if ( !pChildObjController )
             {
-                return ANSC_STATUS_RESOURCES;
+                /*CID 57268: Structurally dead code (UNREACHABLE)*/
+                returnStatus = ANSC_STATUS_RESOURCES;
 
                 goto  EXIT1;
             }

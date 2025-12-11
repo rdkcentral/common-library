@@ -388,7 +388,7 @@ AnscSctoSend
         ANSC_HANDLE                 hReserved
     )
 {
-    ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
+    // ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
     PANSC_SIMPLE_CLIENT_TCP_OBJECT  pMyObject    = (PANSC_SIMPLE_CLIENT_TCP_OBJECT)hThisObject;
 
     if ( !pMyObject->bActive )
@@ -424,6 +424,8 @@ AnscSctoSend
     }
     else
     {
+        /*CID 62434 :Structurally dead code (UNREACHABLE)*/
+        ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
         PTLS_SCS_INTERFACE              pTlsScsIf    = (PTLS_SCS_INTERFACE            )pMyObject->hTlsScsIf;
         PANSC_BUFFER_DESCRIPTOR         pBufferDesp  = NULL;
         pBufferDesp = (PANSC_BUFFER_DESCRIPTOR)AnscAllocateBdo(0, 0, 0);
@@ -451,10 +453,10 @@ AnscSctoSend
                     pMyObject->hTlsConnection,
                     (ANSC_HANDLE)pBufferDesp
                 );
+        return  returnStatus;
     }
 #endif
 
-    return  returnStatus;
 }
 
 /**********************************************************************
