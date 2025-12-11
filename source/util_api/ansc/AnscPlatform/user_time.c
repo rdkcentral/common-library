@@ -71,6 +71,11 @@
         04/03/02    adapted to linux user by Ying Lou
 
 **********************************************************************/
+#define _TIME_BITS 64
+#define _FILE_OFFSET_BITS 64
+#include <sys/types.h>
+#include "time.h"
+
 #include "user_base.h"
 #include "user_time.h"
 #include "safec_lib_common.h"
@@ -388,9 +393,9 @@ UserGetTzOffset( void )
 unsigned long
 UserGetUtcSeconds( void )
 {
-    time_t          timeNow;
+    int64_t          timeNow;
 
-	UserGetNtpTime(&timeNow);
+	UserGetNtpTime((time_t*)&timeNow);
 
     return timeNow;
 }
