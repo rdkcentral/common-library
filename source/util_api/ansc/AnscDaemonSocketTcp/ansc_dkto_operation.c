@@ -204,7 +204,15 @@ AnscDktoOpen
      * To work around certain problem in Linux TCP/IP stack, we need to explicitly set the timeout
      * for sending operation...
      */
-    _ansc_set_sndtimeo(pMyObject->Socket, 3, 0);
+    
+    /*CID 61002: Unchecked return value from library (CHECKED_RETURN) */
+    int ret_value = 0;
+    _ansc_set_sndtimeo(pMyObject->Socket, 3, 0 , ret_value);
+    if ( ret_value != 0 )
+    {
+             return  ANSC_STATUS_FAILURE;
+    }
+    // _ansc_set_sndtimeo(pMyObject->Socket, 3, 0);
 
     return  ANSC_STATUS_SUCCESS;
 }
