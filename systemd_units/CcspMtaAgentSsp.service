@@ -31,7 +31,7 @@ WorkingDirectory=/usr/ccsp/mta
 ExecStartPre=/bin/sh -c 'echo "$(date): Starting CcspMtaAgentSsp" >> /var/log/mta_agent.log'
 #ExecStartPre=/bin/sh -c 'sleep 30'
 ExecStart=/bin/sh -c '/usr/bin/CcspMtaAgentSsp -subsys $Subsys'
-ExecStart=/bin/sh -c '/usr/bin/CcspMtaAgentSsp -subsys $Subsys'
+ExecStartPost=/bin/sh -c 'logger "CcspMtaAgentSsp started successfully"'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspMtaAgentSsp" >> ${PROCESS_RESTART_LOG}'
 Restart=always
 
