@@ -187,16 +187,18 @@ SCLI_SHELL_ARG_HELP_LIST, *PSCLI_SHELL_ARG_HELP_LIST;
     {                                                               \
         ULONG                       i;                              \
         PBMC2_CMD_ARG_HELP          pHelp;                          \
-        for (i = 0; i < (pHelpList)->ulArgHelpCount; i ++ )         \
+        if ( (pHelpList)->pArgHelps )                               \
         {                                                           \
-            pHelp = &((pHelpList)->pArgHelps[i]);                   \
-            if ( pHelp->pItem)                                      \
-                AnscFreeMemory(pHelp->pItem);                       \
-            if ( pHelp->pDescription )                              \
-                AnscFreeMemory(pHelp->pDescription);                \
-        }                                                           \
-	if ( (pHelpList)->pArgHelps )                               \
-	    AnscFreeMemory((pHelpList)->pArgHelps);                 \
+            for (i = 0; i < (pHelpList)->ulArgHelpCount; i ++ )     \
+            {                                                       \
+                pHelp = &((pHelpList)->pArgHelps[i]);               \
+                if ( pHelp->pItem)                                  \
+                    AnscFreeMemory(pHelp->pItem);                   \
+                if ( pHelp->pDescription )                          \
+                    AnscFreeMemory(pHelp->pDescription);            \
+            }                                                       \
+            AnscFreeMemory((pHelpList)->pArgHelps);                 \
+        }                                                       \
         AnscFreeMemory(pHelpList);                                  \
     }                                                               \
 }

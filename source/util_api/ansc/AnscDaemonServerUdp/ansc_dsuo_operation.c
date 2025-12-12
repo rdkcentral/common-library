@@ -169,8 +169,16 @@ AnscDsuoEngage
 
         goto  EXIT1;
     }
-    
-	   _ansc_en_reuseaddr(pMyObject->Socket);
+        /*CID 65076: Unchecked return value from library (CHECKED_RETURN)*/
+        int ret_value = 0;
+        _ansc_en_reuseaddr(pMyObject->Socket, ret_value);
+        if ( ret_value != 0 )
+        {
+            returnStatus = ANSC_STATUS_FAILURE;
+
+            goto  EXIT2;
+        }
+	    //_ansc_en_reuseaddr(pMyObject->Socket);
     
     if ( pMyObject->Mode & ANSC_DSUO_MODE_XSOCKET )
     {

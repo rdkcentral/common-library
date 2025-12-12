@@ -541,7 +541,7 @@ AnscDetoSend
         ANSC_HANDLE                 hReserved
     )
 {
-    ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
+    // ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
     PANSC_DAEMON_ENGINE_TCP_OBJECT  pMyObject    = (PANSC_DAEMON_ENGINE_TCP_OBJECT)hThisObject;
     PANSC_DAEMON_SOCKET_TCP_OBJECT  pSocket      = (PANSC_DAEMON_SOCKET_TCP_OBJECT)hSocket;
 
@@ -579,6 +579,8 @@ AnscDetoSend
     }
     else
     {
+        /*CID 58050 : Structurally dead code (UNREACHABLE) */
+        ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
         PTLS_SCS_INTERFACE              pTlsScsIf    = (PTLS_SCS_INTERFACE            )pServer->GetTlsScsIf((ANSC_HANDLE)pServer);
         pBufferDesp = (PANSC_BUFFER_DESCRIPTOR)AnscAllocateBdo(0, 0, 0);
 
@@ -605,10 +607,11 @@ AnscDetoSend
                     pSocket->hTlsConnection,
                     (ANSC_HANDLE)pBufferDesp
                 );
+        
+        return  returnStatus;
     }
 #endif
     
-    return  returnStatus;
 }
 
 
