@@ -1013,10 +1013,12 @@ HttpAuthoGetDigestAuthInfo
             pChal ++;
         }
 
+        /* CID: 54109 fix for Logically dead code
         if ( !pChal )
         {
-            break;
+                break;
         }
+        */
 
         PUCHAR found = 0;
         ULONG obj_size = 0;

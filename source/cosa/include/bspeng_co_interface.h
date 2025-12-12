@@ -3175,7 +3175,7 @@ BSP_TEMPLATE_OBJECT, *PBSP_TEMPLATE_OBJECT;
     {                                                                               \
     ANSC_HANDLE                     hVal;                                           \
                                                                                     \
-    bDeleteL = bDeleteR = TRUE;                                                     \
+    bDeleteR = TRUE;                                                                \
                                                                                     \
     pValL =                                                                         \
         pMyObject->EvalExpression(hThisObject, &iBr->left, hRuntime, &bTerminated); \
@@ -3191,14 +3191,12 @@ BSP_TEMPLATE_OBJECT, *PBSP_TEMPLATE_OBJECT;
     {                                                                               \
         /* pValL->Remove((ANSC_HANDLE)pValL); */                                    \
         pRt->ReleaseVariable((ANSC_HANDLE)pRt, (ANSC_HANDLE)pValL);                 \
-        bDeleteL    = FALSE;                                                        \
         pValL       = (PBSP_TEMPLATE_VAR_OBJECT)hVal;                               \
     }                                                                               \
     else                                                                            \
     {                                                                               \
         /* pValL->Remove((ANSC_HANDLE)pValL); */                                    \
         pRt->ReleaseVariable((ANSC_HANDLE)pRt, (ANSC_HANDLE)pValL);                 \
-        bDeleteL    = FALSE;                                                        \
         pValL       =                                                               \
             pMyObject->StackVar(hThisObject, iBr->left.Value.n, hRuntime, FALSE);   \
     }                                                                               \
@@ -3224,6 +3222,13 @@ BSP_TEMPLATE_OBJECT, *PBSP_TEMPLATE_OBJECT;
     */                                                                              \
     bDeleteR    = TRUE;                                                             \
     }                                                                               \
+
+#define  BSPENG_REMOVE_BINARY_OPERANDS_N                                            \
+    if (bDeleteR)                                                                   \
+    {                                                                               \
+        /* pValR->Remove((ANSC_HANDLE)pValR); */                                    \
+        pRt->ReleaseVariable((ANSC_HANDLE)pRt, (ANSC_HANDLE)pValR);                 \
+    }
 
 #define  BSPENG_REMOVE_BINARY_OPERANDS                                              \
     if (bDeleteL)                                                                   \

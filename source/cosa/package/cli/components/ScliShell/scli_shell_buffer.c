@@ -231,7 +231,7 @@ ScliShoGetBufferedCmd
 
     if ( pulCmdCode )
     {
-        *pulCmdCode = pCmd ? pCmd->ulCmdCode : SCLI_SHELL_BICODE_Unrecognized;
+        *pulCmdCode = SCLI_SHELL_BICODE_Unrecognized; /*CID: 73402 fix for Logically dead code */
     }
 
     if ( ppCmd )
