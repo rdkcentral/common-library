@@ -3902,15 +3902,22 @@ ScliShoRedrawTextBoxInput
 
     pSession    = (PSCLI_SHELL_SESSION_EXEC)pMyObject->GetSession((ANSC_HANDLE)pMyObject, (ULONG)hSrvSession);
     
-    if ( !pSession )
+    if ( !pSession || pSession->CommandLen == 0) /* CID: 60715 fix for Logically dead code */
     {
         return ANSC_STATUS_FAILURE;
     }
 
     pLast        = pSession->Command + pSession->CommandLen - 1;
-    pTextBoxInfo = (PBMC2_ICE_TEXTBOX_INFO   )pSession->hActiveTextBox;    
-    pValue       = pSession->Command + pSession->ulFirstVisiblePos;
-    ulValueLen   = pValue ? AnscSizeOfString((const char *)pValue) : 0;
+    pTextBoxInfo = (PBMC2_ICE_TEXTBOX_INFO   )pSession->hActiveTextBox;
+    /* CID: 60715 fix for Logically dead code */
+    if (pSession->ulFirstVisiblePos > pSession->CommandLen)
+    {
+        pValue = NULL;
+        ulValueLen = 0;
+    } else {
+        pValue = pSession->Command + pSession->ulFirstVisiblePos;
+        ulValueLen = AnscSizeOfString((const char *)pValue);
+    }
 
     if ( pTextBoxInfo )
     {
