@@ -120,7 +120,6 @@ ScliShoAsyncRunCmdTask
 
     if ( pMyObject->hBmc2SccIf )
     {
-        int                         nRow = -1;
         ULONG                       ulInputMode;
 
 
@@ -135,9 +134,9 @@ ScliShoAsyncRunCmdTask
                         hSrvSession
                     );
 
-            CmdRequest.CurLineNumber    = nRow - 1;
-
-            if ( ulInputMode == SCLI_SHELL_INPUT_MODE_linemode && nRow > 0 )
+            CmdRequest.CurLineNumber    = 1;
+			/* CID: 74914 fix for Logically dead code */
+            if ( ulInputMode == SCLI_SHELL_INPUT_MODE_linemode && CmdRequest.CurLineNumber > 0 )
             {
                 CmdRequest.CurLineNumber --;
             }
