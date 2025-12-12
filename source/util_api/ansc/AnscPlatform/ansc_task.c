@@ -352,7 +352,8 @@ AnscTaskRoutine2
 
         AnscReleaseTask((ANSC_HANDLE)pTaskRecord);
     }
-
+#if 0
+CID: 559697: Unreachable. Above is an infinite loop. So logically Unreachable
     if ( g_bSafeParenting )
     {
         AnscWaitAllChildTasks(pTaskRecord->Handle);
@@ -361,6 +362,7 @@ AnscTaskRoutine2
     AnscEraseTask(pTaskRecord);
 
     AnscLeaveTask();
+#endif
 }
 
 

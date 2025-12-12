@@ -2793,29 +2793,35 @@ CCSP_Message_Bus_Send_Str
         dbus_connection_unlock(conn);
 
         NewTimeout(&timeout, CCSP_MESSAGE_BUS_SEND_STR_TIMEOUT_SECONDS, 0);
-        if (reply)
-        {
-            ret = analyze_reply(message, reply, NULL);
-        }        
-        else if(pthread_cond_timedwait(&cb_data->count_threshold_cv, &cb_data->count_mutex, &timeout) != 0)
-        {
-            dbus_pending_call_cancel(pcall);
-            //            CcspTraceWarning(("<%s>: reply pthread_cond_timedwait timed out\n", __FUNCTION__));
+	// Wait for the condition variable with a loop to handle spurious wakeups.
+	while (!cb_data->succeed) {
+	    if (pthread_cond_timedwait(&cb_data->count_threshold_cv, &cb_data->count_mutex, &timeout) != 0) {
+		// Handle the timeout case
+		dbus_pending_call_cancel(pcall);
+		// Optionally log a timeout warning
+		//            CcspTraceWarning(("<%s>: reply pthread_cond_timedwait timed out\n", __FUNCTION__));
 
-            //in case ccsp_msg_check_resp_sync is called between dbus_pending_call_cancel and pthread_cond_timedwait
-            // -> Cannot happen if it is a timed wait, increase the timeout amount instead. RTian 07/08/2013
-            // CCSP_Msg_SleepInMilliSeconds(500);
-        }
-        else
-        {
-            dbus_connection_lock(conn);
-            reply = dbus_pending_call_steal_reply(pcall);
-            dbus_connection_unlock(conn);
-            if(reply)
-            {
-                ret = analyze_reply(message, reply, NULL);
-            }
-        }
+		//in case ccsp_msg_check_resp_sync is called between dbus_pending_call_cancel and pthread_cond_timedwait
+		// -> Cannot happen if it is a timed wait, increase the timeout amount instead. RTian 07/08/2013
+		// CCSP_Msg_SleepInMilliSeconds(500);
+		break;
+	    }
+	    // If condition is met, proceed with reply processing
+	    if (cb_data->succeed) {
+		dbus_connection_lock(conn);
+		reply = dbus_pending_call_steal_reply(pcall);
+		dbus_connection_unlock(conn);
+		if (reply) {
+		    ret = analyze_reply(message, reply, NULL);
+		}
+	    }
+	}
+
+	// If reply received, analyze it
+	if (reply) {
+	    ret = analyze_reply(message, reply, NULL);
+	}
+
         pthread_mutex_unlock(&cb_data->count_mutex);
 
         pthread_mutex_destroy(&cb_data->count_mutex);
@@ -2932,27 +2938,35 @@ CCSP_Message_Bus_Send_Msg
         {
             ret = analyze_reply(message, reply, result);
         }
-        else if((rc = pthread_cond_timedwait(&cb_data->count_threshold_cv, &cb_data->count_mutex, &timeout)) != 0)
-        {
-            dbus_pending_call_cancel(pcall);
-            //            CcspTraceWarning(("<%s>: pthread_cond_timedwait timeout\n", __FUNCTION__));
+	else
+	{
+	    // Wait for the condition variable with a loop to handle spurious wakeups
+	    while ((rc = pthread_cond_timedwait(&cb_data->count_threshold_cv, &cb_data->count_mutex, &timeout)) == 0)
+	    {
+		// Check if the condition is met and process the reply
+		if (cb_data->succeed) {
+		    dbus_connection_lock(conn);
+		    reply = dbus_pending_call_steal_reply(pcall);
+		    dbus_connection_unlock(conn);
+		    if (reply)
+		    {
+			ret = analyze_reply(message, reply, result);
+			break;  // Exit after processing the reply
+		    }
+		}
+	    }
 
-            // in case ccsp_msg_check_resp_sync is called between dbus_pending_call_cancel and pthread_cond_timedwait
-            // CCSP_Msg_SleepInMilliSeconds(1000);
+	    // If timeout occurs or condition is not met
+	    if (rc != 0) {
+		dbus_pending_call_cancel(pcall);
+		//            CcspTraceWarning(("<%s>: pthread_cond_timedwait timeout\n", __FUNCTION__));
 
-            ret = CCSP_MESSAGE_BUS_TIMEOUT;
-        }
-        else
-        {
-            dbus_connection_lock(conn);
-            reply = dbus_pending_call_steal_reply(pcall);
-            dbus_connection_unlock(conn);
-            if (reply)
-            {
-                ret = analyze_reply(message, reply, result);
-            }
-            else {} // do nothing
-        }
+		// in case ccsp_msg_check_resp_sync is called between dbus_pending_call_cancel and pthread_cond_timedwait
+		// CCSP_Msg_SleepInMilliSeconds(1000);
+		ret = CCSP_MESSAGE_BUS_TIMEOUT;
+	    }
+	}
+
         pthread_mutex_unlock(&cb_data->count_mutex);
 
         pthread_mutex_destroy(&cb_data->count_mutex);
