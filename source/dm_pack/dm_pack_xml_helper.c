@@ -216,12 +216,15 @@ PANSC_XML_DOM_NODE_OBJECT pCurrentFunctionsNode=0;
 PANSC_XML_DOM_NODE_OBJECT DMPackCreateObject(PANSC_XML_DOM_NODE_OBJECT P, int type, char* name, char* maxInstance)
 {
   PANSC_XML_DOM_NODE_OBJECT P1 = NULL;
-
+  /*CID: 280130 fix for Resource leak*/
   P1 = DMPackCreateNode(P,"object",0,0);
-  DMPackCreateNode(P1,"name",name,0);
-  DMPackCreateNode(P1,"objectType",objectType[type],objectTypeLen[type]);
-  if(maxInstance)
-    DMPackCreateNode(P1,"maxInstance",maxInstance,0);
+  if (!P1)
+    return P1;
+
+  DMPackCreateNode(P1, "name", name, 0);
+  DMPackCreateNode(P1, "objectType", objectType[type], objectTypeLen[type]);
+  if (maxInstance)
+	  DMPackCreateNode(P1, "maxInstance", maxInstance, 0);
   pCurrentFunctionsNode=0;
   return P1;
 }
@@ -269,17 +272,22 @@ void DMPackCreateFunctions(PANSC_XML_DOM_NODE_OBJECT P, char* name, int numFuncs
 
 void DMPackCreateParam(PANSC_XML_DOM_NODE_OBJECT P, char* name, int typeId)
 {
-  PANSC_XML_DOM_NODE_OBJECT P1 = DMPackCreateNode(P,"parameter",0,0);
-  DMPackCreateNode(P1,"name",name,0);
-  DMPackCreateNode(P1,"type",paramName[typeId],paramNameLen[typeId]);
-  DMPackCreateNode(P1,"syntax",paramSyntax[typeId],paramSyntaxLen[typeId]);
+  PANSC_XML_DOM_NODE_OBJECT P1 = NULL;
+  /* CID:280150 fix for Resource leak */
+  P1 = DMPackCreateNode(P, "parameter", 0, 0);
+  if (!P1) return;
+
+  DMPackCreateNode(P1, "name", name, 0);
+  DMPackCreateNode(P1, "type", paramName[typeId], paramNameLen[typeId]);
+  DMPackCreateNode(P1, "syntax", paramSyntax[typeId], paramSyntaxLen[typeId]);
 }
 
 void DMPackCreateParamEx(PANSC_XML_DOM_NODE_OBJECT P, char* name, int typeId, char* type, char* syntax, int writable, int notify)
 {
   PANSC_XML_DOM_NODE_OBJECT P1 = NULL;
-
+  /* CID:280152 fix for Resource leak */
   P1 = DMPackCreateNode(P,"parameter",0,0);
+  if (!P1) return;
 
   DMPackCreateNode(P1,"name",name,0);
 
@@ -287,17 +295,14 @@ void DMPackCreateParamEx(PANSC_XML_DOM_NODE_OBJECT P, char* name, int typeId, ch
     DMPackCreateNode(P1,"type",type,0);
   else
     DMPackCreateNode(P1,"type",paramName[typeId],paramNameLen[typeId]);
-
   if(syntax)
     DMPackCreateNode(P1,"syntax",syntax,0);
   else
     DMPackCreateNode(P1,"syntax",paramSyntax[typeId],paramSyntaxLen[typeId]);
-
   if(writable == 0)
     DMPackCreateNode(P1,"writable","false",5);
   else if(writable == 1)
     DMPackCreateNode(P1,"writable","true",4);
-
   if(notify == 0)
     DMPackCreateNode(P1,"notify","off",3);
   else if(notify == 1)

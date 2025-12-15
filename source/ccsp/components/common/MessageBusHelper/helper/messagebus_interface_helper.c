@@ -368,7 +368,7 @@ CcspCcMbi_GetParameterValues
 
 EXIT2:
 
-    if ( pParamValueArray )
+    if ( pParamValueArray != NULL )
     {
         for ( i = 0; i < ulArraySize; i++ )
         {
