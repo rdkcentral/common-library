@@ -79,8 +79,11 @@
 
 #include "messagebus_interface_global.h"
 #include "slap_vco_internal_api.h"
-
+#if defined (_COSA_QCA_ARM_)
+static ULONG g_uMaxParamInResponse = 40000; /* DSLH_WMPDO_MAX_PARAM_VALUES_IN_RESPONSE */
+#else
 static ULONG g_uMaxParamInResponse = 20000; /* DSLH_WMPDO_MAX_PARAM_VALUES_IN_RESPONSE */
+#endif
 static int g_currentSessionID = 0;
 
 ULONG    g_lastWriteEntity       = 0;
