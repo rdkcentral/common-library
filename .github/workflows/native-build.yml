@@ -23,13 +23,13 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           chmod +x setup_dependencies.sh
-          ./setup_dependencies.sh
+          ./cov_docker_script/setup_dependencies.sh
 
       - name: Build native component
         run: |
           cd $GITHUB_WORKSPACE
           chmod +x build_native.sh
-          ./build_native.sh
+          ./cov_docker_script/build_native.sh
 
       - name: Verify build artifacts
         run: |
@@ -44,4 +44,3 @@ jobs:
           name: common-library-build
           path: |
             source/.libs/libccsp_common.so*
-          retention-days: 7
