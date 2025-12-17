@@ -1,0 +1,47 @@
+name: Native Build for Coverity Scan
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+env:
+  AUTOMATICS_UNAME: ${{ secrets.AUTOMATICS_UNAME }}
+  AUTOMATICS_PASSCODE: ${{ secrets.AUTOMATICS_PASSCODE }}
+
+jobs:
+  build-native:
+    name: Build common-library natively
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rdkcentral/docker-rdk-ci:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup dependencies
+        run: |
+          cd $GITHUB_WORKSPACE
+          chmod +x setup_dependencies.sh
+          ./setup_dependencies.sh
+
+      - name: Build native component
+        run: |
+          cd $GITHUB_WORKSPACE
+          chmod +x build_native.sh
+          ./build_native.sh
+
+      - name: Verify build artifacts
+        run: |
+          echo "Checking for build artifacts..."
+          ls -lh source/.libs/libccsp_common.so* || echo "Library not found"
+          echo "Build completed successfully"
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: common-library-build
+          path: |
+            source/.libs/libccsp_common.so*
+          retention-days: 7

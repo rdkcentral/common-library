@@ -1,0 +1,24 @@
+{
+  "dependencies": [
+    {
+      "name": "trower-base64",
+      "repository": "https://github.com/xmidt-org/trower-base64.git",
+      "branch": "main",
+      "build_system": "meson",
+      "external_build_script": "",
+      "library_patterns": [
+        "build/libtrower-base64.so*"
+      ]
+    },
+    {
+      "name": "rbus",
+      "repository": "https://github.com/rdkcentral/rbus.git",
+      "branch": "main",
+      "build_system": "cmake",
+      "external_build_script": "",
+      "library_patterns": [
+        "../build/rbus/src/rbus/librbus.so*"
+      ]
+    }
+  ]
+}
