@@ -1,12 +1,14 @@
-name: Native Build for Coverity Scan
+name: Build Commmon-Library Component in Native Environment
 
 on:
+  push:
+    branches: [ main, 'sprint/**', 'release/**', develop ]
   pull_request:
-    branches: [ develop ]
+    branches: [ main, 'sprint/**', 'release/**', topic/RDK*, develop ]
 
 jobs:
-  build-native:
-    name: Build common-library natively
+  build-entservices-on-pr:
+    name: Build common-library component in github rdkcentral
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rdkcentral/docker-rdk-ci:latest
@@ -15,28 +17,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup dependencies
+      - name: native build
         run: |
-          cd $GITHUB_WORKSPACE
-          chmod +x ./cov_docker_script/setup_dependencies.sh
-          ./cov_docker_script/setup_dependencies.sh
-
-      - name: Build native component
-        run: |
-          cd $GITHUB_WORKSPACE
-          chmod +x build_native.sh
-          ./cov_docker_script/build_native.sh
-
-      - name: Verify build artifacts
-        run: |
-          echo "Checking for build artifacts..."
-          ls -lh source/.libs/libccsp_common.so* || echo "Library not found"
-          echo "Build completed successfully"
-
-      - name: Upload build artifacts
-        if: success()
-        uses: actions/upload-artifact@v3
-        with:
-          name: common-library-build
-          path: |
-            source/.libs/libccsp_common.so*
+          sh -x cov_docker_script/setup_dependencies.sh
+          sh -x cov_docker_script/build_native.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.RDKCM_RDKE }}
