@@ -28,7 +28,6 @@ Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/mta
-ExecStartPre=/bin/sh -c 'sleep 30'
 ExecStart=/bin/sh -c '/usr/bin/CcspMtaAgentSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspMtaAgentSsp" >> ${PROCESS_RESTART_LOG}'
 Restart=always
