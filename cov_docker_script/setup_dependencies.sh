@@ -110,7 +110,7 @@ for ((i=0; i<build_count; i++)); do
                 cd "$HOME/$name"
                 meson build --prefix="$INSTALL_PREFIX"
                 cd build
-                ninja all test|| ninja all
+                ninja all test || ninja all
                 ;;
             cmake)
                 log_info "Building with CMake..."
