@@ -37,11 +37,12 @@ cd "$SCRIPT_DIR"
 
 # Step 3: Install headers
 log_info "Step 3: Installing headers..."
-header_count=$(jq '.component_header_dirs | length' "$BUILD_CONFIG")
-dest_subdir=$(jq -r '.component_install_subdir' "$BUILD_CONFIG")
+header_count=$(jq '.component_header_dirs // [] | length' "$BUILD_CONFIG" 2>/dev/null) || header_count=0
+dest_subdir=$(jq -r '.component_install_subdir // "component"' "$BUILD_CONFIG")
 
 for ((i=0; i<header_count; i++)); do
-    header_dir=$(jq -r ".component_header_dirs[$i]" "$BUILD_CONFIG")
+    header_dir=$(jq -r ".component_header_dirs[$i] // empty" "$BUILD_CONFIG")
+    [ -z "$header_dir" ] && continue
     
     if [ -d "$SCRIPT_DIR/$header_dir" ]; then
         mkdir -p "$HEADER_PREFIX/$dest_subdir"
@@ -52,10 +53,11 @@ done
 
 # Step 4: Install libraries
 log_info "Step 4: Installing libraries..."
-lib_count=$(jq '.component_libraries | length' "$BUILD_CONFIG")
+lib_count=$(jq '.component_libraries // [] | length' "$BUILD_CONFIG" 2>/dev/null) || lib_count=0
 
 for ((i=0; i<lib_count; i++)); do
-    pattern=$(jq -r ".component_libraries[$i]" "$BUILD_CONFIG")
+    pattern=$(jq -r ".component_libraries[$i] // empty" "$BUILD_CONFIG")
+    [ -z "$pattern" ] && continue
     
     for lib_file in $SCRIPT_DIR/$pattern; do
         if [ -f "$lib_file" ]; then

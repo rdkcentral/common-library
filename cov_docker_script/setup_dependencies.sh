@@ -32,6 +32,21 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
+# Validate JSON config files
+if ! jq empty "$HEADERS_CONFIG" 2>/dev/null; then
+    log_error "Invalid JSON in: $HEADERS_CONFIG"
+    exit 1
+fi
+
+if ! jq empty "$BUILD_DEPS_CONFIG" 2>/dev/null; then
+    log_error "Invalid JSON in: $BUILD_DEPS_CONFIG"
+    exit 1
+fi
+
+# Setup PKG_CONFIG_PATH for dependency builds
+export PKG_CONFIG_PATH="$INSTALL_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
+export LD_LIBRARY_PATH="$INSTALL_PREFIX/lib:$LD_LIBRARY_PATH"
+
 # Clean previous installation
 log_info "Cleaning previous installations..."
 rm -rf "$HOME/usr"
@@ -43,11 +58,16 @@ log_info "✓ Clean environment ready"
 # Clone and setup header-only dependencies
 log_info "Setting up header-only dependencies..."
 
-header_count=$(jq '.dependencies | length' "$HEADERS_CONFIG")
+header_count=$(jq '.dependencies // [] | length' "$HEADERS_CONFIG" 2>/dev/null) || header_count=0
 for ((i=0; i<header_count; i++)); do
-    name=$(jq -r ".dependencies[$i].name" "$HEADERS_CONFIG")
-    repo=$(jq -r ".dependencies[$i].repository" "$HEADERS_CONFIG")
-    branch=$(jq -r ".dependencies[$i].branch" "$HEADERS_CONFIG")
+    name=$(jq -r ".dependencies[$i].name // empty" "$HEADERS_CONFIG")
+    repo=$(jq -r ".dependencies[$i].repository // empty" "$HEADERS_CONFIG")
+    branch=$(jq -r ".dependencies[$i].branch // empty" "$HEADERS_CONFIG")
+    
+    if [ -z "$name" ] || [ -z "$repo" ] || [ -z "$branch" ]; then
+        log_warn "Skipping incomplete header dependency at index $i"
+        continue
+    fi
     
     log_info "Cloning ${name}..."
     cd "$HOME"
@@ -55,10 +75,14 @@ for ((i=0; i<header_count; i++)); do
     git clone "$repo" -b "$branch" "$name"
     
     # Copy headers
-    header_path_count=$(jq ".dependencies[$i].header_paths | length" "$HEADERS_CONFIG")
+    header_path_count=$(jq ".dependencies[$i].header_paths // [] | length" "$HEADERS_CONFIG" 2>/dev/null) || header_path_count=0
     for ((j=0; j<header_path_count; j++)); do
-        src=$(jq -r ".dependencies[$i].header_paths[$j].source" "$HEADERS_CONFIG")
-        dest=$(jq -r ".dependencies[$i].header_paths[$j].destination" "$HEADERS_CONFIG")
+        src=$(jq -r ".dependencies[$i].header_paths[$j].source // empty" "$HEADERS_CONFIG")
+        dest=$(jq -r ".dependencies[$i].header_paths[$j].destination // empty" "$HEADERS_CONFIG")
+        
+        if [ -z "$src" ] || [ -z "$dest" ]; then
+            continue
+        fi
         
         full_src="$HOME/$name/$src"
         full_dest="$HEADER_PREFIX/$dest"
@@ -74,12 +98,17 @@ done
 # Clone and build dependencies
 log_info "Building dependencies..."
 
-build_count=$(jq '.dependencies | length' "$BUILD_DEPS_CONFIG")
+build_count=$(jq '.dependencies // [] | length' "$BUILD_DEPS_CONFIG" 2>/dev/null) || build_count=0
 for ((i=0; i<build_count; i++)); do
-    name=$(jq -r ".dependencies[$i].name" "$BUILD_DEPS_CONFIG")
-    repo=$(jq -r ".dependencies[$i].repository" "$BUILD_DEPS_CONFIG")
-    branch=$(jq -r ".dependencies[$i].branch" "$BUILD_DEPS_CONFIG")
-    build_sys=$(jq -r ".dependencies[$i].build_system" "$BUILD_DEPS_CONFIG")
+    name=$(jq -r ".dependencies[$i].name // empty" "$BUILD_DEPS_CONFIG")
+    repo=$(jq -r ".dependencies[$i].repository // empty" "$BUILD_DEPS_CONFIG")
+    branch=$(jq -r ".dependencies[$i].branch // empty" "$BUILD_DEPS_CONFIG")
+    build_sys=$(jq -r ".dependencies[$i].build_system // empty" "$BUILD_DEPS_CONFIG")
+    
+    if [ -z "$name" ] || [ -z "$repo" ] || [ -z "$branch" ]; then
+        log_warn "Skipping incomplete build dependency at index $i"
+        continue
+    fi
     
     echo ""
     log_info "Processing: ${name}"
@@ -137,17 +166,29 @@ for ((i=0; i<build_count; i++)); do
     
     # Copy libraries (skip if external script was used, as it handles installation)
     if [ -z "$external_script" ]; then
-        lib_count=$(jq ".dependencies[$i].library_patterns | length" "$BUILD_DEPS_CONFIG")
+        lib_count=$(jq ".dependencies[$i].library_patterns // [] | length" "$BUILD_DEPS_CONFIG" 2>/dev/null) || lib_count=0
         mkdir -p "$INSTALL_PREFIX/lib"
+        libs_found=0
+        
         for ((j=0; j<lib_count; j++)); do
-            pattern=$(jq -r ".dependencies[$i].library_patterns[$j]" "$BUILD_DEPS_CONFIG")
-            for lib_file in $HOME/$name/$pattern; do
-                if [ -f "$lib_file" ]; then
-                    cp "$lib_file" "$INSTALL_PREFIX/lib/"
-                    log_info "  ✓ Installed: $(basename $lib_file)"
-                fi
+            pattern=$(jq -r ".dependencies[$i].library_patterns[$j] // empty" "$BUILD_DEPS_CONFIG")
+            [ -z "$pattern" ] && continue
+            
+            # Search in both repo root and build directory
+            for search_path in "$HOME/$name" "$HOME/build/$name"; do
+                for lib_file in $search_path/$pattern; do
+                    if [ -f "$lib_file" ]; then
+                        cp "$lib_file" "$INSTALL_PREFIX/lib/"
+                        log_info "  ✓ Installed: $(basename $lib_file)"
+                        libs_found=1
+                    fi
+                done
             done
         done
+        
+        if [ $libs_found -eq 0 ]; then
+            log_warn "  No libraries found for $name - this may be expected for some dependencies"
+        fi
     fi
     
     log_info "✓ ${name} completed"
