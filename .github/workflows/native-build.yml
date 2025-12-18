@@ -22,7 +22,7 @@ jobs:
       - name: Setup dependencies
         run: |
           cd $GITHUB_WORKSPACE
-          chmod +x setup_dependencies.sh
+          chmod +x ./cov_docker_script/setup_dependencies.sh
           ./cov_docker_script/setup_dependencies.sh
 
       - name: Build native component
