@@ -7,7 +7,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HEADERS_CONFIG="${SCRIPT_DIR}/common_library_external_dependencies_headers.json"
-BUILD_DEPS_CONFIG="${SCRIPT_DIR}/common_library_build_deps.json"
+BUILD_DEPS_CONFIG="${SCRIPT_DIR}/common_library_external_dependencies_build.json"
 HEADER_PREFIX=${HEADER_PREFIX:-$HOME/usr/include/rdkb}
 INSTALL_PREFIX=${INSTALL_PREFIX:-$HOME/usr/local}
 BUILD_JOBS=${BUILD_JOBS:-$(nproc)}
