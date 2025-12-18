@@ -50,7 +50,7 @@ for ((i=0; i<header_count; i++)); do
     branch=$(jq -r ".dependencies[$i].branch" "$HEADERS_CONFIG")
     
     log_info "Cloning ${name}..."
-    cd $HOME
+    cd "$HOME"
     [ -d "$name" ] && rm -rf "$name"
     git clone "$repo" -b "$branch" "$name"
     
