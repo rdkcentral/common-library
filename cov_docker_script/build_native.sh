@@ -73,6 +73,9 @@ fi
 LDFLAGS_BASE=$(jq -r '.ldflags[]? // empty' "$BUILD_CONFIG" 2>/dev/null | tr '\n' ' ')
 LDFLAGS_BASE="-L$INSTALL_PREFIX/lib $LDFLAGS_BASE"
 
+# Determine workspace root (parent of cov_docker_script)
+WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # Build configure options
 configure_opts=$(jq -r '.configure_options[]? // empty' "$BUILD_CONFIG" 2>/dev/null | tr '\n' ' ')
 
@@ -114,9 +117,6 @@ log_info "Build Environment:"
 log_info "  Headers: $HEADER_PREFIX"
 log_info "  Libraries: $INSTALL_PREFIX/lib"
 log_info "  Jobs: $BUILD_JOBS"
-
-# Determine workspace root (parent of cov_docker_script)
-WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Navigate to component directory
 cd "$WORKSPACE_ROOT"
