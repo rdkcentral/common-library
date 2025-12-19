@@ -1523,16 +1523,19 @@ static DmErr_t SetParamGrp(DmParam_t params[] /* in-out */, int cnt, int commit,
 rollback:
     for (; i >= 0; i--) {
 #ifdef __CDM_LOCAL_ACCESS
+        /*CID 70189: Unchecked return value (CHECKED_RETURN)*/
         if (compList[i].isLocal) {
-            CcspCcMbi_SetCommit(0, CompIdGetWriteId(cdm.compId), 0, NULL);
+            err = CcspCcMbi_SetCommit(0, CompIdGetWriteId(cdm.compId), 0, NULL);
         } else {
 #endif
-            CcspBaseIf_setCommit(cdm.busHdl, 
-                    compList[i].compId, compList[i].dbusPath, 
-                    0, CompIdGetWriteId(cdm.compId), 0);
+            err = CcspBaseIf_setCommit(cdm.busHdl, 
+                        compList[i].compId, compList[i].dbusPath, 
+                        0, CompIdGetWriteId(cdm.compId), 0);
 #ifdef __CDM_LOCAL_ACCESS
         }
 #endif
+            if (err != CCSP_SUCCESS)
+                goto errout;
     }
 
 errout:

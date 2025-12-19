@@ -200,10 +200,7 @@ HttpTroTmhClientNotify
                 {
                     pMyObject->bCloseConnection = TRUE;
                 }
-                else
-                {
-                    pMyObject->bCloseConnection = TRUE;
-                }
+                /*CID 65968: Identical code for different branches (removed the else part with same code)*/
 
                 /*
                  * The SBC object now has a chance to examine all the HTTP header fields and make
