@@ -238,7 +238,7 @@ DslhObjroGetObjRecord2
 
     pSLinkEntry = AnscQueueGetFirstEntry(&pMyObject->ObjroQueue);
 
-    while ( pObjNameToken->Name && pSLinkEntry )
+    while (pObjNameToken->Name[0] != '\0' && pSLinkEntry) //CID: 72176 fix for NO_EFFECT
     {
         pChildObjRecord = ACCESS_DSLH_OBJ_RECORD_OBJECT(pSLinkEntry);
         pSLinkEntry     = AnscQueueGetNextEntry(pSLinkEntry);

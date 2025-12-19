@@ -834,14 +834,15 @@ StunScoVerifyMsgIntegrity
 
     AnscStunGetAttributeByType(pStunHeader, STUN_ATTRIB_TYPE_MSG_INTEGRITY, pStunAttribute);
 
+    /*CID: 64646 fix for Logically dead code
     if ( !pStunAttribMsgIntegrity )
     {
         return  FALSE;
     }
     else
     {
-        pStunAttribMsgIntegrity = (PSTUN_ATTRIB_MSG_INTEGRITY)pStunAttribute;
-    }
+*/
+    pStunAttribMsgIntegrity = (PSTUN_ATTRIB_MSG_INTEGRITY)pStunAttribute;
 
     if ( AnscStunAttribMiGetLength(pStunAttribMsgIntegrity) != 20 )
     {

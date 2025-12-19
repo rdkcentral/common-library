@@ -247,12 +247,8 @@ HttpWstoTmhNotify
                  */
                 ulBodySize = pBmoReq->PredictBodySize((ANSC_HANDLE)pBmoReq);
 
-                if ( ulBodySize > HTTP_SSO_MAX_MESSAGE_SIZE )
-                {
-                    ulBodySize = HTTP_SSO_MAX_MESSAGE_SIZE;
-                }
-
-                if ( ulBodySize == 0xFFFFFFFF )
+                /*CID: 54468 fix for Logically dead code */
+                if ( (ulBodySize > HTTP_SSO_MAX_MESSAGE_SIZE) || (ulBodySize == 0xFFFFFFFF))
                 {
                     ulBodySize = HTTP_SSO_MAX_MESSAGE_SIZE;
                 }
