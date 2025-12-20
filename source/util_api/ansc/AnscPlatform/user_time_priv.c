@@ -67,6 +67,11 @@
         05/01/14    initial revision.
 
 **********************************************************************/
+#define _TIME_BITS 64
+#define _FILE_OFFSET_BITS 64
+#include <sys/types.h>
+#include "time.h"
+
 #include "user_base.h"
 #include "user_time.h"
 
@@ -297,7 +302,6 @@ UserGetTickInMilliSeconds()
 void
 UserSetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
 {
-    time_t          newTime;
     struct tm       newtm;
     struct timeval  newtv;
     union semun semopts;
@@ -317,7 +321,7 @@ UserSetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
     newtm.tm_isdst = 1;
 
 #if !defined(_ANSC_LINUX_NO_TM_GMT)
-    newTime = timegm(&newtm);
+    int64_t newTime = (int64_t)timegm(&newtm);
     /*CID: 62026 Argument cannot be negative*/
     if (newTime < 0) {
          printf("newTime cant be negative\n");
@@ -330,7 +334,7 @@ UserSetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
 	   newtm.tm_min, newtm.tm_sec, newtm.tm_isdst);
    */
 
-    newtv.tv_sec  = (long)newTime;
+    newtv.tv_sec  = newTime;
     newtv.tv_usec = 0;
 
 	if ( sid == -1 )
@@ -367,7 +371,6 @@ UserGetTimeNow(time_t *timeNow, struct tm *Tm)
 void
 UserSetLocalTime(USER_SYSTEM_TIME*  pSystemTime)
 {
-    time_t          newTime;
     struct tm       newtm;
     struct timeval  newtv;
     union semun semopts;
@@ -390,14 +393,14 @@ UserSetLocalTime(USER_SYSTEM_TIME*  pSystemTime)
 	   newtm.tm_min, newtm.tm_sec, newtm.tm_isdst);
 
 
-    newTime = mktime(&newtm);
+    int64_t newTime = (int64_t)mktime(&newtm);
     /*CID:55942 Argument cannot be negative*/
     if (newTime < 0) {
          printf("newTime cant be negative\n");
          return;
     }
 
-    newtv.tv_sec  = (long)newTime;
+    newtv.tv_sec  = newTime;
     newtv.tv_usec = 0;
 	if ( sid == -1 )
     {
