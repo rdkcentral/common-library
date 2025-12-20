@@ -516,7 +516,6 @@ void CcspBaseIf_deadlock_detection_log_save
     parameterAttributeStruct_t  * parameterAttribute = 0; //setParameterAttributes
     char *                        str            = NULL;  //AddTblRow / DeleteTblRow
     unsigned long                 size           = 0;
-    unsigned long                 index          = deadlock_detection_log_index;
     unsigned int                  i              = 0;
     char                          timestr[128]   = {0};
     time_t                        t1             = GetCurrentTime();
@@ -528,6 +527,7 @@ void CcspBaseIf_deadlock_detection_log_save
     
     pthread_mutex_lock(&(info->info_mutex));
 
+    unsigned long                 index          = deadlock_detection_log_index;
     if ( info->messageType )
     {
         size = info->size;
