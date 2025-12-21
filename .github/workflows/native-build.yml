@@ -1,4 +1,4 @@
-name: Build Commmon-Library Component in Native Environment
+name: Build Common-Library Component in Native Environment
 
 on:
   push:
