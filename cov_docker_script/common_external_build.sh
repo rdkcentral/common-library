@@ -17,6 +17,7 @@ set -e
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPONENT_ROOT="$(dirname "$SCRIPT_DIR")"
+CONFIG_FILE="$SCRIPT_DIR/component_config.json"
 
 # Color output
 GREEN='\033[0;32m'
@@ -32,9 +33,12 @@ log_step() { echo -e "${BLUE}[STEP]${NC} $1"; }
 # Main execution
 ################################################################################
 main() {
+    # Read component name from config
+    COMPONENT_NAME=$(jq -r '.native_component.name' "$CONFIG_FILE")
+    
     echo ""
     echo "=========================================="
-    log_step "External Build Script for moca-agent"
+    log_step "External Build Script for $COMPONENT_NAME"
     echo "=========================================="
     echo ""
     
@@ -59,8 +63,6 @@ main() {
         log_error "build_native.sh not found"
         exit 1
     fi
-    
-    COMPONENT_NAME=$(jq -r '.native_component.name' "$CONFIG_FILE")
     
     echo ""
     echo "=========================================="
