@@ -1,0 +1,197 @@
+{
+  "build_options": {
+    "skip_header_dependencies": false,
+    "skip_library_dependencies": false,
+    "clean_before_build": true,
+    "auto_discover_libraries": true,
+    "additional_lib_paths": [
+      "$INSTALL_PREFIX/lib/x86_64-linux-gnu"
+    ]
+  },
+  "native_component": {
+    "name": "common-library",
+    "build_system": "autotools",
+    "cflags": [
+      "-DSAFEC_DUMMY_API",
+      "-D_ANSC_USE_OPENSSL_",
+      "-D_NO_PKI_KB5_SUPPORT"
+    ],
+    "system_includes": [
+      "/usr/include/dbus-1.0",
+      "/usr/lib/*/dbus-1.0/include"
+    ],
+    "dependency_include_dirs": [
+      "rtmessage"
+    ],
+    "ldflags": [],
+    "configure_options": [],
+    "source_header_patches": [
+      {
+        "source": "source/ccsp/include/ccsp_message_bus.h",
+        "patch_line": "typedef struct _CCSP_MESSAGE_BUS_CONNECTION",
+        "insert_before": "typedef struct DBusLoop DBusLoop;"
+      }
+    ],
+    "pre_build_commands": [],
+    "component_header_dirs": [
+      {
+        "source": "source/ccsp/include",
+        "destination": "."
+      },
+      {
+        "source": "source/ccsp/components/include",
+        "destination": "."
+      },
+      {
+        "source": "source/ccsp/components/common/MessageBusHelper/include",
+        "destination": "."
+      },
+      {
+        "source": "source/ccsp/custom",
+        "destination": "."
+      },
+      {
+        "source": "source/cosa/include",
+        "destination": "."
+      },
+      {
+        "source": "source/cosa/include/linux",
+        "destination": "linux"
+      },
+      {
+        "source": "source/cosa/include/linux",
+        "destination": "."
+      },
+      {
+        "source": "source/cosa/package/slap/include",
+        "destination": "."
+      },
+      {
+        "source": "source/util_api/ansc/include",
+        "destination": "."
+      },
+      {
+        "source": "source/util_api/http/include",
+        "destination": "."
+      },
+      {
+        "source": "source/util_api/stun/include",
+        "destination": "."
+      },
+      {
+        "source": "source/util_api/tls/include",
+        "destination": "."
+      },
+      {
+        "source": "source/util_api/web/include",
+        "destination": "."
+      },
+      {
+        "source": "source/util_api/asn.1/include",
+        "destination": "."
+      },
+      {
+        "source": "source/debug_api/include",
+        "destination": "."
+      },
+      {
+        "source": "source/dm_pack",
+        "destination": "."
+      }
+    ],
+    "component_libraries": [],
+    "component_install_subdir": ""
+  },
+  "header_dependencies": [
+    {
+      "name": "safec",
+      "repository": "https://github.com/rurban/safeclib.git",
+      "branch": "master",
+      "header_paths": [
+        {
+          "source": "include",
+          "destination": "."
+        }
+      ]
+    },
+    {
+      "name": "rdk_logger",
+      "repository": "https://github.com/rdkcentral/rdk_logger.git",
+      "branch": "develop",
+      "header_paths": [
+        {
+          "source": "include",
+          "destination": "."
+        }
+      ]
+    },
+    {
+      "name": "trower-base64",
+      "repository": "https://github.com/xmidt-org/trower-base64.git",
+      "branch": "main",
+      "header_paths": [
+        {
+          "source": "include/trower-base64",
+          "destination": "."
+        },
+        {
+          "source": "include/trower-base64",
+          "destination": "trower-base64"
+        }
+      ]
+    },
+    {
+      "name": "rbus",
+      "repository": "https://github.com/rdkcentral/rbus.git",
+      "branch": "main",
+      "header_paths": [
+        {
+          "source": "include",
+          "destination": "rbus"
+        },
+        {
+          "source": "src/rbus",
+          "destination": "rbus"
+        },
+        {
+          "source": "src/core",
+          "destination": "rbus"
+        },
+        {
+          "source": "src/rtmessage",
+          "destination": "rtmessage"
+        }
+      ]
+    }
+  ],
+  "library_dependencies": [
+    {
+      "name": "trower-base64",
+      "repository": "https://github.com/xmidt-org/trower-base64.git",
+      "branch": "v1.2.7",
+      "build_system": "meson",
+      "dependency_script": null,
+      "meson_options": [],
+      "library_patterns": [
+        "*.so*"
+      ],
+      "install_to_prefix": true
+    },
+    {
+      "name": "rbus",
+      "repository": "https://github.com/rdkcentral/rbus.git",
+      "branch": "main",
+      "build_system": "cmake",
+      "dependency_script": null,
+      "cmake_options": [
+        "-DBUILD_FOR_DESKTOP=ON",
+        "-DCMAKE_BUILD_TYPE=Debug"
+      ],
+      "library_patterns": [
+        "*.so*"
+      ],
+      "install_to_prefix": true
+    }
+  ]
+}
+

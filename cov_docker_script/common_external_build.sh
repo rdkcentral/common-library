@@ -1,78 +1,76 @@
 #!/bin/bash
 
-# External Build Script for Common-Library
-# Used when common-library is a dependency of another component
-# This script builds all dependencies and the component itself
+################################################################################
+# Script 3: External Build Script (for common-library)
+# 
+# Purpose: Entry point for building moca-agent when used as a dependency
+#   - Called by other components that depend on moca-agent
+#   - Sets up all dependencies using setup_dependencies.sh
+#   - Builds native component using build_native.sh
+#   - Provides complete build for external consumers
+#
+# Usage: ./common_external_build.sh
+################################################################################
 
 set -e
 
+# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BUILD_CONFIG="${SCRIPT_DIR}/build_config.json"
-HEADER_PREFIX=${HEADER_PREFIX:-$HOME/usr/include/rdkb}
-INSTALL_PREFIX=${INSTALL_PREFIX:-$HOME/usr/local}
+COMPONENT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Color output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
-YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_step() { echo -e "${BLUE}[STEP]${NC} $1"; }
 
-echo "=========================================="
-log_info "External Build: Common-Library"
-echo "=========================================="
-
-# Step 1: Setup dependencies
-log_info "Step 1: Setting up dependencies..."
-cd "$SCRIPT_DIR"
-./setup_dependencies.sh
-
-# Step 2: Build component
-log_info "Step 2: Building common-library..."
-cd "$SCRIPT_DIR"
-./build_native.sh
-
-# Step 3: Install headers
-log_info "Step 3: Installing headers..."
-header_count=$(jq '.component_header_dirs // [] | length' "$BUILD_CONFIG" 2>/dev/null) || header_count=0
-dest_subdir=$(jq -r '.component_install_subdir // "component"' "$BUILD_CONFIG")
-
-for ((i=0; i<header_count; i++)); do
-    header_dir=$(jq -r ".component_header_dirs[$i] // empty" "$BUILD_CONFIG")
-    [ -z "$header_dir" ] && continue
+################################################################################
+# Main execution
+################################################################################
+main() {
+    echo ""
+    echo "=========================================="
+    log_step "External Build Script for moca-agent"
+    echo "=========================================="
+    echo ""
     
-    if [ -d "$SCRIPT_DIR/$header_dir" ]; then
-        mkdir -p "$HEADER_PREFIX/$dest_subdir"
-        cp -r "$SCRIPT_DIR/$header_dir"/*.h "$HEADER_PREFIX/$dest_subdir/" 2>/dev/null || true
-        log_info "  ✓ Installed headers from: $header_dir"
+    # Step 1: Setup dependencies
+    log_step "Step 1: Setting up dependencies..."
+    if [ -f "$SCRIPT_DIR/setup_dependencies.sh" ]; then
+        chmod +x "$SCRIPT_DIR/setup_dependencies.sh"
+        "$SCRIPT_DIR/setup_dependencies.sh"
+    else
+        log_error "setup_dependencies.sh not found"
+        exit 1
     fi
-done
-
-# Step 4: Install libraries
-log_info "Step 4: Installing libraries..."
-lib_count=$(jq '.component_libraries // [] | length' "$BUILD_CONFIG" 2>/dev/null) || lib_count=0
-
-for ((i=0; i<lib_count; i++)); do
-    pattern=$(jq -r ".component_libraries[$i] // empty" "$BUILD_CONFIG")
-    [ -z "$pattern" ] && continue
     
-    for lib_file in $SCRIPT_DIR/$pattern; do
-        if [ -f "$lib_file" ]; then
-            cp "$lib_file" "$INSTALL_PREFIX/lib/"
-            log_info "  ✓ Installed: $(basename $lib_file)"
-        fi
-    done
-done
+    echo ""
+    
+    # Step 2: Build native component
+    log_step "Step 2: Building native component..."
+    if [ -f "$SCRIPT_DIR/build_native.sh" ]; then
+        chmod +x "$SCRIPT_DIR/build_native.sh"
+        "$SCRIPT_DIR/build_native.sh"
+    else
+        log_error "build_native.sh not found"
+        exit 1
+    fi
+    
+    COMPONENT_NAME=$(jq -r '.native_component.name' "$CONFIG_FILE")
+    
+    echo ""
+    echo "=========================================="
+    log_info "External Build Complete!"
+    echo "=========================================="
+    log_info "Component: $COMPONENT_NAME"
+    log_info "Location:  $COMPONENT_ROOT"
+    echo "=========================================="
+    
+    exit 0
+}
 
-echo ""
-echo "=========================================="
-log_info "External Build Complete!"
-echo "=========================================="
-log_info "Headers: ${HEADER_PREFIX}/${dest_subdir}"
-log_info "Libraries: ${INSTALL_PREFIX}/lib"
-echo "=========================================="
-
-exit 0
+main "$@"
