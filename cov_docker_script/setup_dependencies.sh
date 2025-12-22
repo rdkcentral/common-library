@@ -394,6 +394,7 @@ build_library_dependency() {
             
             # Process configure options - separate env vars from regular options
             local configure_args="--prefix=$INSTALL_PREFIX"
+            local make_cflags=""
             if [ -n "$autotools_opts" ] && [ "$autotools_opts" != "null" ]; then
                 local opts_count=$(echo "$autotools_opts" | jq 'length')
                 for ((k=0; k<opts_count; k++)); do
@@ -405,8 +406,15 @@ build_library_dependency() {
                     if [[ "$opt" =~ ^([A-Z_]+)=(.*)$ ]]; then
                         local var_name="${BASH_REMATCH[1]}"
                         local var_value="${BASH_REMATCH[2]}"
-                        export "${var_name}=${var_value}"
-                        log_info "  Exported ${var_name}=${var_value}"
+                        
+                        # Special handling for CFLAGS - don't export, save for make
+                        if [ "$var_name" = "CFLAGS" ]; then
+                            make_cflags="$var_value"
+                            log_info "  Saved CFLAGS for make: $var_value"
+                        else
+                            export "${var_name}=${var_value}"
+                            log_info "  Exported ${var_name}=${var_value}"
+                        fi
                     else
                         # Regular configure option (like --enable-foo)
                         configure_args="$configure_args $opt"
@@ -419,7 +427,12 @@ build_library_dependency() {
                 ./configure $configure_args
             fi
             
-            make -j"$BUILD_JOBS"
+            # Build with CFLAGS if specified
+            if [ -n "$make_cflags" ]; then
+                make -j"$BUILD_JOBS" CFLAGS="$make_cflags"
+            else
+                make -j"$BUILD_JOBS"
+            fi
             make install
             ;;
             
@@ -490,9 +503,12 @@ process_library_dependencies() {
             cd "$BUILD_DIR/$name"
             if [ -f "$dep_script" ]; then
                 chmod +x "$dep_script"
-                # Set a different BUILD_DIR for nested builds to avoid self-deletion
+                # Save original BUILD_DIR and set a different one for nested builds
+                local ORIGINAL_BUILD_DIR="$BUILD_DIR"
                 export BUILD_DIR="$BUILD_DIR/${name}_deps"
                 ./"$dep_script"
+                # Restore original BUILD_DIR
+                export BUILD_DIR="$ORIGINAL_BUILD_DIR"
                 log_info "  ✓ Dependency script completed"
             else
                 log_error "Dependency script not found: $dep_script"
