@@ -7,7 +7,7 @@ on:
     branches: [ main, 'sprint/**', 'release/**', topic/RDK*, develop ]
 
 jobs:
-  build-entservices-on-pr:
+  build-common-library-on-pr:
     name: Build common-library component in github rdkcentral
     runs-on: ubuntu-latest
     container:
