@@ -2487,7 +2487,7 @@ AnscBdoTracePrint
 
 #endif /* _ANSC_TRACE_PACKET_ */
 
-
+/*CID: 559811 fix for Check of thread-shared field evades lock acquisition*/
 void
 AnscPacketCleanup
     (
@@ -2500,20 +2500,43 @@ AnscPacketCleanup
      * free pdo pool
      */
     AnscAcquireSpinLock(&g_qPdoPoolSpinLock);
-
-    for( pEnt = AnscSListGetFirstEntry(&g_qPdoPoolList); pEnt; )
-    {
-        PANSC_PACKET_DESCRIPTOR     pPdo;
-
-        pPdo = (PANSC_PACKET_DESCRIPTOR)ACCESS_ANSC_PACKET_DESCRIPTOR(pEnt); 
-        pEnt = AnscSListGetNextEntry(pEnt);
-
-        AnscFreePdo2(pPdo);
-    }
-    AnscSListInitializeHeader(&g_qPdoPoolList);
-    AnscReleaseSpinLock(&g_qPdoPoolSpinLock);
-    AnscFreeSpinLock(&g_qPdoPoolSpinLock);
     g_bPdoPoolInitialized = FALSE;
+
+    // Detach all entries from the shared list under lock
+    // so no other thread can see inconsistent Next pointers.
+    PSINGLE_LINK_ENTRY pPdoChainHead = NULL;
+    PSINGLE_LINK_ENTRY pPdoChainTail = NULL;
+
+    while ((pEnt = AnscSListPopEntry(&g_qPdoPoolList)) != NULL)
+    {
+        // chain entries locally
+        pEnt->Next = NULL;
+        if (!pPdoChainHead) {
+            pPdoChainHead = pEnt;
+            pPdoChainTail = pEnt;
+        } else {
+            pPdoChainTail->Next = pEnt;
+            pPdoChainTail = pEnt;
+        }
+    }
+
+    // Reset shared list header under lock
+    AnscSListInitializeHeader(&g_qPdoPoolList);
+
+    AnscReleaseSpinLock(&g_qPdoPoolSpinLock);
+
+    // Now free outside the lock
+    for (pEnt = pPdoChainHead; pEnt; )
+    {
+        PSINGLE_LINK_ENTRY next = pEnt->Next;
+        PANSC_PACKET_DESCRIPTOR pPdo =
+            (PANSC_PACKET_DESCRIPTOR)ACCESS_ANSC_PACKET_DESCRIPTOR(pEnt);
+        AnscFreePdo2(pPdo);
+        pEnt = next;
+    }
+
+    // After the list is empty and freed, retire the spinlock
+    AnscFreeSpinLock(&g_qPdoPoolSpinLock);
 
 
     /*
@@ -2521,19 +2544,39 @@ AnscPacketCleanup
      */
     AnscAcquireSpinLock(&g_qBdoPoolSpinLock);
 
-    for( pEnt = AnscSListGetFirstEntry(&g_qBdoPoolList); pEnt; )
-    {
-        PANSC_BUFFER_DESCRIPTOR     pBdo;
-
-        pBdo = (PANSC_BUFFER_DESCRIPTOR)ACCESS_ANSC_BUFFER_DESCRIPTOR(pEnt); 
-        pEnt = AnscSListGetNextEntry(pEnt);
-
-        AnscFreeMemory(pBdo);
-    }
-    AnscSListInitializeHeader(&g_qBdoPoolList);
-    AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
-    AnscFreeSpinLock(&g_qBdoPoolSpinLock);
     g_bBdoPoolInitialized = FALSE;
+
+    // Detach all entries under lock
+    PSINGLE_LINK_ENTRY pBdoChainHead = NULL;
+    PSINGLE_LINK_ENTRY pBdoChainTail = NULL;
+
+    while ((pEnt = AnscSListPopEntry(&g_qBdoPoolList)) != NULL)
+    {
+        pEnt->Next = NULL;
+        if (!pBdoChainHead) {
+            pBdoChainHead = pEnt;
+            pBdoChainTail = pEnt;
+        } else {
+            pBdoChainTail->Next = pEnt;
+            pBdoChainTail = pEnt;
+        }
+    }
+
+    AnscSListInitializeHeader(&g_qBdoPoolList);
+
+    AnscReleaseSpinLock(&g_qBdoPoolSpinLock);
+
+    // Free outside the lock
+    for (pEnt = pBdoChainHead; pEnt; )
+    {
+        PSINGLE_LINK_ENTRY next = pEnt->Next;
+        PANSC_BUFFER_DESCRIPTOR pBdo =
+            (PANSC_BUFFER_DESCRIPTOR)ACCESS_ANSC_BUFFER_DESCRIPTOR(pEnt);
+        AnscFreeMemory(pBdo);
+        pEnt = next;
+    }
+
+    AnscFreeSpinLock(&g_qBdoPoolSpinLock);
 
 #ifdef _ANSC_TRACE_PACKET_    
     g_ulAllocPdo    = 0;
