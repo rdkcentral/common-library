@@ -29,10 +29,6 @@ Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/mta
 #ExecStartPre=/bin/sh -c 'sleep 30'
-# NEW: record uptime seconds and wall-clock time just before starting
-#ExecStartPre=/bin/sh -c 'UP=$(awk "{print int(\$1)}" /proc/uptime); \
-#  echo "$(date "+%H:%M:%S") [BootUpTime] service  echo "$(date "+%H:%M:%S") [BootUpTime] service_CcspMtaAgent_start_uptime=${UP}" >> /rdklogs/logs/BootTime.log'
-
 # Print uptime and a timestamp to BootTime.log just before starting
 ExecStartPre=/bin/sh -c '
   UP=$(awk "{print int(\$1)}" /proc/uptime);
