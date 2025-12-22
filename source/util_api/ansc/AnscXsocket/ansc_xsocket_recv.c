@@ -276,13 +276,7 @@ AnscXsocketRecvTask
 
                 return  ANSC_STATUS_SUCCESS;
             }
-            else
-            {
-                pXsinkHolder->Close ((ANSC_HANDLE)pXsinkHolder, TRUE);
-                pMyObject   ->Remove((ANSC_HANDLE)pMyObject);
-
-                return  ANSC_STATUS_SUCCESS;
-            }
+            /*CID 61488: Identical code for different branches (removed the else part with same code)*/
         }
         else
         {
