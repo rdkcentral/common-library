@@ -20,7 +20,9 @@ jobs:
       - name: native build
         run: |
           chmod +x cov_docker_script/setup_dependencies.sh
+          ./cov_docker_script/build_native.sh
           chmod +x cov_docker_script/build_native.sh
+          ./cov_docker_script/build_native.sh
 
         env:
           GITHUB_TOKEN: ${{ secrets.RDKCM_RDKE }}
