@@ -490,21 +490,24 @@ process_library_dependencies() {
             cd "$BUILD_DIR/$name"
             if [ -f "$dep_script" ]; then
                 chmod +x "$dep_script"
+                # Set a different BUILD_DIR for nested builds to avoid self-deletion
+                export BUILD_DIR="$BUILD_DIR/${name}_deps"
                 ./"$dep_script"
+                log_info "  ✓ Dependency script completed"
             else
                 log_error "Dependency script not found: $dep_script"
                 exit 1
             fi
+        else
+            # Get build options
+            local cmake_opts=$(jq -c ".library_dependencies[$i].cmake_options // null" "$COMPONENT_CONFIG")
+            local meson_opts=$(jq -c ".library_dependencies[$i].meson_options // null" "$COMPONENT_CONFIG")
+            local autotools_opts=$(jq -c ".library_dependencies[$i].configure_options // null" "$COMPONENT_CONFIG")
+            local source_subdir=$(jq -r ".library_dependencies[$i].source_subdir // null" "$COMPONENT_CONFIG")
+            
+            # Build the dependency using standard build system
+            build_library_dependency "$i" "$name" "$build_sys" "$cmake_opts" "$meson_opts" "$autotools_opts" "$source_subdir"
         fi
-        
-        # Get build options
-        local cmake_opts=$(jq -c ".library_dependencies[$i].cmake_options // null" "$COMPONENT_CONFIG")
-        local meson_opts=$(jq -c ".library_dependencies[$i].meson_options // null" "$COMPONENT_CONFIG")
-        local autotools_opts=$(jq -c ".library_dependencies[$i].configure_options // null" "$COMPONENT_CONFIG")
-        local source_subdir=$(jq -r ".library_dependencies[$i].source_subdir // null" "$COMPONENT_CONFIG")
-        
-        # Build the dependency
-        build_library_dependency "$i" "$name" "$build_sys" "$cmake_opts" "$meson_opts" "$autotools_opts" "$source_subdir"
         
         # Create installation marker
         touch "$INSTALL_PREFIX/.installed_$name"
