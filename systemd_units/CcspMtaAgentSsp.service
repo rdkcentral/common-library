@@ -28,14 +28,10 @@ Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/mta
+ExecStartPre=/bin/sh -c 'echo "$(date): Starting CcspMtaAgentSsp" >> /var/log/mta_agent.log'
 #ExecStartPre=/bin/sh -c 'sleep 30'
-# Print uptime and a timestamp to BootTime.log just before starting
-ExecStartPre=/bin/sh -c '
-  UP=$(awk "{print int(\$1)}" /proc/uptime);
-  TS=$(date "+%H:%M:%S");
-  echo "$TS [BootUpTime] service_CcspMtaAgent_start_uptime=${UP}s" >> /rdklogs/logs/BootTime.log
-'
 ExecStart=/bin/sh -c '/usr/bin/CcspMtaAgentSsp -subsys $Subsys'
+ExecStartPost=/bin/sh -c 'logger "CcspMtaAgentSsp started successfully"'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspMtaAgentSsp" >> ${PROCESS_RESTART_LOG}'
 Restart=always
 
