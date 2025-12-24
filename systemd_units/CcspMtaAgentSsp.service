@@ -29,8 +29,7 @@ Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/mta
 #ExecStartPre=/bin/sh -c 'echo "$(date): Starting CcspMtaAgentSsp" >> /var/log/mta_agent.log'
-ExecStartPre=/bin/sh -c 'echo "$(date): Uptime (seconds): $(cut -d\" \" -f1 /proc/uptime)" >> /var/log/mta_agent.log'
-#ExecStartPre=/bin/sh -c 'sleep 30'
+ExecStartPre=/bin/sh -c 'sleep 30 && echo "$(date): Uptime (seconds): $(cut -d\" \" -f1 /proc/uptime)" >> /var/log/mta_agent.log'
 ExecStart=/bin/sh -c '/usr/bin/CcspMtaAgentSsp -subsys $Subsys'
 ExecStartPost=/bin/sh -c 'logger "CcspMtaAgentSsp started successfully"'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspMtaAgentSsp" >> ${PROCESS_RESTART_LOG}'
