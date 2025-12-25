@@ -189,10 +189,6 @@ process_header_dependencies() {
                 log_warn "  Source path not found: $src"
             fi
         done
-        
-        # Cleanup cloned repository
-        rm -rf "$BUILD_DIR/$name"
-        log_info "  ✓ Cleaned up $name"
     done
     
     # Apply critical header patches needed by library dependencies
