@@ -102,24 +102,6 @@ setup_environment() {
     local clean_before=$(jq -r '.build_options.clean_before_build // true' "$COMPONENT_CONFIG")
     if [ "$clean_before" = "true" ]; then
         log_info "Cleaning previous installations..."
-        
-        if [ -d "$HOME/usr" ]; then
-            log_info "  Removing: $HOME/usr"
-            chmod -R u+w "$HOME/usr" 2>/dev/null || true
-            rm -rf "$HOME/usr" || {
-                log_warn "Failed to remove $HOME/usr, trying with sudo..."
-                sudo rm -rf "$HOME/usr"
-            }
-        fi
-        
-        if [ -d "$BUILD_DIR" ]; then
-            log_info "  Removing: $BUILD_DIR"
-            chmod -R u+w "$BUILD_DIR" 2>/dev/null || true
-            rm -rf "$BUILD_DIR" || {
-                log_warn "Failed to remove $BUILD_DIR, trying with sudo..."
-                sudo rm -rf "$BUILD_DIR"
-            }
-        fi
     else
         log_info "Skipping cleanup (clean_before_build=false)"
     fi
