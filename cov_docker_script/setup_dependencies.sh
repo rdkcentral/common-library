@@ -282,13 +282,6 @@ build_library_dependency() {
         cmake)
             log_info "  Building with CMake..."
             
-            # Clean build directory if requested
-            local clean_before=$(jq -r '.build_options.clean_before_build // false' "$COMPONENT_CONFIG")
-            if [ "$clean_before" = "true" ] && [ -d "$BUILD_DIR/${name}_build" ]; then
-                log_info "  Cleaning previous CMake build..."
-                rm -rf "$BUILD_DIR/${name}_build"
-            fi
-            
             local cmake_args="-DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX"
             if [ -n "$cmake_opts" ] && [ "$cmake_opts" != "null" ]; then
                 local opts_count=$(echo "$cmake_opts" | jq 'length')
@@ -307,13 +300,6 @@ build_library_dependency() {
             log_info "  Building with Meson..."
             
             cd "$build_path"
-            
-            # Clean build directory if requested
-            local clean_before=$(jq -r '.build_options.clean_before_build // false' "$COMPONENT_CONFIG")
-            if [ "$clean_before" = "true" ] && [ -d "build" ]; then
-                log_info "  Cleaning previous Meson build..."
-                rm -rf build
-            fi
             
             local meson_args="--prefix=$INSTALL_PREFIX"
             if [ -n "$meson_opts" ] && [ "$meson_opts" != "null" ]; then
