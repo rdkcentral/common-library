@@ -571,7 +571,7 @@ main() {
     setup_environment
     process_header_dependencies
     process_library_dependencies
-    cleanup_build_artifacts
+    #cleanup_build_artifacts
     display_summary
     
     exit 0
