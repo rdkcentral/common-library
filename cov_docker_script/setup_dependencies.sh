@@ -143,12 +143,16 @@ process_header_dependencies() {
         echo ""
         log_info "[$((i+1))/$count] Processing: $name"
         
-        # Clone repository
+        # Clone repository only if not already present
         cd "$BUILD_DIR"
-        log_info "  Cloning $name..."
-        if ! git clone --depth 1 "$repo" -b "$branch" "$name" > /dev/null 2>&1; then
-            log_error "Failed to clone $name from $repo (branch: $branch)"
-            exit 1
+        if [ -d "$name" ]; then
+            log_info "  Using existing $name (already exists in $BUILD_DIR)"
+        else
+            log_info "  Cloning $name..."
+            if ! git clone --depth 1 "$repo" -b "$branch" "$name" > /dev/null 2>&1; then
+                log_error "Failed to clone $name from $repo (branch: $branch)"
+                exit 1
+            fi
         fi
         
         # Copy headers
@@ -452,7 +456,7 @@ process_library_dependencies() {
         # Clone repository if not already present
         cd "$BUILD_DIR"
         if [ -d "$name" ]; then
-            log_info "  Repository already cloned: $name"
+            log_info "  Using existing $name (already exists in $BUILD_DIR)"
         else
             log_info "  Cloning $name..."
             if ! git clone --depth 1 "$repo" -b "$branch" "$name" > /dev/null 2>&1; then
