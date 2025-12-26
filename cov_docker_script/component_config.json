@@ -11,7 +11,7 @@
         "repo": "https://github.com/rurban/safeclib.git",
         "branch": "master",
         "header_paths": [
-          { "source": "include", "destination": "$HOME/usr/include" }
+          { "source": "include", "destination": "$HOME/usr/include/rdkb" }
         ]
       },
       {
@@ -19,7 +19,7 @@
         "repo": "https://github.com/rdkcentral/rdk_logger.git",
         "branch": "develop",
         "header_paths": [
-          { "source": "include", "destination": "$HOME/usr/include" }
+          { "source": "include", "destination": "$HOME/usr/include/rdkb" }
         ],
         "build": {
           "type": "autotools"
@@ -30,8 +30,8 @@
         "repo": "https://github.com/xmidt-org/trower-base64.git",
         "branch": "v1.2.7",
         "header_paths": [
-          { "source": "include/trower-base64", "destination": "$HOME/usr/include" },
-          { "source": "include/trower-base64", "destination": "$HOME/usr/include/trower-base64" }
+          { "source": "include/trower-base64", "destination": "$HOME/usr/include/rdkb" },
+          { "source": "include/trower-base64", "destination": "$HOME/usr/include/rdkb/trower-base64" }
         ],
         "build": {
           "type": "commands",
@@ -46,10 +46,10 @@
         "repo": "https://github.com/rdkcentral/rbus.git",
         "branch": "main",
         "header_paths": [
-          { "source": "include", "destination": "$HOME/usr/include/rbus" },
-          { "source": "src/rbus", "destination": "$HOME/usr/include/rbus" },
-          { "source": "src/core", "destination": "$HOME/usr/include/rbus" },
-          { "source": "src/rtmessage", "destination": "$HOME/usr/include/rtmessage" }
+          { "source": "include", "destination": "$HOME/usr/include/rdkb/rbus" },
+          { "source": "src/rbus", "destination": "$HOME/usr/include/rdkb/rbus" },
+          { "source": "src/core", "destination": "$HOME/usr/include/rdkb/rbus" },
+          { "source": "src/rtmessage", "destination": "$HOME/usr/include/rdkb/rtmessage" }
         ],
         "build": {
           "type": "cmake",
@@ -63,31 +63,36 @@
   "native_component": {
     "name": "common-library",
 
-    "include_path": "$HOME/usr/include:/usr/include/dbus-1.0:/usr/lib/x86_64-linux-gnu/dbus-1.0/include",
+    "include_path": "$HOME/usr/include/rdkb:/usr/include/dbus-1.0:/usr/lib/x86_64-linux-gnu/dbus-1.0/include",
     "lib_output_path": "$HOME/usr/local/lib/",
 
     "header_sources": [
-      { "source": "source/ccsp/include", "destination": "$HOME/usr/include" },
-      { "source": "source/ccsp/components/include", "destination": "$HOME/usr/include" },
-      { "source": "source/ccsp/components/common/MessageBusHelper/include", "destination": "$HOME/usr/include" },
-      { "source": "source/ccsp/custom", "destination": "$HOME/usr/include" },
-      { "source": "source/cosa/include", "destination": "$HOME/usr/include" },
-      { "source": "source/cosa/include/linux", "destination": "$HOME/usr/include/linux" },
-      { "source": "source/cosa/include/linux", "destination": "$HOME/usr/include" },
-      { "source": "source/cosa/package/slap/include", "destination": "$HOME/usr/include" },
-      { "source": "source/util_api/ansc/include", "destination": "$HOME/usr/include" },
-      { "source": "source/util_api/http/include", "destination": "$HOME/usr/include" },
-      { "source": "source/util_api/stun/include", "destination": "$HOME/usr/include" },
-      { "source": "source/util_api/tls/include", "destination": "$HOME/usr/include" },
-      { "source": "source/util_api/web/include", "destination": "$HOME/usr/include" },
-      { "source": "source/util_api/asn.1/include", "destination": "$HOME/usr/include" },
-      { "source": "source/debug_api/include", "destination": "$HOME/usr/include" },
-      { "source": "source/dm_pack", "destination": "$HOME/usr/include" }
+      { "source": "source/ccsp/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/ccsp/components/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/ccsp/components/common/MessageBusHelper/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/ccsp/custom", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/cosa/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/cosa/include/linux", "destination": "$HOME/usr/include/rdkb/linux" },
+      { "source": "source/cosa/include/linux", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/cosa/package/slap/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/util_api/ansc/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/util_api/http/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/util_api/stun/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/util_api/tls/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/util_api/web/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/util_api/asn.1/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/debug_api/include", "destination": "$HOME/usr/include/rdkb" },
+      { "source": "source/dm_pack", "destination": "$HOME/usr/include/rdkb" }
     ],
 
     "source_patches": [
       {
-        "file": "../usr/include/rdkb/ccsp_message_bus.h",
+        "file": "source/ccsp/include/ccsp_message_bus.h",
+        "search": "typedef struct _CCSP_MESSAGE_BUS_CONNECTION",
+        "replace": "typedef struct DBusLoop DBusLoop;\n\ntypedef struct _CCSP_MESSAGE_BUS_CONNECTION"
+      },
+      {
+        "file": "$HOME/usr/include/rdkb/ccsp_message_bus.h",
         "search": "typedef struct _CCSP_MESSAGE_BUS_CONNECTION",
         "replace": "typedef struct DBusLoop DBusLoop;\n\ntypedef struct _CCSP_MESSAGE_BUS_CONNECTION"
       }
@@ -96,7 +101,7 @@
     "build": {
       "type": "autotools",
       "configure_options": [
-        "CPPFLAGS=-I/usr/include -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I$HOME/usr/include -I$HOME/usr/include/rtmessage",
+        "CPPFLAGS=-I$HOME/usr/include/rdkb -I/usr/include -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I$HOME/usr/include/rdkb/rtmessage",
         "CFLAGS=-DSAFEC_DUMMY_API -D_ANSC_USE_OPENSSL_ -D_NO_PKI_KB5_SUPPORT",
         "LDFLAGS=-L$HOME/usr/lib -L$HOME/usr/lib/x86_64-linux-gnu"
       ]

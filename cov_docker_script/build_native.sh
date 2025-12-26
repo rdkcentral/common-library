@@ -103,6 +103,37 @@ apply_source_patches() {
     return 0
 }
 
+# Process native headers
+process_native_headers() {
+    local header_count
+    header_count=$(jq -r '.native_component.header_sources // [] | length' "$CONFIG_FILE")
+    
+    if [[ "$header_count" -eq 0 ]]; then
+        log "No header sources configured"
+        return 0
+    fi
+    
+    step "Processing native component headers ($header_count sources)"
+    
+    local i=0
+    while [[ $i -lt $header_count ]]; do
+        local src dst
+        src=$(jq -r ".native_component.header_sources[$i].source" "$CONFIG_FILE")
+        dst=$(jq -r ".native_component.header_sources[$i].destination" "$CONFIG_FILE")
+        
+        # Expand paths
+        src="$COMPONENT_DIR/$src"
+        dst=$(expand_path "$dst")
+        
+        copy_headers "$src" "$dst"
+        i=$((i + 1))
+    done
+    
+    ok "All headers processed successfully"
+    echo ""
+    return 0
+}
+
 # Build with autotools
 build_component_autotools() {
     cd "$COMPONENT_DIR"
@@ -201,6 +232,12 @@ install_libraries() {
 # Main execution
 main() {
     configure_environment
+    
+    # Process native headers
+    if ! process_native_headers; then
+        err "Header processing failed"
+        exit 1
+    fi
     
     # Apply patches
     if ! apply_source_patches; then
