@@ -87,7 +87,7 @@
 
     "source_patches": [
       {
-        "file": "source/ccsp/include/ccsp_message_bus.h",
+        "file": "$HOME/usr/include/rdkb/ccsp_message_bus.h",
         "search": "typedef struct _CCSP_MESSAGE_BUS_CONNECTION",
         "replace": "typedef struct DBusLoop DBusLoop;\n\ntypedef struct _CCSP_MESSAGE_BUS_CONNECTION"
       }
