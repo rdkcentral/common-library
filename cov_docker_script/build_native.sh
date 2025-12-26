@@ -79,7 +79,16 @@ apply_source_patches() {
         replace=$(jq -r ".native_component.source_patches[$i].replace // \"\"" "$CONFIG_FILE")
         content=$(jq -r ".native_component.source_patches[$i].content // \"\"" "$CONFIG_FILE")
         
-        local target_file="$COMPONENT_DIR/$file"
+        # Expand $HOME in file path, then resolve relative paths from COMPONENT_DIR
+        local expanded_file=$(expand_path "$file")
+        local target_file
+        if [[ "$expanded_file" = /* ]]; then
+            # Absolute path - use as is
+            target_file="$expanded_file"
+        else
+            # Relative path - prepend COMPONENT_DIR
+            target_file="$COMPONENT_DIR/$expanded_file"
+        fi
         
         if ! apply_patch "$target_file" "$search" "$replace" "$type" "$content"; then
             err "Failed to apply patch $((i+1))/$patch_count"
