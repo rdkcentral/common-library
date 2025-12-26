@@ -88,9 +88,8 @@
     "source_patches": [
       {
         "file": "source/ccsp/include/ccsp_message_bus.h",
-        "type": "insert_before",
-        "match": "typedef struct _CCSP_MESSAGE_BUS_CONNECTION",
-        "insert": "typedef struct DBusLoop DBusLoop;"
+        "search": "typedef struct _CCSP_MESSAGE_BUS_CONNECTION",
+        "replace": "typedef struct DBusLoop DBusLoop;\n\ntypedef struct _CCSP_MESSAGE_BUS_CONNECTION"
       }
     ],
 
