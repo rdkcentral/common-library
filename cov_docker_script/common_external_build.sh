@@ -1,79 +1,92 @@
-#!/bin/bash
-
-################################################################################
-# Generic External Build Script
-# 
-# Purpose: Entry point for building any component when used as a dependency
-#   - Called by other components that depend on this component
-#   - Sets up all dependencies using setup_dependencies.sh
-#   - Builds native component using build_native.sh
-#   - Provides complete build for external consumers
-#   - Fully generic - works with any component via component_config.json
-#
-# Usage: ./common_external_build.sh
-################################################################################
-
+#!/usr/bin/env bash
 set -e
 
-# Configuration
+################################################################################
+# Common External Build Script
+# Orchestrates the complete build process: dependencies + native component
+# Usage: ./common_external_build.sh [config_file] [component_dir]
+################################################################################
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMPONENT_ROOT="$(dirname "$SCRIPT_DIR")"
-CONFIG_FILE="$SCRIPT_DIR/component_config.json"
+CONFIG_FILE="${1:-$SCRIPT_DIR/component_config.json}"
+COMPONENT_DIR="${2:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
-# Color output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# Source common utilities
+source "$SCRIPT_DIR/common_build_utils.sh"
 
-log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-log_step() { echo -e "${BLUE}[STEP]${NC} $1"; }
+# Validate inputs
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    err "Config file not found: $CONFIG_FILE"
+    exit 1
+fi
 
-################################################################################
-# Main execution
-################################################################################
-main() {
-    # Read component name from config
-    COMPONENT_NAME=$(jq -r '.native_component.name' "$CONFIG_FILE")
-    
-    echo ""
-    echo "=========================================="
-    log_step "External Build Script for $COMPONENT_NAME"
-    echo "=========================================="
-    echo ""
-    
-    # Step 1: Setup dependencies
-    log_step "Step 1: Setting up dependencies..."
-    if [ -f "$SCRIPT_DIR/setup_dependencies.sh" ]; then
-        chmod +x "$SCRIPT_DIR/setup_dependencies.sh"
-        "$SCRIPT_DIR/setup_dependencies.sh"
-    else
-        log_error "setup_dependencies.sh not found"
-        exit 1
-    fi
-    
-    echo ""
-    
-    # Step 2: Build native component
-    log_step "Step 2: Building native component..."
-    if [ -f "$SCRIPT_DIR/build_native.sh" ]; then
-        chmod +x "$SCRIPT_DIR/build_native.sh"
-        "$SCRIPT_DIR/build_native.sh"
-    else
-        log_error "build_native.sh not found"
-        exit 1
-    fi
-    
-    echo ""
-    echo "=========================================="
-    log_info "External Build Complete!"
-    echo "=========================================="
-    log_info "Component: $COMPONENT_NAME"
-    log_info "Location:  $COMPONENT_ROOT"
-    echo "=========================================="
-    
-    exit 0
-}
+if [[ ! -d "$COMPONENT_DIR" ]]; then
+    err "Component directory not found: $COMPONENT_DIR"
+    exit 1
+fi
 
-main "$@"
+# Get component name from config
+COMPONENT_NAME=$(jq -r '.native_component.name' "$CONFIG_FILE")
+
+# Print main banner
+echo ""
+echo -e "${BOLD}${BLUE}================================================================${NC}"
+echo -e "${BOLD}${BLUE}    Complete Build Pipeline for: ${COMPONENT_NAME}${NC}"
+echo -e "${BOLD}${BLUE}================================================================${NC}"
+echo ""
+log "Configuration: $CONFIG_FILE"
+log "Component directory: $COMPONENT_DIR"
+echo ""
+
+# Step 1: Setup Dependencies
+print_banner "Step 1/2: Setting Up Dependencies"
+log "Running dependency setup script..."
+echo ""
+
+if ! "$SCRIPT_DIR/setup_dependencies.sh" "$CONFIG_FILE"; then
+    err "Dependency setup failed"
+    exit 1
+fi
+
+echo ""
+ok "Dependencies setup completed successfully"
+echo ""
+
+# Step 2: Build Native Component
+print_banner "Step 2/2: Building Native Component"
+log "Running native component build script..."
+echo ""
+
+if ! "$SCRIPT_DIR/build_native.sh" "$CONFIG_FILE" "$COMPONENT_DIR"; then
+    err "Native component build failed"
+    exit 1
+fi
+
+echo ""
+ok "Native component build completed successfully"
+echo ""
+
+# Final summary
+echo ""
+echo -e "${BOLD}${GREEN}================================================================${NC}"
+echo -e "${BOLD}${GREEN}    Complete Build Pipeline Completed Successfully!${NC}"
+echo -e "${BOLD}${GREEN}================================================================${NC}"
+echo ""
+log "Component: ${BOLD}$COMPONENT_NAME${NC}"
+log "All dependencies built and installed"
+log "Native component compiled successfully"
+echo ""
+
+# Display installation paths
+HEADER_PATH=$(jq -r '.native_component.include_path' "$CONFIG_FILE")
+LIB_PATH=$(jq -r '.native_component.lib_output_path' "$CONFIG_FILE")
+HEADER_PATH="${HEADER_PATH//\$HOME/$HOME}"
+LIB_PATH="${LIB_PATH//\$HOME/$HOME}"
+
+echo -e "${CYAN}Installation Locations:${NC}"
+log "  Headers: $HEADER_PATH"
+log "  Libraries: $LIB_PATH"
+echo ""
+
+echo -e "${GREEN}✓ Ready for Coverity analysis or deployment${NC}"
+echo ""
