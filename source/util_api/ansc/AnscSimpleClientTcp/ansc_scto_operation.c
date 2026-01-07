@@ -315,7 +315,7 @@ AnscSctoEngage
         if ( (XSKT_SOCKET)pMyObject->Socket == XSKT_SOCKET_INVALID_SOCKET )
         {
             AnscTrace("!!!!!!!!!! _xskt_socket error !!!!!!!!!!\n");
-            if ( pMyObject->Mode & (ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR == 0 ))
+            if ( (pMyObject->Mode & ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR) == 0 ) /* CID: 61683 fix for Logically dead code */
             {
                 pWorker->Notify
 	    			(
@@ -341,7 +341,7 @@ AnscSctoEngage
 
         if ( pMyObject->Socket == ANSC_SOCKET_INVALID_SOCKET )
         {
-            if ( pMyObject->Mode & (ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR == 0 ))
+            if ( (pMyObject->Mode & ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR) == 0 ) /* CID: 61683 fix for Logically dead code */
             {
                 pWorker->Notify
 	    			(
@@ -401,7 +401,7 @@ AnscSctoEngage
 
             perror("_xskt_bind error");
 
-            if ( pMyObject->Mode & (ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR == 0 ))
+            if ( (pMyObject->Mode & ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR) == 0 ) /* CID: 61683 fix for Logically dead code */
             {
                 pWorker->Notify
 	    			(
@@ -456,7 +456,7 @@ AnscSctoEngage
 
             perror("_ansc_bind error");
 
-            if ( pMyObject->Mode & (ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR == 0 ))
+            if ( (pMyObject->Mode & ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR) == 0 ) /* CID: 61683 fix for Logically dead code */
             {
                 pWorker->Notify
 	    			(
@@ -514,7 +514,7 @@ AnscSctoEngage
 
             s_error = _xskt_get_last_error();
 
-            if ( pMyObject->Mode & (ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR == 0 ))
+            if ( (pMyObject->Mode & ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR) == 0 ) /* CID: 61683 fix for Logically dead code */
             {
                 pWorker->Notify
 	    			(
@@ -545,7 +545,7 @@ AnscSctoEngage
 
             AnscTrace("!!! Connect error: %d, %s !!!\n", s_error, strerror(s_error));
 
-            if ( pMyObject->Mode & (ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR == 0 ))
+            if ( (pMyObject->Mode & ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR) == 0 ) /* CID: 61683 fix for Logically dead code */
             {
                 pWorker->Notify
 				    (
@@ -643,7 +643,7 @@ AnscSctoEngage
 	        returnStatus = ANSC_STATUS_FAILURE;
 
 	        //PANSC_SCTO_WORKER_OBJECT        pWorker      = (PANSC_SCTO_WORKER_OBJECT)pMyObject->hWorker;
-            if ( pMyObject->Mode & (ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR == 0 ))
+            if ( (pMyObject->Mode & ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR) == 0 ) /* CID: 61683 fix for Logically dead code */
             {
                 pWorker->Notify
                     (
@@ -661,7 +661,7 @@ AnscSctoEngage
 		        AnscTrace("AnscSctoEngage - openssl_validate_certificate() failed %p.\n", ssl);
 
 		        //PANSC_SCTO_WORKER_OBJECT        pWorker      = (PANSC_SCTO_WORKER_OBJECT      )pMyObject->hWorker;
-                if ( pMyObject->Mode & (ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR == 0) )
+                if ( (pMyObject->Mode & ANSC_SCTO_MODE_NO_BSP_NOTIFY_CONN_ERR) == 0 ) /* CID: 61683 fix for Logically dead code */
                 {
 	                pWorker->Notify
 	                    (
