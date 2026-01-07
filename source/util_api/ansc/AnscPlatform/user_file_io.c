@@ -322,7 +322,6 @@ user_copy_file(char *src, char *dst, int fail_if_exists)
 {
     int src_fd, dst_fd;
     unsigned char buf[1024];
-    int rsz, wsz;
 
     src_fd = open(src, O_RDONLY);
     if (src_fd < 0)
@@ -336,25 +335,34 @@ user_copy_file(char *src, char *dst, int fail_if_exists)
         return 0;
     }
 
-    do
-    {
-        rsz = read(src_fd, buf, sizeof(buf));
-        for(wsz=0; wsz < rsz;)
-        {
-            int sz;
-            sz = write(dst_fd, buf+wsz, rsz - wsz);
-            if (sz <= 0)
-            {
+    /*CID: 559703 fix for Overflowed integer argument*/
+    for (;;) {
+        ssize_t rsz = read(src_fd, buf, sizeof buf);
+        if (rsz == 0) break;
+        if (rsz < 0) {
+            if (errno == EINTR) continue;
+            goto fail;
+        }
+
+        size_t rem = (size_t)rsz;
+        unsigned char *p = buf;
+
+        while (rem > 0) {
+            ssize_t wsz = write(dst_fd, p, rem);
+            if (wsz < 0) {
+                if (errno == EINTR) continue;
                 goto fail;
             }
-            wsz += sz;
-        }
-    }
-    while(rsz > 0);
+            if (wsz == 0) goto fail;
 
-    if (rsz < 0)
-    {
-        goto fail;
+            // --- Sanitize tainted scalar from write() ---
+            size_t uwsz = (size_t)wsz;
+            if (uwsz > rem) goto fail;
+            // -------------------------------------------
+
+            rem -= uwsz;
+            p   += uwsz;
+        }
     }
 
     close(src_fd);

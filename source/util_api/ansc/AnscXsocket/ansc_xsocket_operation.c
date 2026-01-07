@@ -363,11 +363,29 @@ AnscXsocketBind
 */
     if ( pMyObject->Type != ANSC_XSOCKET_TYPE_TCP )
     {
-        _xskt_en_broadcast(pMyObject->Xsocket);
+        /*CID 71371:Unchecked return value from library (CHECKED_RETURN) */
+        int ret_value = 0;
+        _xskt_en_broadcast(pMyObject->Xsocket , ret_value);
+        if ( ret_value != 0 )
+        {
+            AnscTraceError(("(_xskt_en_broadcast) Setsockopt error: %s\n", strerror(errno)));
+
+            return  ANSC_STATUS_FAILURE;
+        }
+        //_xskt_en_broadcast(pMyObject->Xsocket);
     }
     else
     {
-        _xskt_en_reuseaddr(pMyObject->Xsocket);
+        /*CID 71371:(#8 of 8):Unchecked return value from library (CHECKED_RETURN) */
+        int ret_value = 0;
+        _xskt_en_reuseaddr(pMyObject->Xsocket , ret_value);
+        if ( ret_value != 0 )
+        {
+            AnscTraceError(("(_xskt_en_reuseaddr) Setsockopt error: %s\n", strerror(errno)));
+
+            return  ANSC_STATUS_FAILURE;
+        }
+        //_xskt_en_reuseaddr(pMyObject->Xsocket);
     }
 
     /* TODO bind to different interfaces */

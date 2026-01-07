@@ -356,16 +356,9 @@ AnscXmlDomNodeAddChildByName
 {
     PANSC_XML_DOM_NODE_OBJECT       pXmlNode      = (PANSC_XML_DOM_NODE_OBJECT)hThisObject;
     PANSC_XML_DOM_NODE_OBJECT       pChildNode    = NULL;
-    BOOL                            bUnique       = FALSE;
 
-    if ( bUnique )
-    {
-        pChildNode = AnscXmlDomNodeGetChildByName((ANSC_HANDLE)pXmlNode, name);
-    }
-    else
-    {
-        pChildNode = NULL;
-    }
+    /*CID: 74024, 61922 fix for Logically dead code */
+    pChildNode = AnscXmlDomNodeGetChildByName((ANSC_HANDLE)pXmlNode, name);
 
     if ( pChildNode )
     {
