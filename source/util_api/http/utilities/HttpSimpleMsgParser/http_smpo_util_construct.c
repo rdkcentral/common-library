@@ -8254,10 +8254,9 @@ HttpSmpoUtilBuildCookie
                 return ANSC_STATUS_FAILURE;
         }
     }
-    /*CID: 68591 fix for Logically dead code
+    
     if (!bCopySucc)
         return ANSC_STATUS_FAILURE;
-	*/
 
     return status;
 }

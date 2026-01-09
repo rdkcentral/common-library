@@ -550,7 +550,7 @@ AnscAsn1AttrCopyValueFrom
     pNewObject->ulMaxiLen           = pMyObject->ulMaxiLen;
     pNewObject->FormType            = pMyObject->FormType;
     pNewObject->ulClassNumber       = pMyObject->ulClassNumber;
-    pNewObject->bImplicit           = pMyObject->bImplicit; //CID: 65052 fix for NO_EFFECT
+    pNewObject->bImplicit           = pNewObject->bImplicit;
 
     return ANSC_STATUS_SUCCESS;
 }

@@ -210,14 +210,11 @@ DslhObjroPopulateObjRecords
                 pChildObjEntity = (PDSLH_OBJ_ENTITY_OBJECT)pObjEntity->GetObjEntity3((ANSC_HANDLE)pObjEntity);
 
                 pChildLastName  = child_name;
-                /*RDKB-5792, CID-24199, adding NULL check
-                CID: 66021 fix for Logically dead code
-                if ( !pChildLastName )
+                if ( !pChildLastName ) /*RDKB-5792, CID-24199, adding NULL check*/
                 {
                     returnStatus = ANSC_STATUS_RESOURCES;
                     goto  EXIT3;
                 }
-                */
                 ulFullNameSize  = (pMyObject->FullName? AnscSizeOfString(pMyObject->FullName) : 0) + AnscSizeOfString(pChildLastName) + 4;
 
                 pChildFullName  = (char*)AnscAllocateMemory(ulFullNameSize);

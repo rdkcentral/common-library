@@ -504,10 +504,8 @@ BspTemplateBranchStoreBranchData
             if (pBr)
                 BSP_TEMPLATE_PUSH_ACV_ITEM(FALSE, pBr, pSListHeader);
 
-             /* CID: 53213 fix for Logically dead code
             if (!bSucc)
                 break;
-            */
         }
         break;
 

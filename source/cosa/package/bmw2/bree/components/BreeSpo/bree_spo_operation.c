@@ -419,11 +419,10 @@ OUT_OF_RESOURCES:
         pList->Remove((ANSC_HANDLE)pList);
     }
 
-    /*CID: 73334 fix for Logically dead code
     if (pArchive)
     {
         pArchive->Remove((ANSC_HANDLE)pArchive);
-    }*/
+    }
 
 NO_PROBLEM:
 

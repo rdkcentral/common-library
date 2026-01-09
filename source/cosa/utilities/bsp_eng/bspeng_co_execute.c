@@ -669,7 +669,7 @@ BspTemplateObjDoBitXorN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -678,8 +678,7 @@ BspTemplateObjDoBitXorN
     pValL->BitXor((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 57448 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -732,7 +731,7 @@ BspTemplateObjDoShiftRightN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -741,8 +740,7 @@ BspTemplateObjDoShiftRightN
     pValL->ShiftRight((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 54873 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -795,7 +793,7 @@ BspTemplateObjDoShiftLeftN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -804,8 +802,7 @@ BspTemplateObjDoShiftLeftN
     pValL->ShiftLeft((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 67978 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -982,7 +979,7 @@ BspTemplateObjDoBitAndN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -991,8 +988,7 @@ BspTemplateObjDoBitAndN
     pValL->BitAnd((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 68713 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -1045,7 +1041,7 @@ BspTemplateObjDoBitOrN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -1054,8 +1050,7 @@ BspTemplateObjDoBitOrN
     pValL->BitOr((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 70284 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -1108,7 +1103,7 @@ BspTemplateObjDoModuloN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -1117,8 +1112,7 @@ BspTemplateObjDoModuloN
     pValL->Mod((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 70755 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -1171,7 +1165,7 @@ BspTemplateObjDoDivideN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -1180,8 +1174,7 @@ BspTemplateObjDoDivideN
     pValL->Divide((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 59699 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -1296,7 +1289,7 @@ BspTemplateObjDoMultiplyN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -1305,8 +1298,7 @@ BspTemplateObjDoMultiplyN
     pValL->Multiply((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 71695 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -1421,7 +1413,7 @@ BspTemplateObjDoDecrN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -1430,8 +1422,7 @@ BspTemplateObjDoDecrN
     pValL->Minus((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 58316 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -1599,7 +1590,7 @@ BspTemplateObjDoIncrN
     PBSP_TEMPLATE_BRANCH_OBJECT     iBr       = (PBSP_TEMPLATE_BRANCH_OBJECT)hBranch;
     PBSP_TEMPLATE_RUNTIME_OBJECT    pRt       = (PBSP_TEMPLATE_RUNTIME_OBJECT)hRuntime;
     PBSP_TEMPLATE_VAR_OBJECT        aResult   = (PBSP_TEMPLATE_VAR_OBJECT)hVar;
-    BOOL                            bDeleteR;
+    BOOL                            bDeleteL, bDeleteR;
     PBSP_TEMPLATE_VAR_OBJECT        pValL, pValR;
     BOOL                            bTerminated = FALSE;
 
@@ -1639,8 +1630,7 @@ if (TRUE)
     pValL->Plus((ANSC_HANDLE)pValL, pValR);
     aResult->Assign((ANSC_HANDLE)aResult, (ANSC_HANDLE)pValL);
 
-    /*CID: 52892 fix for Logically dead code */
-    BSPENG_REMOVE_BINARY_OPERANDS_N;
+    BSPENG_REMOVE_BINARY_OPERANDS;
 }
 
 
@@ -4811,10 +4801,10 @@ BspTemplateObjDoWhile
                 {
                     pIter = (PBSP_TEMPLATE_BRANCH_OBJECT)pIter->left.Value.b;
                 }
-                /*CID: 64579 fix for REVERSE_INULL
+
                 if (pIter)
                 {
-                */
+
                     pMyObject->DoStatementList
                         (
                             hThisObject, 
@@ -4828,6 +4818,8 @@ BspTemplateObjDoWhile
                     {
                         return;
                     }
+
+                }
 
             }
 

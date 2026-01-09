@@ -458,7 +458,7 @@ BspTemplateObjTokenize
     PBSP_TEMPLATE_OBJECT            pMyObject = (PBSP_TEMPLATE_OBJECT)hThisObject;
     BOOL                            bInText   = TRUE;
 /*    BOOL                            bAtStart  = TRUE;*/
-    //BOOL                            bAtEnd    = FALSE;
+    BOOL                            bAtEnd    = FALSE;
     PBSP_TEMPLATE_TOKEN             pFirst = NULL, pToken = NULL, pPrevToken = NULL, pPrev2Token = NULL;
     char                            ch;
     BOOL                            bOK;
@@ -514,10 +514,8 @@ BspTemplateObjTokenize
                 if (pPrevToken)
                     pPrevToken->pNext   = pToken;
                 
-                /*CID: 62981 fix for Logically dead code
                 if (bAtEnd)
-                        break;
-                */
+                    break;
             }
 
             /*bAtStart = FALSE;*/
@@ -566,7 +564,7 @@ NEXT_LINE:
                         {
                             pToken  = (PBSP_TEMPLATE_TOKEN)pMyObject->hToken;
 
-                            bOK = TRUE; /*CID: 62981 fix for Logically dead code */
+                            bOK = bAtEnd ? pToken->Value.op == BspOp_Term : TRUE;
 
                             if (pToken->Value.op == BspOp_Term)
                             {
@@ -615,10 +613,8 @@ NEXT_LINE:
                         if (pPrevToken)
                             pPrevToken->pNext   = pToken;
 
-                        /*CID: 62981 fix for Logically dead code
                         if (bAtEnd)
                             break;
-                        */
 
                         pPrevToken  = (PBSP_TEMPLATE_TOKEN)pMyObject->hPrevToken;
 
@@ -4906,8 +4902,8 @@ BspTemplateObjUnaryExp
     PBSP_TEMPLATE_BRANCH_OBJECT     pRight;
 
     pExp    = pMyObject->PostfixExp(hThisObject);
-    if (!pExp) /* CID: 60973 fix for Logically dead code */
-        return NULL;
+    if (pExp)
+        return (ANSC_HANDLE)pExp;
 
     if (pMyObject->ulErrLineNo)
         return NULL;
@@ -4920,12 +4916,8 @@ BspTemplateObjUnaryExp
     pTemp   = (PBSP_TEMPLATE_TEMP_OBJECT)CreateBspEngTempComponent(NULL, NULL, NULL);
     if ( !pTemp )
     {
-        /* CID: 60973 fix for Logically dead code */
         if ( pExp )
-        {
-                BspTemplateBranchCORemove((ANSC_HANDLE)pExp);
-                pExp = NULL;
-        }
+            BspTemplateBranchCORemove((ANSC_HANDLE)pExp);
 
         return NULL;
     }
@@ -8598,7 +8590,7 @@ BspTemplateObjDoApi
                 s1    = pMyObject->StackVar(hThisObject, ulVar, hRuntime, FALSE);
             }
 
-            //bDelete = FALSE; CID: 54418 fix for Logically dead code
+            bDelete = FALSE;
 
             aBr = pBr->right.Value.a.pBranch[1];
             num = pMyObject->EvalExpression(hThisObject, &aBr->right, hRuntime, &bTerminated);

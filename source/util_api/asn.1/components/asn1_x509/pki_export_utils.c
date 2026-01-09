@@ -483,7 +483,7 @@ pkiParsingOneName
         {
             pOneLine ++;
             
-            if( pOneLine[0] == '\0') /*CID: 71855 fix for Logically dead code */
+            if( pOneLine == NULL)
             {
                 return FALSE;
             }
@@ -551,7 +551,7 @@ pkiParsingOneName
         pOneLine = pTemp + 1;
 
         /* the last one */
-        if( pOneLine[0] == '\0') /*CID: 71855 fix for Logically dead code */
+        if( pOneLine == NULL)
         {
             return FALSE;
         }
