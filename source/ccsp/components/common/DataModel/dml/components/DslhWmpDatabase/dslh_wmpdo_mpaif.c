@@ -884,11 +884,8 @@ DslhWmpdoMpaSetParameterValues
                     	while (g_isBusy && count > 0)
                     	{
                         	CcspTraceWarning(("<< %s, It's g_isBusy busy try again in 250ms>>\n",__FUNCTION__));
-							/*CID: 257711 fix for Waiting while holding a lock*/
-							AnscReleaseTsLock(&pMyObject->AccessTsLock);
                         	usleep(250000);
                         	count --;
-							AnscAcquireTsLock(&pMyObject->AccessTsLock);
                     	}
 			pthread_mutex_lock(&NotifyMutex);
 		
@@ -900,15 +897,10 @@ DslhWmpdoMpaSetParameterValues
                          	*ppInvalidParameterName = AnscCloneString(pParameterValueArray[i].Name);
                          	returnStatus = CCSP_ERR_INVALID_PARAMETER_VALUE;
                          	pthread_mutex_unlock(&NotifyMutex);
-							/*CID: 72271 fix for Resource leak*/
-							if(vcSig.newValue)
-                        		AnscFreeMemory((char*)vcSig.newValue);
-                    		if(vcSig.oldValue)
-                        		AnscFreeMemory((char*)vcSig.oldValue);
                          	break;
                        }
 		       /*sensitive information like keyPassphrase should not print*/
-		       if(_ansc_strstr(str,"KeyPassphrase") == NULL) /*CID: 66607 fix for Array compared against 0*/
+		       if((str != NULL) && (_ansc_strstr(str,"KeyPassphrase") == NULL))
 		       {
 		             CcspTraceWarning(("<< %s sending Notification str %s >>\n",__FUNCTION__,str));
 		       }
@@ -960,14 +952,9 @@ DslhWmpdoMpaSetParameterValues
         {
             /* init the variable and object record arrays; */ 
             pMyObject->InitObjVarArray(hThisObject);
-        }
-		/*CID: 272608 fix for Dereference after null check*/
-		pObjRecordArray      = (PDSLH_OBJ_RECORD_OBJECT*   )pMyObject->hObjRecordArray;
-        pVarRecordArray      = (PDSLH_VAR_RECORD_OBJECT*   )pMyObject->hVarRecordArray;
 
-        if ( !pVarRecordArray || !pObjRecordArray )
-        {
-            goto EXIT2;
+            pObjRecordArray      = (PDSLH_OBJ_RECORD_OBJECT*   )pMyObject->hObjRecordArray;
+            pVarRecordArray      = (PDSLH_VAR_RECORD_OBJECT*   )pMyObject->hVarRecordArray;
         }
 
         ulParameterCount =
@@ -1001,14 +988,8 @@ DslhWmpdoMpaSetParameterValues
     for ( i = 0; i < ulObjectCount; i++ )
     {        
         pObjRecord = (PDSLH_OBJ_RECORD_OBJECT)pObjRecordArray[i];
-        /*CID: 272608 fix for Dereference after null check*/
-        if ( !pObjRecord )
-        {
-            /*
-             * Impossible, no need for error handling...
-             */
-        }
-        else
+
+        if ( pObjRecord != NULL)
         {
             if ( !pObjRecord->VerifyChanges((ANSC_HANDLE)pObjRecord, &pFaultParamName) )
             {

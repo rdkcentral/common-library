@@ -262,9 +262,9 @@ Bmc2ReqcoDoTransfer
 
         if ( param_list )
         {
-	    /*CID: 164053 and 186730 Resource leak- Free the memory in SlapVhoCloneParamList */
+	    /*CID: 164053 Resource leak- Free the memory in SlapVhoCloneParamList */
 	    /* SlapVhoCloneParamList allocates memory that is stored into dst_param_list*/
-            SlapCloneParamList(param_list, pAsyncJob->ParamList, TRUE);
+            SlapCloneParamList(param_list, pAsyncJob->ParamList);
         }
 
         AnscSpawnTask
@@ -337,9 +337,9 @@ Bmc2ReqcoDoExecute
 
         if ( param_list )
         {
-	    /*CID: 164052 and 186730 Resource leak - Free the ptr in SlapVhoCloneParamList */
+	    /*CID: 164052 Resource leak - Free the ptr in SlapVhoCloneParamList */
 	    /* SlapVhoCloneParamList allocates memory that is stored into dst_param_list*/
-            SlapCloneParamList(param_list, pAsyncJob->ParamList, TRUE);
+            SlapCloneParamList(param_list, pAsyncJob->ParamList);
         }
 
         AnscSpawnTask

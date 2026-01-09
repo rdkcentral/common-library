@@ -387,8 +387,7 @@ SlapVhoCloneParamList
     (
         ANSC_HANDLE                 hThisObject,
         ANSC_HANDLE                 src_param_list,
-        ANSC_HANDLE*                dst_param_list,
-		BOOL                        free_dst_list
+        ANSC_HANDLE*                dst_param_list
     )
 {
     UNREFERENCED_PARAMETER(hThisObject);
@@ -430,12 +429,12 @@ SlapVhoCloneParamList
 
     *dst_param_list = dst_list;
 
-	/*CID:164052,164053, and 186730 for Resource leak*/
-    if (free_dst_list && dst_list)
+    /*CID:164052,164053 Resource leak in Bmc2ReqcoDoExecute()*/
+    if (dst_list)
     {
-        SlapFreeParamList(dst_list);
-        /* CID 186730 fix */
-        (dst_list) = NULL;
+	SlapFreeParamList(dst_list);
+	/* CID 186730 fix */
+	(dst_list) = NULL;
     }
 
     return;

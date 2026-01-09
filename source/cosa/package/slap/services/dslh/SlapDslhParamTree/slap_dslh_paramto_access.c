@@ -245,14 +245,14 @@ SetParamValueHelper
     if ( CCSP_SUCCESS != ret  || 1 != size )
 	{
 		free_parameterValStruct_t (MsgBusHandle, size, ppParamVal);    
-		goto cleanup; /*CID: 71382 and 66253 fix for Resource leak*/
+		return  returnStatus;
 	}
 	
 	if ( strValStruct[0].type != ppParamVal[0]->type)  //datatype miss match
 	{
 		//printf("Exit on Type Miss Match ..\n");
 		free_parameterValStruct_t (MsgBusHandle, size, ppParamVal);    
-		goto cleanup; /*CID: 71382 and 66253 fix for Resource leak*/
+		return  returnStatus;
 	}
 
 	free_parameterValStruct_t (MsgBusHandle, size, ppParamVal);    
@@ -281,20 +281,6 @@ SetParamValueHelper
 	
 	returnStatus =  ANSC_STATUS_SUCCESS;
     return  returnStatus;
-
-/*CID: 71382 and 66253 fix for Resource leak*/
-cleanup:
-	if (dst_componentid)
-	{
-        AnscFreeMemory(dst_componentid);
-	}
-
-    if (dst_dbus_path)
-	{
-        AnscFreeMemory(dst_dbus_path);
-	}
-
-   	return  returnStatus;
 }
 
 /**********************************************************************
@@ -761,17 +747,6 @@ SlapDslhParamtoGetParamValue
 
     }
 	free_parameterValStruct_t(MsgBusHandle, size, ppParamVal);
-	/*CID: 64172 and 71299 fix for Resource leak*/
-	if (dst_componentid)
-	{
-        AnscFreeMemory(dst_componentid);
-	}
-
-    if (dst_dbus_path)
-	{
-        AnscFreeMemory(dst_dbus_path);
-	}
-	
 	return pRetSlapVal;      
 }
 
@@ -936,16 +911,6 @@ SlapDslhParamtoGetParamTypeAndValue
 		*ppValue = AnscCloneString((ppParamVal[0]->parameterValue));
     }
 	free_parameterValStruct_t(MsgBusHandle, size, ppParamVal);
-	/*CID: 64681 and 66136 fix for Resource leak*/
-	if (dst_componentid)
-	{
-        AnscFreeMemory(dst_componentid);
-	}
-
-    if (dst_dbus_path)
-	{
-        AnscFreeMemory(dst_dbus_path);
-	}
 }
 
 
@@ -1596,13 +1561,7 @@ SlapDslhParamtoGetParamInfo
 
     if ( CCSP_SUCCESS != ret || 1 > size) 
     {
-		free_componentStruct_t(MsgBusHandle, size, ppComponents);
-		/*CID: 61556 fix for Resource leak*/
-		if (pParamName != NULL)
-		{
-        		AnscFreeMemory(pParamName);
-		}
-
+		free_componentStruct_t(MsgBusHandle, size, ppComponents); 
 		if (CCSP_CR_ERR_UNSUPPORTED_NAMESPACE == ret ||  CCSP_CR_ERR_INVALID_PARAM	== ret )
 			return 1;
 		else
@@ -2068,11 +2027,7 @@ SlapDslhParamtoGetParamInfoShort
 		pParamName = AnscCloneString("Device.");
 	}
 
-    /*CID: 66694 fix for Resource leak*/
-	if (pParamName != NULL)
-	{
-		uParentLength = AnscSizeOfString(pParamName);
-	}
+	uParentLength = AnscSizeOfString(pParamName);
 
 	ret = CcspBaseIf_discComponentSupportingNamespace 
             (
@@ -2086,13 +2041,7 @@ SlapDslhParamtoGetParamInfoShort
 
     if ( CCSP_SUCCESS != ret || 1 > size) 
     {
-		free_componentStruct_t(MsgBusHandle, size, ppComponents);
-		/*CID: 66694 fix for Resource leak*/
-		if (pParamName != NULL)
-		{
-			AnscFreeMemory(pParamName);
-		}
-
+		free_componentStruct_t(MsgBusHandle, size, ppComponents); 
 		if (CCSP_CR_ERR_UNSUPPORTED_NAMESPACE == ret ||  CCSP_CR_ERR_INVALID_PARAM	== ret )
 		return 1;
 		else
@@ -2706,7 +2655,7 @@ SlapDslhParamtoAddObject
 		{
 		   AnscFreeMemory(NumArray);
 		}
-		goto cleanup; /*CID: 69263 fix for Resource leak*/
+		return  ANSC_STATUS_FAILURE;
 	}
 
 	InstanceNumber = NumArray[Nums - 1] + 1;
@@ -2723,24 +2672,10 @@ SlapDslhParamtoAddObject
 
     if(ret != CCSP_SUCCESS )
     {
-	    goto cleanup; /*CID: 69263 fix for Resource leak*/
+	    return  ANSC_STATUS_FAILURE;
     }
 	
     return  InstanceNumber;
-
-/*CID: 69263 fix for Resource leak*/
-cleanup:
-	if (dst_componentid)
-	{
-        AnscFreeMemory(dst_componentid);
-	}
-
-    if (dst_dbus_path)
-	{
-        AnscFreeMemory(dst_dbus_path);
-	}
-
-	return  ANSC_STATUS_FAILURE;
 }
 
 
@@ -2834,18 +2769,7 @@ SlapDslhParamtoDelObject
 			pObjName
 		);
 
-/*CID: 59079 and 59659 fix for Resource leak*/
-	if (dst_componentid)
-	{
-        AnscFreeMemory(dst_componentid);
-	}
-
-    if (dst_dbus_path)
-	{
-        AnscFreeMemory(dst_dbus_path);
-	}
-
-	if(ret != CCSP_SUCCESS )
+    if(ret != CCSP_SUCCESS )
     {
 	    return  ANSC_STATUS_FAILURE;
     }
@@ -3139,33 +3063,19 @@ SlapDslhParamtoIsParameterReadOnly
 	if ( CCSP_SUCCESS != ret || size != 1 ) 
 	{
 		free_parameterInfoStruct_t (MsgBusHandle, size, ppParamInfos);    
-		goto cleanup;  /*CID: 66124 fix for Resource leak*/
+		return bReadOnly;  
 	}
 
 	if ( TRUE == ppParamInfos[0]->writable)  
  	{
 		free_parameterInfoStruct_t (MsgBusHandle, size, ppParamInfos);    
-		goto cleanup; /*CID: 66124 fix for Resource leak*/
+		return  bReadOnly;
 	}
 
 	free_parameterInfoStruct_t (MsgBusHandle, size, ppParamInfos);    
 
 	bReadOnly =  TRUE;
     return  bReadOnly;
-
-/*CID: 66124 fix for Resource leak*/
-cleanup:
-	if (dst_componentid)
-	{
-        AnscFreeMemory(dst_componentid);
-	}
-
-    if (dst_dbus_path)
-	{
-        AnscFreeMemory(dst_dbus_path);
-	}
-
-   	return  bReadOnly;
 }
 
 
