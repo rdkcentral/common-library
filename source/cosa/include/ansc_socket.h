@@ -305,22 +305,21 @@ ANSC_SOCKET_ADDRESS,  *PANSC_SOCKET_ADDRESS;
                 );                                                                          \
          }
 
-#define  _ansc_en_multicast(s, m_addr, if_addr , ret_val)                                   \
+#define  _ansc_en_multicast(s, m_addr, if_addr)                                             \
          {                                                                                  \
             ansc_ip_mreq            temp_ip_mreq;                                           \
                                                                                             \
             temp_ip_mreq.imr_multiaddr.s_addr = m_addr;                                     \
             temp_ip_mreq.imr_interface.s_addr = if_addr;                                    \
                                                                                             \
-            ret_val =                                                                       \
-                _ansc_setsocketopt                                                          \
-                    (                                                                       \
-                        s,                                                                  \
-                        ANSC_SOCKET_SOL_IPPROTO_IP,                                         \
-                        ANSC_SOCKET_IP_ADD_MEMBERSHIP,                                      \
-                        (char*)&temp_ip_mreq,                                               \
-                        sizeof(temp_ip_mreq)                                                \
-                    );                                                                      \
+            _ansc_setsocketopt                                                              \
+                (                                                                           \
+                    s,                                                                      \
+                    ANSC_SOCKET_SOL_IPPROTO_IP,                                             \
+                    ANSC_SOCKET_IP_ADD_MEMBERSHIP,                                          \
+                    (char*)&temp_ip_mreq,                                                   \
+                    sizeof(temp_ip_mreq)                                                    \
+                );                                                                          \
          }
 
 #define  _ansc_en_multicast_loop(s)                                                         \
@@ -338,20 +337,19 @@ ANSC_SOCKET_ADDRESS,  *PANSC_SOCKET_ADDRESS;
                 );                                                                          \
          }
 
-#define  _ansc_en_reuseaddr(s,ret_val)                                                      \
+#define  _ansc_en_reuseaddr(s)                                                              \
          {                                                                                  \
             int                     en_reuseaddr = 1;                                       \
             int                     op_len       = sizeof(en_reuseaddr);                    \
                                                                                             \
-            ret_val =                                                                       \
-                _ansc_setsocketopt                                                          \
-                    (                                                                       \
-                        s,                                                                  \
-                        ANSC_SOCKET_SOL_SOCKET,                                             \
-                        ANSC_SOCKET_SO_REUSEADDR,                                           \
-                        (char*)&en_reuseaddr,                                               \
-                        op_len                                                              \
-                    );                                                                      \
+            _ansc_setsocketopt                                                              \
+                (                                                                           \
+                    s,                                                                      \
+                    ANSC_SOCKET_SOL_SOCKET,                                                 \
+                    ANSC_SOCKET_SO_REUSEADDR,                                               \
+                    (char*)&en_reuseaddr,                                                   \
+                    op_len                                                                  \
+                );                                                                          \
          }
 
 #define  _ansc_get_lastrecvifaddr(s, if_addr)                                               \
@@ -447,22 +445,21 @@ ANSC_SOCKET_ADDRESS,  *PANSC_SOCKET_ADDRESS;
          }
 
 
-#define  _ansc_set_sndtimeo(s, sec, usec, i_return_value)                                   \
+#define  _ansc_set_sndtimeo(s, sec, usec)                                                   \
          {                                                                                  \
             ansc_timeval            timeval;                                                \
                                                                                             \
             timeval.tv_sec  = sec;                                                          \
             timeval.tv_usec = usec;                                                         \
                                                                                             \
-            i_return_value =                                                                \
-                _ansc_setsocketopt                                                          \
-                    (                                                                       \
-                        s,                                                                  \
-                        ANSC_SOCKET_SOL_SOCKET,                                             \
-                        ANSC_SOCKET_SO_SNDTIMEO,                                            \
-                        (char*)&timeval,                                                    \
-                        sizeof(timeval)                                                     \
-                    );                                                                      \
+            _ansc_setsocketopt                                                              \
+                (                                                                           \
+                    s,                                                                      \
+                    ANSC_SOCKET_SOL_SOCKET,                                                 \
+                    ANSC_SOCKET_SO_SNDTIMEO,                                                \
+                    (char*)&timeval,                                                        \
+                    sizeof(timeval)                                                         \
+                );                                                                          \
          }
 
 #define  _ansc_set_rcvtimeo(s, sec, usec)                                                   \

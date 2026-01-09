@@ -197,8 +197,7 @@ TlsHsoServerSendHelloRequest
     }
     else
     {
-        /*CID 75012: (#4 of 4): Unused value (UNUSED_VALUE)*/
-        // pMyObject->HsServerState = TLS_HSS_STATE_sentHelloRequest;
+        pMyObject->HsServerState = TLS_HSS_STATE_sentHelloRequest;
         pMyObject->HsServerState = TLS_HSS_STATE_waitClientHello;
 
         pStateTimerObj->Stop       ((ANSC_HANDLE)pStateTimerObj);

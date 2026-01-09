@@ -372,38 +372,36 @@
                 }                                                                               \
              }
 
-    #define  _xskt_en_broadcast(s , i_return_value)                                         \
+    #define  _xskt_en_broadcast(s)                                                          \
              {                                                                              \
                 int                     en_broadcast = (int)-1;                             \
                 int                     op_len       = sizeof(en_broadcast);                \
                                                                                             \
-                i_return_value =                                                            \
-                    _xskt_setsocketopt                                                      \
-                        (                                                                   \
-                            s,                                                              \
-                            XSKT_SOCKET_SOL_SOCKET,                                         \
-                            XSKT_SOCKET_SO_BROADCAST,                                       \
-                            (char*)&en_broadcast,                                           \
-                            op_len                                                          \
-                        );                                                                  \
+                _xskt_setsocketopt                                                          \
+                    (                                                                       \
+                        s,                                                                  \
+                        XSKT_SOCKET_SOL_SOCKET,                                             \
+                        XSKT_SOCKET_SO_BROADCAST,                                           \
+                        (char*)&en_broadcast,                                               \
+                        op_len                                                              \
+                    );                                                                      \
              }
 
-    #define  _xskt_en_multicast(s, m_addr, if_addr , i_return_value )                       \
+    #define  _xskt_en_multicast(s, m_addr, if_addr)                                         \
              {                                                                              \
                 ansc_ip_mreq            temp_ip_mreq;                                       \
                                                                                             \
                 temp_ip_mreq.imr_multiaddr.s_addr = m_addr;                                 \
                 temp_ip_mreq.imr_interface.s_addr = if_addr;                                \
                                                                                             \
-                i_return_value =                                                            \
-                    _xskt_setsocketopt                                                      \
-                        (                                                                   \
-                            s,                                                              \
-                            XSKT_SOCKET_SOL_IPPROTO_IP,                                     \
-                            XSKT_SOCKET_IP_ADD_MEMBERSHIP,                                  \
-                            (char*)&temp_ip_mreq,                                           \
-                            sizeof(temp_ip_mreq)                                            \
-                        );                                                                  \
+                _xskt_setsocketopt                                                          \
+                    (                                                                       \
+                        s,                                                                  \
+                        XSKT_SOCKET_SOL_IPPROTO_IP,                                         \
+                        XSKT_SOCKET_IP_ADD_MEMBERSHIP,                                      \
+                        (char*)&temp_ip_mreq,                                               \
+                        sizeof(temp_ip_mreq)                                                \
+                    );                                                                      \
              }
 
     #define  _xskt_en_multicast_loop(s)                                                     \
@@ -421,20 +419,19 @@
                     );                                                                      \
              }
 
-    #define  _xskt_en_reuseaddr(s , i_return_value)                                         \
+    #define  _xskt_en_reuseaddr(s)                                                          \
              {                                                                              \
                 int                     en_reuseaddr = 1;                                   \
                 int                     op_len       = sizeof(en_reuseaddr);                \
                                                                                             \
-                i_return_value =                                                            \
-                    _xskt_setsocketopt                                                      \
-                        (                                                                   \
-                            s,                                                              \
-                            XSKT_SOCKET_SOL_SOCKET,                                         \
-                            XSKT_SOCKET_SO_REUSEADDR,                                       \
-                            (char*)&en_reuseaddr,                                           \
-                            op_len                                                          \
-                        );                                                                  \
+                _xskt_setsocketopt                                                          \
+                    (                                                                       \
+                        s,                                                                  \
+                        XSKT_SOCKET_SOL_SOCKET,                                             \
+                        XSKT_SOCKET_SO_REUSEADDR,                                           \
+                        (char*)&en_reuseaddr,                                               \
+                        op_len                                                              \
+                    );                                                                      \
              }
 
     #define  XSKT_SOCKET_AF_INET                    AF_INET

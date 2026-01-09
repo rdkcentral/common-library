@@ -1079,8 +1079,7 @@ dslhCpeCheckEmptyObject
     PDSLH_MPR_INTERFACE             pDslhMprIf        = (PDSLH_MPR_INTERFACE)pMyObject->GetDslhMprIf(pMyObject);
     PDSLH_OBJ_RECORD_OBJECT         pObjRecord         = NULL;
 
-    /*CID 54364: Same on both sides (CONSTANT_EXPRESSION_RESULT)*/
-	if( !pParameterArray || !pDslhMprIf)
+	if( !pParameterArray || !pParameterArray || !pDslhMprIf)
 	{
 		return ANSC_STATUS_SUCCESS;
 	}
@@ -1242,8 +1241,7 @@ DslhCpecoRegisterDataModelInternal
             }
         }
 
-        /*CID 132625: Copy-paste error (COPY_PASTE_ERROR)*/
-        if( _ansc_strstr(pCompName, pPrefix) == pCompName)
+        if( _ansc_strstr(pCompName, pPrefix) == pCR_id)
         {
             rc = strcpy_s(pTmpCompName, sizeof(pTmpCompName), pCompName);
             ERR_CHK(rc);

@@ -269,8 +269,7 @@ TlsHsoClientSendClientHello
     }
     else
     {
-        /*CID 55559: Unused value (UNUSED_VALUE)*/
-        // pMyObject->HsClientState = TLS_HSC_STATE_sentClientHello;
+        pMyObject->HsClientState = TLS_HSC_STATE_sentClientHello;
         pMyObject->HsClientState = TLS_HSC_STATE_waitServerHello;
 
         pStateTimerObj->Stop       ((ANSC_HANDLE)pStateTimerObj);

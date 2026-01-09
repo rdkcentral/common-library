@@ -714,8 +714,7 @@ AnscDumpMemory
 
             if ( CurrByte == '%' )                              /* escape the character '%' */
             {
-                /*CID 67551: Unused value (UNUSED_VALUE)*/
-                // CharBuffer[ i ] = '%';
+                CharBuffer[ i ] = '%';
                 CharBuffer[ i ] = CurrByte;
             }
             else if ( (CurrByte >= 0x20) && (CurrByte < 128) )  /* Non control charactor */

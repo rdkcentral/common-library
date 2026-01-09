@@ -9033,12 +9033,9 @@ HttpSmpoUtilParseRelPath
     }
 
     /* parse query parameters */
-    /*CID 58183: Dereference after null check (FORWARD_NULL)*/
-    if( pQuery )
-    {
-        pQuery ++;
-        HttpSmpoUtilCopyHeaderString(pQuery, ulQueryLen, pUri->QueryParams, HTTP_MAX_URI_QUERY_SIZE);
-    }
+    pQuery ++;
+    HttpSmpoUtilCopyHeaderString(pQuery, ulQueryLen, pUri->QueryParams, HTTP_MAX_URI_QUERY_SIZE);
+
     return TRUE;
 }
 

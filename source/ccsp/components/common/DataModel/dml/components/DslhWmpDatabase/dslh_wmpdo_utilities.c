@@ -709,21 +709,19 @@ DslhWmpdoParseParamEnumTokens
         ulCharOffset     = 0;
         pTokenEnumString = AnscTcUnlinkToken(pTokenChainEnums);
         pTokenEnumCode   = AnscTcUnlinkToken(pTokenChainEnums);
-        /*CID 74679: Dereference null return value (NULL_RETURNS)*/
-        if( pTokenEnumString && pTokenEnumCode )
+
+        while ( pTokenEnumString->Name[ulCharOffset] == ' ' )
         {
-            while ( pTokenEnumString->Name[ulCharOffset] == ' ' )
-            {
-                ulCharOffset++;
-            }
-            
-            DslhVareoAddTokenValue
-                (
-                    (ANSC_HANDLE)pVarEntity,
-                    &pTokenEnumString->Name[ulCharOffset],
-                    _ansc_atoi(pTokenEnumCode->Name)
-                );
+            ulCharOffset++;
         }
+
+        DslhVareoAddTokenValue
+            (
+                (ANSC_HANDLE)pVarEntity,
+                &pTokenEnumString->Name[ulCharOffset],
+                _ansc_atoi(pTokenEnumCode->Name)
+            );
+
         AnscFreeMemory(pTokenEnumString);
         AnscFreeMemory(pTokenEnumCode  );
     }

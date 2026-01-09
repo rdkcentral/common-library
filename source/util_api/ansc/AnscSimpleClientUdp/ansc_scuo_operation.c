@@ -255,16 +255,7 @@ AnscScuoEngage
     {
         if ( AnscIpv4IsAddrClassD(pMyObject->PeerAddress.Dot) )
         {
-            /*CID 62420:(#12 of 15):Unchecked return value from library (CHECKED_RETURN)*/
-            int ret_value = 0;
-            _xskt_en_reuseaddr(((XSKT_SOCKET)pMyObject->Socket) , ret_value);
-            if ( ret_value != 0 )
-            {
-                returnStatus = ANSC_STATUS_FAILURE;
-
-                goto  EXIT2;
-            }
-            //_xskt_en_reuseaddr(((XSKT_SOCKET)pMyObject->Socket));
+            _xskt_en_reuseaddr(((XSKT_SOCKET)pMyObject->Socket));
 
 
             if ( _xskt_bind((XSKT_SOCKET)pMyObject->Socket, (xskt_socket_addr*)&xskt_any_addr, sizeof(xskt_any_addr)) != 0 )
@@ -289,16 +280,7 @@ AnscScuoEngage
     {
         if ( AnscIpv4IsAddrClassD(pMyObject->PeerAddress.Dot) )
         {
-            /*CID 62420: (#15 of 15): Unchecked return value from library (CHECKED_RETURN) */
-            int ret_value = 0;
-            _ansc_en_reuseaddr(pMyObject->Socket, ret_value);
-            if ( ret_value != 0 )
-            {
-                returnStatus = ANSC_STATUS_FAILURE;
-
-                goto  EXIT2;
-            }
-            //_ansc_en_reuseaddr(pMyObject->Socket);
+            _ansc_en_reuseaddr(pMyObject->Socket);
 
 
             if ( _ansc_bind(pMyObject->Socket, (ansc_socket_addr*)&ansc_any_addr, sizeof(ansc_any_addr)) != 0 )
@@ -331,33 +313,14 @@ AnscScuoEngage
     {
         if ( AnscIpv4IsAddrClassD(pMyObject->PeerAddress.Dot) )
         {
-            /*CID 62420:(#13 of 15):Unchecked return value from library (CHECKED_RETURN)*/
-            int ret_value = 0;
-            _xskt_en_multicast(((XSKT_SOCKET)pMyObject->Socket), pMyObject->PeerAddress.Value, ((pansc_socket_addr_in)&xskt_client_addr)->sin_addr.s_addr , ret_value);
-
-            if ( ret_value != 0 )
-            {
-                returnStatus = ANSC_STATUS_FAILURE;
-
-                goto  EXIT2;
-            }
-            //_xskt_en_multicast(((XSKT_SOCKET)pMyObject->Socket), pMyObject->PeerAddress.Value, ((pansc_socket_addr_in)&xskt_client_addr)->sin_addr.s_addr);
+            _xskt_en_multicast(((XSKT_SOCKET)pMyObject->Socket), pMyObject->PeerAddress.Value, ((pansc_socket_addr_in)&xskt_client_addr)->sin_addr.s_addr);
         }
     }
     else
     {
         if ( AnscIpv4IsAddrClassD(pMyObject->PeerAddress.Dot) )
         {
-            /*CID 62420:(#14 of 15):Unchecked return value from library (CHECKED_RETURN)*/
-            int ret_value = 0;
-            _ansc_en_multicast(pMyObject->Socket, pMyObject->PeerAddress.Value, ansc_client_addr.sin_addr.s_addr , ret_value);
-            if ( ret_value != 0 )
-            {
-                returnStatus = ANSC_STATUS_FAILURE;
-
-                goto  EXIT2;
-            }
-            //_ansc_en_multicast(pMyObject->Socket, pMyObject->PeerAddress.Value, ansc_client_addr.sin_addr.s_addr);
+            _ansc_en_multicast(pMyObject->Socket, pMyObject->PeerAddress.Value, ansc_client_addr.sin_addr.s_addr);
         }
     }
 
