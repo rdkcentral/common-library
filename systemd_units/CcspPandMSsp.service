@@ -33,6 +33,7 @@ ExecStartPre=/bin/sh -c '(/usr/ccsp/pam/GwProvCheck.sh)'
 ExecStart=/bin/sh -c '/usr/bin/CcspPandMSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspPandMSsp" >> ${PROCESS_RESTART_LOG}'
 ExecStartPost=/bin/sh -c '(/usr/ccsp/ccspPAMCPCheck.sh)'
+SyslogIdentifier=CcspPandMSsp
 Restart=always
 
 
