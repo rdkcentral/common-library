@@ -650,11 +650,7 @@ AnscDumpMemory
         /*
          *      Print the address
          */
-#ifdef _64BIT_ARCH_SUPPORT_
         _ansc_sprintf(PrintBuffer, "%p", pCurr);
-#else
-        _ansc_sprintf(PrintBuffer, "0x%08X", (unsigned int)pCurr);
-#endif
         _ansc_strcat (PrintBuffer, ": ");
 
         /*
@@ -695,11 +691,7 @@ AnscDumpMemory
         /*
          *      Print the address
          */
-#ifdef _64BIT_ARCH_SUPPORT_
         _ansc_sprintf(PrintBuffer, "%p", pCurr);
-#else
-        _ansc_sprintf(PrintBuffer, "0x%08X", (unsigned int)pCurr);
-#endif
         _ansc_strcat (PrintBuffer, ": " );
 
         /*
@@ -722,7 +714,8 @@ AnscDumpMemory
 
             if ( CurrByte == '%' )                              /* escape the character '%' */
             {
-                CharBuffer[ i ] = '%';
+                /*CID 67551: Unused value (UNUSED_VALUE)*/
+                // CharBuffer[ i ] = '%';
                 CharBuffer[ i ] = CurrByte;
             }
             else if ( (CurrByte >= 0x20) && (CurrByte < 128) )  /* Non control charactor */

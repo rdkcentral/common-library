@@ -75,7 +75,9 @@ if [ "x"$1 = "xkill" ] || [ "x"$2 = "xkill" ]; then
 #	killall CcspRmSsp
 	killall CcspCrSsp
 #    killall CcspLmSsp
+if [ "$VOICE_SUPPORTED" != "false" ]; then
 	killall CcspMtaAgentSsp
+fi
 	killall CcspCMAgentSsp
     killall CcspLMLite
     killall CcspXdnsSsp

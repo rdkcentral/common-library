@@ -197,7 +197,7 @@ syscfg set mgmt_wan_sshaccess 1
 syscfg commit 
 echo_t "PWD is `pwd`"
 
-
+if [ "$VOICE_SUPPORTED" != "false" ]; then
 if [ "$MODEL_NUM" = "DPC3939B" ] || [ "$MODEL_NUM" = "DPC3941B" ]; then
 echo_t "Disabling MTA for BWG "
 else
@@ -210,6 +210,7 @@ if [ -e ./mta ]; then
         $BINPATH/CcspMtaAgentSsp -subsys $Subsys
     fi
     cd ..
+fi
 fi
 fi
 

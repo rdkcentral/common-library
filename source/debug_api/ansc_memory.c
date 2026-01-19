@@ -332,14 +332,14 @@ AnscAllocateMemoryCountSize
 {
     void*                           pMemoryPointer = NULL;
 
+    AnscInitializeSpinLock(&g_tCountSizeSpinLock);
+    AnscAcquireSpinLock(&g_tCountSizeSpinLock);
     if ( !g_bCountSizeInitialized )
     {
-        AnscInitializeSpinLock(&g_tCountSizeSpinLock);
 
-        AnscAcquireSpinLock(&g_tCountSizeSpinLock);
         g_bCountSizeInitialized     = TRUE;
-        AnscReleaseSpinLock(&g_tCountSizeSpinLock);
     }
+    AnscReleaseSpinLock(&g_tCountSizeSpinLock);
 
     pMemoryPointer = AnscAllocateMemoryOrig(ulMemorySize + sizeof(ULONG));
 
@@ -958,13 +958,8 @@ AnscTraceMemoryTable2
             sprintf
                 (
                     pTraceMessage,
-#ifdef _64BIT_ARCH_SUPPORT_
                     " *** mem_block = %p, size = %9d bytes, id = %6d, %s ***",
                     pMemoryAllocItem->MemoryPointer,
-#else
-                    " *** mem_block = 0x%8X, size = %9d bytes, id = %6d, %s ***",
-                    (UINT)pMemoryAllocItem->MemoryPointer,
-#endif
                     (int)pMemoryAllocItem->MemorySize,
                     (int)pMemoryAllocItem->AllocId,
                     pMemoryAllocItem->OwnerDesp
@@ -1022,23 +1017,23 @@ AnscAllocateMemoryRecordDetail
                     " AnscAllocateMemoryRecordDetail 1 \n"
                 ));*/
 
+    AnscInitializeSpinLock(&g_tCountSizeSpinLock);
+
+    AnscAcquireSpinLock(&g_tCountSizeSpinLock);
     if ( !g_bCountSizeInitialized )
     {
-        AnscInitializeSpinLock(&g_tCountSizeSpinLock);
-
-        AnscAcquireSpinLock(&g_tCountSizeSpinLock);
         g_bCountSizeInitialized     = TRUE;
-        AnscReleaseSpinLock(&g_tCountSizeSpinLock);
     }
+    AnscReleaseSpinLock(&g_tCountSizeSpinLock);
+    AnscInitializeSpinLock(&g_tRecordDetailSpinLock);
+    AnscInitializeMemoryAllocTable();
+
+    AnscAcquireSpinLock(&g_tRecordDetailSpinLock);
     if ( !g_bRecordDetailInitialized )
     {
-        AnscInitializeSpinLock(&g_tRecordDetailSpinLock);
-        AnscInitializeMemoryAllocTable();
-
-        AnscAcquireSpinLock(&g_tRecordDetailSpinLock);
         g_bRecordDetailInitialized     = TRUE;
-        AnscReleaseSpinLock(&g_tRecordDetailSpinLock);
     }
+    AnscReleaseSpinLock(&g_tRecordDetailSpinLock);
                 /*CcspTraceError
                 ((
                     " AnscAllocateMemoryRecordDetail 2 \n"
@@ -1449,11 +1444,7 @@ void AnscLiveMemoryInspectRecordDetail
             
                         pPrevAllocItem = AnscGetPrevMemoryAllocItem(pMemoryBlock);
 
-#ifdef _64BIT_ARCH_SUPPORT_
                         printf("found %p\n",pPrevAllocItem);
-#else
-                        printf("found %x\n",(UINT)pPrevAllocItem);
-#endif
                         
                         if ( !pPrevAllocItem )
                         {
