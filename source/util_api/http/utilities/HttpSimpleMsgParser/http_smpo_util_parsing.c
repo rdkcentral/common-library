@@ -453,7 +453,7 @@ HttpSmpoUtilParseHeader
         }
         else
         {
-            pHeaderField->HeaderId      = pXinfo?pXinfo->HeaderId:HTTP_HEADER_ID_EXTENSION;
+            pHeaderField->HeaderId      = pXinfo->HeaderId; /*CID: 58573 fix for Logically dead code */
         }
         pHeaderField->Linkage.Next  = NULL;
         pHeaderField->HashIndex     = 0;

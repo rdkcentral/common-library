@@ -2422,7 +2422,7 @@ ScliShoMatchCommand
         int*                        pErrorPos
     )
 {
-    ANSC_STATUS                     returnStatus    = ANSC_STATUS_SUCCESS;
+    //ANSC_STATUS                     returnStatus    = ANSC_STATUS_SUCCESS;
     BOOL                            bMatched        = TRUE;
     BOOL                            bPartialMatched = FALSE;
     ULONG                           i;
@@ -2450,9 +2450,10 @@ ScliShoMatchCommand
                     pErrorPos
                 );
 
+        /* CID: 61820 fix for Logically dead code
         if ( returnStatus == ANSC_STATUS_CONTINUE )
         {
-            /* dependent argument might be skipped in case no branch matches */
+            // dependent argument might be skipped in case no branch matches
             continue;
         }
 
@@ -2460,6 +2461,7 @@ ScliShoMatchCommand
         {
             goto EXIT;
         }
+        */
 
         if ( pReqArgMatched[i].nMatchTokenEnd >= 0 && 
              pReqArgMatched[i].nMatchTokenEnd >= pReqArgMatched[i].nMatchTokenStart )

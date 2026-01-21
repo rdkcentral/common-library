@@ -4392,10 +4392,10 @@ HttpSmpoUtilBuildCookie
                 return ANSC_STATUS_FAILURE;
         }
     }
-
+    /*Fix for Logically dead code
     if (!bCopySucc)
         return ANSC_STATUS_FAILURE;
-
+    */
     return status;
 }
 
@@ -9912,9 +9912,11 @@ AnscHttpParseRequestLine
 
     pUri    = pMsg;
 
-    /*RDKB-6184, CID-24139, added to avoid Coverity warning*/
+    /*RDKB-6184, CID-24139, added to avoid Coverity warning
+    CID: 62262, 66815 fix for Logically dead code
     if (!pUri)
         return (ANSC_HANDLE)NULL;
+    */
 
     pMsg    = (PUCHAR)_ansc_strchr((char *)pUri, ' ');
 
@@ -10199,7 +10201,7 @@ AnscHttpParseHeader
         }
         else
         {
-            pHeaderField->HeaderId      = pXinfo?pXinfo->HeaderId:HTTP_HEADER_ID_EXTENSION;
+            pHeaderField->HeaderId      = pXinfo->HeaderId; /*CID: 65410 fix for Logically dead code */
         }
         pHeaderField->Linkage.Next  = NULL;
         pHeaderField->HashIndex     = 0;
