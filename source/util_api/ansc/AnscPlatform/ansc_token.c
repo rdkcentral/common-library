@@ -99,14 +99,14 @@ AnscTcAllocate
     {
         return  (ANSC_HANDLE)NULL;
     }
-    else if ( !string )
+    
+	/*CID: 66170 fix for Logically dead code
+    if ( !string )
     {
         return  (ANSC_HANDLE)pTokenChain;
-    }
-    else
-    {
-        AnscQueueInitializeHeader(&pTokenChain->TokensQueue);
-    }
+    }*/
+
+    AnscQueueInitializeHeader(&pTokenChain->TokensQueue);
 
     string      = AnscMoveToNextToken(string, separator);
     /*RDKB-6185, CID-24092, null check before use*/
@@ -182,14 +182,14 @@ AnscTcAllocate2
     {
         return  (ANSC_HANDLE)NULL;
     }
-    else if ( !string )
+    
+	/*CID: 59750 fix for Logically dead code
+    if ( !string )
     {
         return  (ANSC_HANDLE)pTokenChain;
-    }
-    else
-    {
-        AnscQueueInitializeHeader(&pTokenChain->TokensQueue);
-    }
+    }*/
+    
+	AnscQueueInitializeHeader(&pTokenChain->TokensQueue);
 
     string      = AnscMoveToNextToken(string, separator);
     /*RDKB-6185, CID-24126, null check before use*/
@@ -278,14 +278,14 @@ AnscTcAllocate3
     {
         return  (ANSC_HANDLE)NULL;
     }
-    else if ( !string )
+
+    /*CID: 59595 fix for Logically dead code
+    if ( !string )
     {
         return  (ANSC_HANDLE)pTokenChain;
-    }
-    else
-    {
-        AnscQueueInitializeHeader(&pTokenChain->TokensQueue);
-    }
+    }*/
+    
+	AnscQueueInitializeHeader(&pTokenChain->TokensQueue);
 
     string      = AnscMoveToNextToken(string, separator);
     /*RDKB-6185, CID-24426, null check before use*/
