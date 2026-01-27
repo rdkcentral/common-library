@@ -652,6 +652,7 @@ DslhWmpdoMpaSetParameterValues
     *piStatus    = 0;
     errno_t rc = -1;
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     if ( (ulArraySize == 0) || !pParameterValueArray )
     {
@@ -1487,6 +1488,7 @@ DslhWmpdoMpaGetParameterValues
     *pulArraySize      = 0;
 
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     /*
      * A fault response MUST make use of the SOAP Fault element using the following conventions:
@@ -1997,6 +1999,7 @@ DslhWmpdoMpaGetParameterNames
     *pulArraySize     = 0;
 
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     /*
      * A fault response MUST make use of the SOAP Fault element using the following conventions:
@@ -2313,6 +2316,7 @@ DslhWmpdoMpaSetParameterAttributes
     PSINGLE_LINK_ENTRY              pSLinkEntry              = (PSINGLE_LINK_ENTRY     )NULL;
     
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     /*
      * A fault response MUST make use of the SOAP Fault element using the following conventions:
@@ -2693,6 +2697,7 @@ DslhWmpdoMpaGetParameterAttributes
     *pulArraySize       = 0;
 
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     /*
      * A fault response MUST make use of the SOAP Fault element using the following conventions:

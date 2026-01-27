@@ -175,7 +175,7 @@ CcspCcMbi_GetParameterValues
         return returnStatus;
     }
     PDSLH_MPA_INTERFACE         pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )g_pDslhCpeController->GetDslhMpaIf((ANSC_HANDLE)g_pDslhCpeController);
-    PDSLH_MPR_INTERFACE         pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
+    //PDSLH_MPR_INTERFACE         pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
     PSLAP_STRING_ARRAY          pParamNameArray    = (PSLAP_STRING_ARRAY         )NULL;
     PDSLH_CWMP_PARAM_VALUE      pParamValueArray   = (PDSLH_CWMP_PARAM_VALUE     )NULL;
     ULONG                       ulArraySize        = (ULONG                      )0;
@@ -188,7 +188,7 @@ CcspCcMbi_GetParameterValues
         PDSLH_CPE_CONTROLLER_OBJECT      pCpeco = user_data;
 
         pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )pCpeco->GetDslhMpaIf((ANSC_HANDLE)pCpeco);
-        pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
+        //pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
     }
 
     *val      = ppReturnVal;
@@ -205,7 +205,7 @@ CcspCcMbi_GetParameterValues
 
 
     /* increase the request counter by one */
-    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
+    //pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
 
     SlapAllocStringArray2(size, pParamNameArray);
 
@@ -412,7 +412,7 @@ CcspCcMbi_SetParameterValues
     }
 
     PDSLH_MPA_INTERFACE         pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )g_pDslhCpeController->GetDslhMpaIf((ANSC_HANDLE)g_pDslhCpeController);
-    PDSLH_MPR_INTERFACE         pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
+    //PDSLH_MPR_INTERFACE         pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
     PDSLH_CWMP_PARAM_VALUE      pParamArray        = NULL;
     PDSLH_CWMP_PARAM_VALUE      pParamValue        = NULL;
     PSLAP_VARIABLE              pSlapVariable      = (PSLAP_VARIABLE)NULL;
@@ -426,7 +426,7 @@ CcspCcMbi_SetParameterValues
         PDSLH_CPE_CONTROLLER_OBJECT      pCpeco = user_data;
 
         pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )pCpeco->GetDslhMpaIf((ANSC_HANDLE)pCpeco);
-        pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
+        //pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
     }
 
 
@@ -456,7 +456,7 @@ CcspCcMbi_SetParameterValues
     }
 
     /* increase the request counter by one */
-    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
+    //pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
 
     pParamArray = (PDSLH_CWMP_PARAM_VALUE)
 			AnscAllocateMemory(sizeof(DSLH_CWMP_PARAM_VALUE) * size);
@@ -682,7 +682,7 @@ CcspCcMbi_SetParameterAttributes
     }
 
     PDSLH_MPA_INTERFACE             pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )g_pDslhCpeController->GetDslhMpaIf((ANSC_HANDLE)g_pDslhCpeController);
-    PDSLH_MPR_INTERFACE             pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
+    //PDSLH_MPR_INTERFACE             pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
     ULONG                           uMaxParam          = 128;
     PDSLH_CWMP_SET_PARAM_ATTRIB     pParamArray        = NULL;
     PDSLH_CWMP_SET_PARAM_ATTRIB     pParamAttr         = NULL;
@@ -694,7 +694,7 @@ CcspCcMbi_SetParameterAttributes
         PDSLH_CPE_CONTROLLER_OBJECT      pCpeco = user_data;
 
         pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )pCpeco->GetDslhMpaIf((ANSC_HANDLE)pCpeco);
-        pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
+        //pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
     }
 
     if ( (g_currentSessionID != 0) && (sessionId != g_currentSessionID) )
@@ -732,7 +732,7 @@ CcspCcMbi_SetParameterAttributes
     }
 
     /* increase the request counter by one */
-    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
+    //pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
 
     pParamArray = (PDSLH_CWMP_SET_PARAM_ATTRIB)
             AnscAllocateMemory(sizeof(DSLH_CWMP_SET_PARAM_ATTRIB) * size);
@@ -802,7 +802,7 @@ CcspCcMbi_GetParameterAttributes
     }
 
     PDSLH_MPA_INTERFACE             pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )g_pDslhCpeController->GetDslhMpaIf((ANSC_HANDLE)g_pDslhCpeController);
-    PDSLH_MPR_INTERFACE             pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
+    //PDSLH_MPR_INTERFACE             pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
     PSLAP_STRING_ARRAY              pParamNameArray    = (PSLAP_STRING_ARRAY         )NULL;
     PDSLH_CWMP_PARAM_ATTRIB         pParamAttribArray  = (PDSLH_CWMP_PARAM_ATTRIB    )NULL;
     ULONG                           ulArraySize        = (ULONG                      )0;
@@ -815,7 +815,7 @@ CcspCcMbi_GetParameterAttributes
         PDSLH_CPE_CONTROLLER_OBJECT      pCpeco = user_data;
 
         pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )pCpeco->GetDslhMpaIf((ANSC_HANDLE)pCpeco);
-        pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
+        //pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
     }
 
     *val = ppReturnVal;
@@ -843,7 +843,7 @@ CcspCcMbi_GetParameterAttributes
     }
 
     /* increase the request counter by one */
-    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
+    //pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
 
     if ( pDslhMpaIf != NULL )
     {
@@ -1103,7 +1103,7 @@ CcspCcMbi_GetParameterNames
     }
 
     PDSLH_MPA_INTERFACE             pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )g_pDslhCpeController->GetDslhMpaIf((ANSC_HANDLE)g_pDslhCpeController);
-    PDSLH_MPR_INTERFACE             pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
+    //PDSLH_MPR_INTERFACE             pDslhMprIf         = (PDSLH_MPR_INTERFACE        )g_pDslhCpeController->GetDslhMprIf((ANSC_HANDLE)g_pDslhCpeController); 
     PDSLH_CWMP_PARAM_INFO           pParamInfoArray    = (PDSLH_CWMP_PARAM_INFO      )NULL;
     ULONG                           ulArraySize        = (ULONG                      )0;
     parameterInfoStruct_t**         ppReturnVal        = NULL;
@@ -1115,7 +1115,7 @@ CcspCcMbi_GetParameterNames
         PDSLH_CPE_CONTROLLER_OBJECT      pCpeco = user_data;
 
         pDslhMpaIf         = (PDSLH_MPA_INTERFACE        )pCpeco->GetDslhMpaIf((ANSC_HANDLE)pCpeco);
-        pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
+        //pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pCpeco->GetDslhMprIf((ANSC_HANDLE)pCpeco); 
     }
 
     *val = ppReturnVal;
@@ -1140,7 +1140,7 @@ CcspCcMbi_GetParameterNames
     }
 
     /* increase the request counter by one */
-    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
+    //pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);       
 
     returnStatus =
         pDslhMpaIf->GetParameterNames
