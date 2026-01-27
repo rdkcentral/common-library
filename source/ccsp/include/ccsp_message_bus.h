@@ -156,6 +156,8 @@ typedef struct _CCSP_MESSAGE_FILTER
 
 } CCSP_MESSAGE_FILTER;
 
+typedef struct DBusLoop DBusLoop;
+
 typedef struct _CCSP_MESSAGE_BUS_CONNECTION
 {
     DBusConnection *conn;
