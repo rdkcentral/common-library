@@ -43,7 +43,7 @@ log "Build script found, proceeding with build..."
 echo ""
 log "Running common_external_build.sh from build_tools_workflows..."
 cd "$NATIVE_COMPONENT_DIR"
-"$BUILD_TOOLS_DIR/cov_docker_script/common_external_build.sh"
+"$BUILD_TOOLS_DIR/cov_docker_script/common_external_build.sh" "$SCRIPT_DIR/component_config.json" "$NATIVE_COMPONENT_DIR"
 
 echo ""
 ok "External build completed successfully!"
