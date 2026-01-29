@@ -10,9 +10,9 @@ Description= Log Dmesg
 After=CcspMtaAgentSsp.service
 
 [Service]
-Type=simple
+Type=oneshot
 ExecStart=/rdklogger/update_journal_log.sh start
-Restart=always
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
