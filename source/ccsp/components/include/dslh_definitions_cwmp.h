@@ -306,18 +306,21 @@ DSLH_CWMP_PARAM_VALUE,  *PDSLH_CWMP_PARAM_VALUE;
 
 #define  DslhCwmpCleanParamValue(param_value)                                               \
          {                                                                                  \
-            if ( param_value->Name )                                                        \
+            if (param_value)                                                                \
             {                                                                               \
-                AnscFreeMemory(param_value->Name);                                          \
+                if ( param_value->Name )                                                    \
+                {                                                                           \
+                    AnscFreeMemory(param_value->Name);                                      \
                                                                                             \
-                param_value->Name = NULL;                                                   \
-            }                                                                               \
+                    param_value->Name = NULL;                                               \
+                }                                                                           \
                                                                                             \
-            if ( param_value->Value )                                                       \
-            {                                                                               \
-                SlapFreeVariable(param_value->Value);                                       \
+                if ( param_value->Value )                                                   \
+                {                                                                           \
+                    SlapFreeVariable(param_value->Value);                                   \
                                                                                             \
-                param_value->Value = NULL;                                                  \
+                    param_value->Value = NULL;                                              \
+                }                                                                           \
             }                                                                               \
          }
 
