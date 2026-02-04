@@ -687,7 +687,7 @@ CcspNsMgrDiscoverNamespace
 
     pNewSpace = CcspNsMgrChangeToRegNamespaceName(pMyObject->pContainerName, (char*)pNamespace, &bChange);
 
-    if( pNewSpace == NULL)
+    if( pNewSpace == NULL || pAtomNamespace == NULL )
     {
         return CCSP_CR_ERR_INVALID_PARAM;
     }
