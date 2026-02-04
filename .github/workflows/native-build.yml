@@ -19,6 +19,9 @@ jobs:
 
       - name: native build
         run: |
+          # Trust the workspace
+          git config --global --add safe.directory '*'
+
           # Pull the latest changes for the native build system
           git submodule update --init --recursive --remote
 
