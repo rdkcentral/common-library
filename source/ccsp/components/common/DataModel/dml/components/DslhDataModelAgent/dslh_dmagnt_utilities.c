@@ -1242,7 +1242,7 @@ DslhDmagntCheckBaseObjNames
                 }
                 else
                 {
-                    rc = sprintf_s(pFullName, sizeof(pFullName), "%s%s", pRootName, buffer);
+                    rc = sprintf_s(pFullName, sizeof(pFullName), "%s%s%s", pRootName, buffer);
                     if(rc < EOK)
                     {
                        ERR_CHK(rc);
