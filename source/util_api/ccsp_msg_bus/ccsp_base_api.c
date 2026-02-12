@@ -48,6 +48,8 @@
 #include <ccsp_psm_helper.h>
 #include "ccsp_trace.h"
 
+#include "secure_wrapper.h"
+
 /* For AnscEqualString */
 #include "ansc_platform.h"
 
@@ -68,6 +70,23 @@
 #ifndef CCSP_CR_ETHWAN_DEVICE_PROFILE_XML_FILE
 #define CCSP_CR_ETHWAN_DEVICE_PROFILE_XML_FILE "/usr/ccsp/cr-ethwan-deviceprofile.xml"
 #endif
+
+// Declaring selfheal scripts
+//char *SCRIPT_PATH = "/usr/ccsp/tad/";
+char *SELF_HEAL_SCRIPTS[] = {
+    "selfheal_aggressive.sh",
+    "self_heal_connectivity_test.sh",
+    "resource_monitor.sh"
+};
+
+//Start/stop cron jobs
+typedef struct {
+    const char *name;
+    const char *key;
+    int def_val;
+} CronJob;
+
+#define SCRIPT_COUNT (sizeof(SELF_HEAL_SCRIPTS) / sizeof(SELF_HEAL_SCRIPTS[0]))
 
 typedef struct _component_info {
     char **list;
@@ -3714,4 +3733,118 @@ int Rbus2_to_CCSP_error_mapper (int Rbus_error_code)
         case  RBUS_ERROR_INVALID_PARAMETER_VALUE            : CCSP_error_code = CCSP_ERR_INVALID_PARAMETER_VALUE; break;
     }
     return CCSP_error_code;
+}
+
+void extract_command_output (char *cmd, char *out, int len)
+{
+    FILE *fp;
+    CcspTraceInfo(("%s : Executing command: %s\n", __FUNCTION__, cmd));
+    out[0] = 0;
+
+    fp = popen (cmd, "r");
+    if (fp)
+    {
+        if (fgets (out, len, fp) != NULL)
+        {
+          //CID 252175 fix - Parse warning (PW.PARAMETER_HIDDEN)
+            size_t len_out = strlen (out);
+            if ((len_out > 0) && (out[len_out - 1] == '\n'))
+                out[len_out - 1] = 0;
+        }
+        pclose (fp);
+    }
+}
+
+/* Start all self-heal scripts */
+void start_self_heal_scripts() {
+    for (size_t i = 0; i < SCRIPT_COUNT; i++) {
+        CcspTraceWarning(("%s: Starting %s\n", __FUNCTION__, SELF_HEAL_SCRIPTS[i]));
+        // Uses the shared path and script name
+        v_secure_system("/usr/ccsp/tad/%s &", SELF_HEAL_SCRIPTS[i]);
+    }
+}
+/* Stop all self-heal scripts */
+void stop_self_heal_scripts() {
+    char buf[64], cmd[128];
+    for (size_t i = 0; i < SCRIPT_COUNT; i++) {
+        snprintf(cmd, sizeof(cmd), "pidof %s", SELF_HEAL_SCRIPTS[i]);
+        extract_command_output(cmd, buf, sizeof(buf));
+        CcspTraceInfo(("%s: pidof %s returned: %s\n", __FUNCTION__, SELF_HEAL_SCRIPTS[i], buf));
+        if (buf[0] == '\0') {
+            CcspTraceWarning(("%s: %s is not running\n", __FUNCTION__, SELF_HEAL_SCRIPTS[i]));
+        } else {
+            CcspTraceWarning(("%s: Stopping %s \n", __FUNCTION__, SELF_HEAL_SCRIPTS[i]));
+            v_secure_system("kill -9 %s", buf);
+        }
+    }
+}
+
+/* To fetch syscfg values */
+unsigned long get_interval(const char *key, int def_val) {
+    // Handle fixed intervals (null keys)
+    if (!key) return (unsigned long)def_val;
+
+    FILE *fp = NULL;
+    char cmd[64];
+    char buf[32] = {0};
+    unsigned long result = (unsigned long)def_val;
+
+    // Format the command string
+    snprintf(cmd, sizeof(cmd), "syscfg get %s", key);
+
+    // Execute and read output
+    if ((fp = popen(cmd, "r")) != NULL) {
+        
+	    if (fgets(buf, sizeof(buf), fp) != NULL && buf[0] != '\0' && buf[0] != '\n') {
+		    result = (unsigned long)atol(buf);
+        }
+    	pclose(fp);
+    }
+
+    return result;
+}
+
+/* To Update Crontab (Removes old, Adds new) */
+void update_cron_entry(const char *script, unsigned long interval, bool should_run) {
+    // We always remove the old entry to avoid duplicates
+    v_secure_system("crontab -l 2>/dev/null | sed '/%s/d' | crontab -", script);
+    // If should_run is true, we append the new timing
+    if (should_run) {
+        v_secure_system("(crontab -l 2>/dev/null; echo '*/%lu * * * * /usr/ccsp/tad/%s') | crontab -", 
+                        interval, script);
+    }
+}
+
+/* function to Manage add/remove of cron jobs */
+void manage_self_heal_cron_state(bool SelfhealCronEnable) {
+    const CronJob self_heal_scripts[] = {
+        {"self_heal_connectivity_test.sh", "ConnTest_PingInterval", 60},
+        {"resource_monitor.sh", "resource_monitor_interval", 15},
+        {"selfheal_aggressive.sh", "AggressiveInterval", 5}
+    };
+
+    const CronJob recovery_scripts[] = {
+        {"syscfg_recover.sh", NULL, 15},
+        {"resource_monitor_recover.sh", NULL, 5}
+    };
+
+    if (SelfhealCronEnable) {
+        // Stop Cron Job of Recovery Scripts
+        for (int i = 0; i < 2; i++) 
+            update_cron_entry(recovery_scripts[i].name, 0, false);
+        
+        // Start Cron Jobs of Self-Heal Scripts (using syscfg lookup)
+        for (int i = 0; i < 3; i++) {
+            unsigned long val = get_interval(self_heal_scripts[i].key, self_heal_scripts[i].def_val);
+            update_cron_entry(self_heal_scripts[i].name, val, true);
+        }
+    } else {
+        // Stop Cron Job of Self-Heal Scripts
+        for (int i = 0; i < 3; i++) 
+            update_cron_entry(self_heal_scripts[i].name, 0, false);
+        
+        // Start Cron Job of Recovery Scripts (using fixed defaults)
+        for (int i = 0; i < 2; i++) 
+            update_cron_entry(recovery_scripts[i].name, recovery_scripts[i].def_val, true);
+    }
 }

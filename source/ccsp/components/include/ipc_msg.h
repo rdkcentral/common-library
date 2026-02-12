@@ -229,6 +229,11 @@ typedef struct _DHCP_MGR_IPV4_MSG
     bool isTimeOffsetAssigned; 
     uint32_t upstreamCurrRate; 
     uint32_t downstreamCurrRate;
+    char cOption122[BUFLEN_256];
+    char cOption67[BUFLEN_64]; //bootfile name
+    char cTftpServer[BUFLEN_64];
+    char cHostName[BUFLEN_64];
+    char cDomainName[BUFLEN_64];
 } DHCP_MGR_IPV4_MSG;
 
 typedef struct _DHCP_MGR_IPV6_MSG
