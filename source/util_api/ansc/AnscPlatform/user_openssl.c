@@ -182,6 +182,12 @@ int openssl_load_ca_certificates(int who_calls)
 
     ssl_ctx = g_ssl_ctx[who_calls];
 
+    if ( ssl_ctx == NULL )
+    {
+        CcspTraceInfo(("%s:%d ssl_ctx == NULL, return 0\n", __func__, __LINE__));
+        return 0;
+    }
+
     pCACertFiles = AnscCloneString(pCACertFiles);
     pCACertFile = pCACertFiles;
 
