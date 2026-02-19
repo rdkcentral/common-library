@@ -1213,7 +1213,8 @@ DslhCpecoRegisterDataModelInternal
 
             pLink  = AnscSListGetNextEntry(pLink);
 
-            AnscFreeMemory(pEntry);
+            if(pEntry)
+                AnscFreeMemory(pEntry);
         }
     }
     
