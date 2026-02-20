@@ -62,6 +62,13 @@ typedef enum
     MAPT_STATE_CHANGED
 }ipc_msg_type_t;
 
+typedef enum _MAP_TYPE
+{
+    MAP_TYPE_UNKNOWN = 0,
+    MAP_TYPE_MAPE,
+    MAP_TYPE_MAPT
+}MAP_TYPE;
+
 typedef struct _ipc_ppp_ipcp_msg_t
 {
     char ip[BUFLEN_32];
@@ -99,8 +106,7 @@ typedef struct _ipc_ppp_event_msg_t
 
 }ipc_ppp_event_msg_t;
 
-#if defined(FEATURE_MAPT) || defined(MAPT_UNIFICATION_ENABLED)
-typedef struct _ipc_mapt_data_t
+typedef struct _ipc_map_data_t
 {
    char brIPv6Prefix[BUFLEN_128];
    char ruleIPv4Prefix[BUFLEN_32];
@@ -115,8 +121,8 @@ typedef struct _ipc_mapt_data_t
    uint32_t v6Len;
    uint32_t ratio;
    bool isFMR;
-} ipc_mapt_data_t;
-#endif
+   MAP_TYPE mapType;
+}ipc_map_data_t;
 
 typedef struct _ipc_dhcpv4_data_t
 {
@@ -172,7 +178,7 @@ typedef struct _ipc_dhcpv6_data_t
    char ntpserver[BUFLEN_128];  /**< New ntp server(s), dhcp server may provide this */
    char aftr[AFTR_NAME_LENGTH];      /**< dhcp server may provide this */
 #if defined(FEATURE_MAPT) || defined(MAPT_UNIFICATION_ENABLED)
-   ipc_mapt_data_t mapt;
+   ipc_map_data_t mapt;
 #endif
 } ipc_dhcpv6_data_t;
 
@@ -214,7 +220,6 @@ typedef struct _ipc_msg_payload_t
     }data;
 } ipc_msg_payload_t;
 
-
 typedef struct _DHCP_MGR_IPV4_MSG
 {
     char ifname[BUFLEN_64]; 
@@ -243,12 +248,11 @@ typedef struct _DHCP_MGR_IPV6_MSG
    uint32_t prefixVltime;		
    bool addrAssigned;	
    bool prefixAssigned; 
-   bool domainNameAssigned; 
+   bool domainNameAssigned;
    uint32_t ipv6_TimeOffset;
-#if defined(FEATURE_MAPT) || defined(MAPT_UNIFICATION_ENABLED)
-   bool maptAssigned;	
-   ipc_mapt_data_t mapt;
-#endif
+   bool maptAssigned;
+   bool mapeAssigned;
+   ipc_map_data_t map;
 } DHCP_MGR_IPV6_MSG;
 
 typedef enum {
