@@ -24,6 +24,7 @@ After=webpa.service
 [Service]
 Type=simple
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/device.properties
 ExecStart=/usr/bin/webconfig
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting webconfig" >> ${PROCESS_RESTART_LOG}'

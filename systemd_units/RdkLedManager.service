@@ -24,6 +24,7 @@ After=CcspCrSsp.service
 Type=forking
 Environment="PROCESS_RESTART_LOG=/rdklogs/logs/systemd_processRestart.log"
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 Environment="Subsys=eRT."
 WorkingDirectory=/usr/rdk/rdkledmanager/
 ExecStart=/usr/bin/rdkledmanager -subsys $Subsys

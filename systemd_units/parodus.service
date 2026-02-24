@@ -24,6 +24,7 @@ After=CcspPandMSsp.service
 [Service]
 Type=forking
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/device.properties
 ExecStartPre=/bin/sh -c '(/usr/ccsp/parodusStartCheck.sh)'
 ExecStartPre=/usr/bin/parodusStart

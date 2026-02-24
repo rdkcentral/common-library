@@ -25,6 +25,7 @@ After=CcspPandMSsp.service CcspTandDSsp.service
 Type=forking
 Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/xdns
 ExecStart=/bin/sh -c '/usr/bin/CcspXdnsSsp -subsys $Subsys'

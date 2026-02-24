@@ -25,6 +25,7 @@ Type=simple
 PIDFile=/var/tmp/snmp_subagent_v2.pid
 EnvironmentFile=/etc/device.properties
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 Environment="SNMPDLMODPATH=$PWD/libs"
 Environment="MIBDIRS=$PWD/mibs"
 Environment="MIBS=ALL"
