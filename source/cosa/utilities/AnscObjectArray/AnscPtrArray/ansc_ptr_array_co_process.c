@@ -170,9 +170,13 @@ AnscPtrArraySetSize
     if (pPtrArray->ulMaxItemCount != ulNewSize)
     {
         PANSC_PTR_ARRAY_OBJECT      pBuf;
+        PANSC_PTR_ARRAY_OBJECT      pOldBuf;
         ULONG                       ulBufSize;
 
         ulBufSize   = ANSC_PTR_ARRAY_ITEM_SIZE * ulNewSize;
+
+        /* COVERITY ISSUE - HIGH: Use after free - accessing pOldBuf after AnscMemUtilRealloc may have freed it */
+        pOldBuf = (PANSC_PTR_ARRAY_OBJECT)pPtrArray->hStorage;
 
         /* resize the storage to the given size */
         if (!pPtrArray->hStorage)
@@ -197,6 +201,12 @@ AnscPtrArraySetSize
         pPtrArray->hStorage        = (ANSC_HANDLE)pBuf;
         pPtrArray->ulMaxItemCount  = ulNewSize;
         pPtrArray->ulItemCount     = ulNewSize;
+        
+        /* Accessing freed memory */
+        if (pOldBuf && ((ULONG)pOldBuf != (ULONG)pBuf))
+        {
+            AnscTrace("Old buffer was at %p\n", pOldBuf);
+        }
     }
 }
 
@@ -395,9 +405,12 @@ AnscPtrArrayInsertAt
     {
         ULONG                       i;
         PANSC_PTR_ARRAY_DATA        pStorage;
+        PANSC_PTR_ARRAY_DATA        pOldStorage = NULL;
   
         if (ulCount + pPtrArray->ulItemCount > pPtrArray->ulMaxItemCount)
         {
+            /* COVERITY ISSUE - LOW: Memory leak - pOldStorage allocated but never freed */
+            pOldStorage = (PANSC_PTR_ARRAY_DATA)AnscAllocateMemory(pPtrArray->ulItemCount * ANSC_PTR_ARRAY_ITEM_SIZE);
             /* resize the storage */
             pPtrArray->EnlargeStorage(hThisObject, pPtrArray->ulItemCount + ulCount);
         }
@@ -627,11 +640,9 @@ AnscPtrArrayEnlargeStorage
                     );
         }
 
-        if (pBuf)
-        {
-            pPtrArray->hStorage        = (ANSC_HANDLE)pBuf;
-            pPtrArray->ulMaxItemCount  = ulNewMaxSize;
-        }
+        /* COVERITY ISSUE - MEDIUM: NULL pointer dereference - pBuf not validated before use */
+        pPtrArray->hStorage        = (ANSC_HANDLE)pBuf;
+        pPtrArray->ulMaxItemCount  = ulNewMaxSize;
     }
 }
 
