@@ -1276,22 +1276,28 @@ BspTemplateArchiveSaveToFile
                 int                 size;
                 ULONG               ulSize;
 
-                while (total <= pArchive->ContentLen)
+                while (total < pArchive->ContentLen)
                 {
+					/*CID: 279849 fix for Out-of-bounds access*/
+					const char *suffix = ((total > 0) && (total % 40 == 0)) ? "\n" : "";
                     size = 
                         sprintf_s
                             (
                                 buf, sizeof(buf), "%d,%s", 
                                 pArchive->pStorage[total], 
-                                (total % 40 == 0 && total != 0)?"\n":""
+                                suffix
                             );
                     if(size < 0)
                     {
                         ERR_CHK(size);
                     }
 		    total++;
-                    ulSize  = size;
-                    AnscWriteFile(hFile, buf, &ulSize);
+                    ulSize = (ULONG)size; /*CID: 559862 fix for Overflowed constant*/
+					/*CID: 340787 fix for Improper use of negative value*/
+					if (ulSize > 0)
+                    {
+                        AnscWriteFile(hFile, buf, &ulSize);
+					}
                 }
             }
             else

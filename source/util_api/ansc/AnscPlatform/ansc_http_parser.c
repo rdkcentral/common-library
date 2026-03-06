@@ -4392,10 +4392,10 @@ HttpSmpoUtilBuildCookie
                 return ANSC_STATUS_FAILURE;
         }
     }
-
+    /*Fix for Logically dead code
     if (!bCopySucc)
         return ANSC_STATUS_FAILURE;
-
+    */
     return status;
 }
 
@@ -8101,6 +8101,10 @@ HttpSmpoParseCookie
     {
         ulCount --;
     }
+    else
+    {
+        return (ANSC_HANDLE)pHfoCookie;
+    }
 
     pHfoCookie =
         (PHTTP_HFO_COOKIE)AnscAllocateMemory
@@ -8438,67 +8442,67 @@ HttpSmpoParseSetCookie
             ulLen   = pNext ? pNext - pName : pLast - pName + 1;
         }
 
+		/*Fix for Overflowed integer argument similar to CID: 559470*/
         /* check the name */
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_COMMENT) &&
             AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_COMMENT, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE2_COMMENT_URL) &&
-            AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE2_COMMENT_URL,(char *)pName, ulLen, FALSE))
+            AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE2_COMMENT_URL, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_DOMAIN) &&
             AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_DOMAIN, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE2_PORT) &&
-            AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE2_PORT,(char *) pName, ulLen, FALSE))
+            AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE2_PORT, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_MAX_AGE) &&
             AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_MAX_AGE, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_PATH) &&
             AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_PATH, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_SECURE) &&
             AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_SECURE, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE2_DISCARD) &&
             AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE2_DISCARD, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_VERSION) &&
             AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_VERSION, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
         else
         if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_EXPIRES) &&
             AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_EXPIRES, (char *)pName, ulLen, FALSE))
         {
-            ulCount --;
+            if (ulCount > 0) ulCount --;
         }
-
         if (pNext)
         {
             pToken = pNext + 1;
@@ -8509,11 +8513,22 @@ HttpSmpoParseSetCookie
         }
     }
 
-    pHfoSetCookie =
-        (PHTTP_HFO_SET_COOKIE)AnscAllocateMemory
-            (
-                sizeof(HTTP_HFO_SET_COOKIE) + ulCount * sizeof(HTTP_COOKIE_CONTENT)
-            );
+	if (ulCount > 0)
+	{
+		ULONG allocSize = sizeof(HTTP_HFO_SET_COOKIE) + (ulCount * sizeof(HTTP_COOKIE_CONTENT));
+
+		if (allocSize < sizeof(HTTP_HFO_SET_COOKIE) || ulCount > (ULONG_MAX / sizeof(HTTP_COOKIE_CONTENT)))
+		{
+			return NULL;
+		}
+
+		/* Allocation */
+		pHfoSetCookie = (PHTTP_HFO_SET_COOKIE)AnscAllocateMemory(allocSize);
+	}
+	else
+	{
+		pHfoSetCookie = NULL;
+	}
 
     if (pHfoSetCookie)
     {
@@ -8553,15 +8568,22 @@ HttpSmpoParseSetCookie
             pValue  = _ansc_memchr(pToken, HTTP_SMPO_CHAR_EQUAL, ulTokenSize);
 
             /* cookie name */
-            pName   = pToken;
-            if (pValue)
-            {
-                ulLen   = pValue - pName;
-            }
-            else
-            {
-                ulLen   = pNext ? pNext - pName : pLast - pName + 1;
-            }
+			pName = pToken;
+			if (pValue)
+			{
+				ulLen = pValue - pName;
+			}
+			else
+			{
+				if (pNext)
+				{
+					ulLen = pNext - pName;
+				}
+				else
+				{
+					ulLen = pLast - pName + 1;
+				}
+			}
 
             bComment    = FALSE;
             bDomain     = FALSE;
@@ -8578,70 +8600,70 @@ HttpSmpoParseSetCookie
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_COMMENT, (char *)pName, ulLen, FALSE))
             {
                 bComment    = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE2_COMMENT_URL) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE2_COMMENT_URL, (char *)pName, ulLen, FALSE))
             {
                 bCommentUrl = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_DOMAIN) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_DOMAIN, (char *)pName, ulLen, FALSE))
             {
                 bDomain     = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE2_PORT) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE2_PORT, (char *)pName, ulLen, FALSE))
             {
                 bPort       = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_MAX_AGE) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_MAX_AGE, (char *)pName, ulLen, FALSE))
             {
                 bMaxAge     = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_PATH) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_PATH, (char *)pName, ulLen, FALSE))
             {
                 bPath       = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_SECURE) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_SECURE, (char *)pName, ulLen, FALSE))
             {
                 bSecure     = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE2_DISCARD) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE2_DISCARD, (char *)pName, ulLen, FALSE))
             {
                 bDiscard    = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_VERSION) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_VERSION, (char *)pName, ulLen, FALSE))
             {
                 bVersion    = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
             else
             if (ulLen == AnscSizeOfString(HTTP_SMPO_STRING_SCOOKIE_EXPIRES) &&
                 AnscEqualString2(HTTP_SMPO_STRING_SCOOKIE_EXPIRES, (char *)pName, ulLen, FALSE))
             {
                 bExpires    = TRUE;
-                ulIndex --;
+                if (ulIndex > 0) ulIndex --;
             }
 
             if (ulIndex >= pHfoSetCookie->CookieCount)
@@ -8658,7 +8680,7 @@ HttpSmpoParseSetCookie
             }
 
             /* cookie value */
-            if (bPath)
+            if (bPath && pValue)
             {
                 pValue ++;
                 if (pNext)
@@ -8673,7 +8695,7 @@ HttpSmpoParseSetCookie
                 HttpSmpoUtilCopyHeaderString(pValue, ulLen, pCookieContent->Path, HTTP_MAX_PATH_NAME_SIZE);
             }
             else
-            if (bDomain)
+            if (bDomain && pValue)
             {
                 pValue ++;
                 if (pNext)
@@ -8688,7 +8710,7 @@ HttpSmpoParseSetCookie
                 HttpSmpoUtilCopyHeaderString(pValue, ulLen, pCookieContent->Domain, ANSC_DOMAIN_NAME_SIZE);
             }
             else
-            if (bPort)
+            if (bPort && pValue)
             {
                 pValue ++;
                 if (pNext)
@@ -8703,7 +8725,7 @@ HttpSmpoParseSetCookie
                 HttpSmpoUtilCopyHeaderString(pValue, ulLen, pCookieContent->Port, HTTP_MAX_COOKIE_PORT_SIZE);
             }
             else
-            if (bComment)
+            if (bComment && pValue)
             {
                 pValue ++;
                 if (pNext)
@@ -8718,7 +8740,7 @@ HttpSmpoParseSetCookie
                 HttpSmpoUtilCopyHeaderString(pValue, ulLen, pCookieContent->Comment, HTTP_MAX_COOKIE_COMMENT_SIZE);
             }
             else
-            if (bCommentUrl)
+            if (bCommentUrl && pValue)
             {
                 pValue ++;
                 if (pNext)
@@ -8733,14 +8755,14 @@ HttpSmpoParseSetCookie
                 HttpSmpoUtilCopyHeaderString(pValue, ulLen, pCookieContent->CommentUrl, ANSC_URI_STRING_SIZE);
             }
             else
-            if (bMaxAge)
+            if (bMaxAge && pValue)
             {
                 pValue ++;
 
                 pCookieContent->MaxAgeInSeconds = _ansc_atoi((char *)pValue);
             }
             else
-            if (bVersion)
+            if (bVersion && pValue)
             {
                 pValue ++;
 
@@ -9011,9 +9033,12 @@ HttpSmpoUtilParseRelPath
     }
 
     /* parse query parameters */
-    pQuery ++;
-    HttpSmpoUtilCopyHeaderString(pQuery, ulQueryLen, pUri->QueryParams, HTTP_MAX_URI_QUERY_SIZE);
-
+    /*CID 58183: Dereference after null check (FORWARD_NULL)*/
+    if( pQuery )
+    {
+        pQuery ++;
+        HttpSmpoUtilCopyHeaderString(pQuery, ulQueryLen, pUri->QueryParams, HTTP_MAX_URI_QUERY_SIZE);
+    }
     return TRUE;
 }
 
@@ -9887,9 +9912,11 @@ AnscHttpParseRequestLine
 
     pUri    = pMsg;
 
-    /*RDKB-6184, CID-24139, added to avoid Coverity warning*/
+    /*RDKB-6184, CID-24139, added to avoid Coverity warning
+    CID: 62262, 66815 fix for Logically dead code
     if (!pUri)
         return (ANSC_HANDLE)NULL;
+    */
 
     pMsg    = (PUCHAR)_ansc_strchr((char *)pUri, ' ');
 
@@ -10174,7 +10201,7 @@ AnscHttpParseHeader
         }
         else
         {
-            pHeaderField->HeaderId      = pXinfo?pXinfo->HeaderId:HTTP_HEADER_ID_EXTENSION;
+            pHeaderField->HeaderId      = pXinfo->HeaderId; /*CID: 65410 fix for Logically dead code */
         }
         pHeaderField->Linkage.Next  = NULL;
         pHeaderField->HashIndex     = 0;

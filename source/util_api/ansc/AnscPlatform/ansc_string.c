@@ -438,6 +438,8 @@ char *AnscCloneString (char *src_string)
     dst_string = AnscAllocateMemoryNoInit (len + 1);
     if (dst_string == NULL)
         return NULL;
+    memset(dst_string, 0, len + 1);
+
     return memcpy (dst_string, src_string, len + 1);
 }
 

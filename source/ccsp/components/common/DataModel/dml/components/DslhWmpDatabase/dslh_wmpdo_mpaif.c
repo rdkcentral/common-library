@@ -652,6 +652,7 @@ DslhWmpdoMpaSetParameterValues
     *piStatus    = 0;
     errno_t rc = -1;
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     if ( (ulArraySize == 0) || !pParameterValueArray )
     {
@@ -884,8 +885,11 @@ DslhWmpdoMpaSetParameterValues
                     	while (g_isBusy && count > 0)
                     	{
                         	CcspTraceWarning(("<< %s, It's g_isBusy busy try again in 250ms>>\n",__FUNCTION__));
+							/*CID: 257711 fix for Waiting while holding a lock*/
+							AnscReleaseTsLock(&pMyObject->AccessTsLock);
                         	usleep(250000);
                         	count --;
+							AnscAcquireTsLock(&pMyObject->AccessTsLock);
                     	}
 			pthread_mutex_lock(&NotifyMutex);
 		
@@ -897,10 +901,15 @@ DslhWmpdoMpaSetParameterValues
                          	*ppInvalidParameterName = AnscCloneString(pParameterValueArray[i].Name);
                          	returnStatus = CCSP_ERR_INVALID_PARAMETER_VALUE;
                          	pthread_mutex_unlock(&NotifyMutex);
+							/*CID: 72271 fix for Resource leak*/
+							if(vcSig.newValue)
+                        		AnscFreeMemory((char*)vcSig.newValue);
+                    		if(vcSig.oldValue)
+                        		AnscFreeMemory((char*)vcSig.oldValue);
                          	break;
                        }
 		       /*sensitive information like keyPassphrase should not print*/
-		       if((str != NULL) && (_ansc_strstr(str,"KeyPassphrase") == NULL))
+		       if(_ansc_strstr(str,"KeyPassphrase") == NULL) /*CID: 66607 fix for Array compared against 0*/
 		       {
 		             CcspTraceWarning(("<< %s sending Notification str %s >>\n",__FUNCTION__,str));
 		       }
@@ -952,9 +961,14 @@ DslhWmpdoMpaSetParameterValues
         {
             /* init the variable and object record arrays; */ 
             pMyObject->InitObjVarArray(hThisObject);
+        }
+		/*CID: 272608 fix for Dereference after null check*/
+		pObjRecordArray      = (PDSLH_OBJ_RECORD_OBJECT*   )pMyObject->hObjRecordArray;
+        pVarRecordArray      = (PDSLH_VAR_RECORD_OBJECT*   )pMyObject->hVarRecordArray;
 
-            pObjRecordArray      = (PDSLH_OBJ_RECORD_OBJECT*   )pMyObject->hObjRecordArray;
-            pVarRecordArray      = (PDSLH_VAR_RECORD_OBJECT*   )pMyObject->hVarRecordArray;
+        if ( !pVarRecordArray || !pObjRecordArray )
+        {
+            goto EXIT2;
         }
 
         ulParameterCount =
@@ -988,8 +1002,14 @@ DslhWmpdoMpaSetParameterValues
     for ( i = 0; i < ulObjectCount; i++ )
     {        
         pObjRecord = (PDSLH_OBJ_RECORD_OBJECT)pObjRecordArray[i];
-
-        if ( pObjRecord != NULL)
+        /*CID: 272608 fix for Dereference after null check*/
+        if ( !pObjRecord )
+        {
+            /*
+             * Impossible, no need for error handling...
+             */
+        }
+        else
         {
             if ( !pObjRecord->VerifyChanges((ANSC_HANDLE)pObjRecord, &pFaultParamName) )
             {
@@ -1487,6 +1507,7 @@ DslhWmpdoMpaGetParameterValues
     *pulArraySize      = 0;
 
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     /*
      * A fault response MUST make use of the SOAP Fault element using the following conventions:
@@ -1997,6 +2018,7 @@ DslhWmpdoMpaGetParameterNames
     *pulArraySize     = 0;
 
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     /*
      * A fault response MUST make use of the SOAP Fault element using the following conventions:
@@ -2313,6 +2335,7 @@ DslhWmpdoMpaSetParameterAttributes
     PSINGLE_LINK_ENTRY              pSLinkEntry              = (PSINGLE_LINK_ENTRY     )NULL;
     
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     /*
      * A fault response MUST make use of the SOAP Fault element using the following conventions:
@@ -2693,6 +2716,7 @@ DslhWmpdoMpaGetParameterAttributes
     *pulArraySize       = 0;
 
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
+    pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
     /*
      * A fault response MUST make use of the SOAP Fault element using the following conventions:

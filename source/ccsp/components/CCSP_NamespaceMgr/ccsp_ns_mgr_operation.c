@@ -473,7 +473,10 @@ CcspNsMgrBuildNamespaces
     /* add them to the hash table */
     for( i = 0; i < uCount; i ++)
     {
-        pAtomNamespace->AddAtomByName(pAtomNamespace, (char*)ppSpaceCopy[i]->name_space, (ULONG)ppSpaceCopy[i]->dataType, (ANSC_HANDLE)pNSComp);
+        if (ppSpaceCopy[i] != NULL)
+        {
+            pAtomNamespace->AddAtomByName(pAtomNamespace, (char*)ppSpaceCopy[i]->name_space, (ULONG)ppSpaceCopy[i]->dataType, (ANSC_HANDLE)pNSComp);
+        }
     }
 
     /* add the count */
@@ -687,7 +690,7 @@ CcspNsMgrDiscoverNamespace
 
     pNewSpace = CcspNsMgrChangeToRegNamespaceName(pMyObject->pContainerName, (char*)pNamespace, &bChange);
 
-    if( pNewSpace == NULL)
+    if( pNewSpace == NULL || pAtomNamespace == NULL )
     {
         return CCSP_CR_ERR_INVALID_PARAM;
     }

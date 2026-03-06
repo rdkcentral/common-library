@@ -282,11 +282,13 @@ SysRdoAddFolder2
 
     if ( !pTokenEntry )
     {
+		 /* CID: 74322 fix for Logically dead code
         if ( !pThisFolder )
         {
             goto  EXIT2;
         }
-        else if ( (pThisFolder->GetPermission((ANSC_HANDLE)pThisFolder) != ulPermission) ||
+        else*/ 
+		if ( (pThisFolder->GetPermission((ANSC_HANDLE)pThisFolder) != ulPermission) ||
                   (pThisFolder->GetFolderType((ANSC_HANDLE)pThisFolder) != ulFolderType) )
         {
             pThisFolder->ReleaseAccess((ANSC_HANDLE)pThisFolder);
@@ -834,12 +836,13 @@ SysRdoAddRecord
 
         goto  EXIT;
     }
+	/*CID: 69293 fix for Logically dead code
     else if ( !pThisFolder )
     {
         pThisRecord = (PSYS_REPOSITORY_RECORD_OBJECT)NULL;
 
         goto  EXIT;
-    }
+    }*/
     else if ( AnscTcGetTokenCount(pTokenChain) != 1 )
     {
         pThisFolder->ReleaseAccess((ANSC_HANDLE)pThisFolder);
@@ -989,12 +992,13 @@ SysRdoDelRecord
 
         goto  EXIT;
     }
+	/* CID: 53453 fix for Logically dead code
     else if ( !pThisFolder )
     {
         returnStatus = ANSC_STATUS_BAD_NAME;
 
         goto  EXIT;
-    }
+    }*/
     else if ( AnscTcGetTokenCount(pTokenChain) != 1 )
     {
         pThisFolder->ReleaseAccess((ANSC_HANDLE)pThisFolder);

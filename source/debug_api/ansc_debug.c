@@ -265,7 +265,9 @@ const char *CcspTraceGetRdkLogModule(const char *pComponentName)
 #if !defined (NO_MOCA_FEATURE_SUPPORT)
                 if (strcmp(pComponentName, "moca") == 0)                    return "LOG.RDK.MOCA";
 #endif
+#if !defined (NO_MTA_FEATURE_SUPPORT)
                 if (strcmp(pComponentName, "mta") == 0)                     return "LOG.RDK.MTA";
+#endif
                 break;
             case 'n':
 #if defined (FEATURE_RDKB_NFC_MANAGER)
