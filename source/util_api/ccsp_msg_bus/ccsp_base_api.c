@@ -2108,7 +2108,8 @@ int CcspBaseIf_isSystemReady_rbus(
     )
 {
     int ret = CCSP_SUCCESS;
-    char* parameterNames[1] = {"Device.CR.SystemReady"};
+	*val = 1;
+   /* char* parameterNames[1] = {"Device.CR.SystemReady"};
     int size;
     parameterValStruct_t** value = 0;
 
@@ -2136,6 +2137,7 @@ int CcspBaseIf_isSystemReady_rbus(
     {
         CcspTraceError(("%s CcspBaseIf_getParameterValues_rbus %s failed ret=%d\n", __FUNCTION__, parameterNames[0], ret));
     }
+	*/
 
     return ret;
 }
