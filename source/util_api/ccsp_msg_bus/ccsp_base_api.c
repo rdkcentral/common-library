@@ -2107,6 +2107,8 @@ int CcspBaseIf_isSystemReady_rbus(
     dbus_bool *val
     )
 {
+	UNREFERENCED_PARAMETER(bus_handle);
+	UNREFERENCED_PARAMETER(dst_component_id);
     int ret = CCSP_SUCCESS;
 	*val = 1;
    /* char* parameterNames[1] = {"Device.CR.SystemReady"};
@@ -2295,6 +2297,10 @@ int CcspBaseIf_getHealth(
 }
 
 BOOLEAN waitConditionReady(void* hMBusHandle, const char* dst_component_id, char* dbus_path, char *src_component_id){
+	UNREFERENCED_PARAMETER(hMBusHandle);
+	UNREFERENCED_PARAMETER(dst_component_id);
+	UNREFERENCED_PARAMETER(dbus_path);
+	UNREFERENCED_PARAMETER(src_component_id);
    /* #define MAX_WAIT_TIME 10
     #define TIME_INTERVAL 2000 // 2s
 //    #define MAX_WAIT_TIME 5
