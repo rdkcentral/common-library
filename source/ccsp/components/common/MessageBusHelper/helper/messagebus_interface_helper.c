@@ -372,6 +372,11 @@ EXIT2:
     {
         for ( i = 0; i < ulArraySize; i++ )
         {
+	    if (pParamValueArray[i].Name == NULL)
+            {
+                AnscTraceWarning(("CcspCcMbi_GetParameterValues cleanup stopped at index %lu (NULL Name)\n", i));
+                break;
+            }
             DslhCwmpCleanParamValue((&pParamValueArray[i]));
         }
 
