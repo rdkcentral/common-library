@@ -109,6 +109,7 @@ typedef struct _ipc_ppp_event_msg_t
 typedef struct _ipc_map_data_t
 {
    char brIPv6Prefix[BUFLEN_128];
+   char ruleIPv4Address[BUFLEN_32];
    char ruleIPv4Prefix[BUFLEN_32];
    char ruleIPv6Prefix[BUFLEN_128];
    char pdIPv6Prefix[BUFLEN_128];
