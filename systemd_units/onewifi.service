@@ -32,7 +32,8 @@ Environment=LD_LIBRARY_PATH=/usr/opensync/lib
 Environment=OW_OVSDB_DISABLED=1
 Environment=OSW_DRV_TARGET_DISABLED=1
 Environment="LD_PRELOAD=/usr/lib/libbreakpadwrapper.so.0"
+ExecStartPre=/bin/sleep 40
 ExecStart=/bin/sh -c '/usr/bin/OneWifi -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting OneWifi" >> ${PROCESS_RESTART_LOG}'
-TimeoutStartSec=120
+TimeoutStartSec=180
 Restart=always
