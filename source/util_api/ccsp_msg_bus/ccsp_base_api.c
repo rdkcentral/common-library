@@ -47,6 +47,9 @@
 #endif
 #include <ccsp_psm_helper.h>
 #include "ccsp_trace.h"
+#ifdef CORD_ENABLED
+#include <cord.h>
+#endif
 
 /* For AnscEqualString */
 #include "ansc_platform.h"
@@ -2984,6 +2987,59 @@ int PSM_Set_Record_Value
 {
     UNREFERENCED_PARAMETER(ulRecordType);
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
+
+#ifdef CORD_ENABLED
+    UNREFERENCED_PARAMETER(bus_handle);
+
+    if (pRecordName == NULL || pValue == NULL)
+        return CCSP_CR_ERR_INVALID_PARAM;
+
+    cord_rc_t cord_rc;
+
+    switch (pValue->Syntax)
+    {
+    case SLAP_VAR_SYNTAX_int:
+        cord_rc = cord_set_i32(pRecordName, (int32_t)pValue->Variant.varInt, CORD_FLAG_PERSIST_SYNC);
+        break;
+    case SLAP_VAR_SYNTAX_uint32:
+        cord_rc = cord_set_u32(pRecordName, (uint32_t)pValue->Variant.varUint32, CORD_FLAG_PERSIST_SYNC);
+        break;
+    case SLAP_VAR_SYNTAX_bool:
+        cord_rc = cord_set_bool(pRecordName, (pValue->Variant.varBool != 0), CORD_FLAG_PERSIST_SYNC);
+        break;
+    case SLAP_VAR_SYNTAX_string:
+        if (pValue->Variant.varString == NULL)
+            return CCSP_CR_ERR_INVALID_PARAM;
+        cord_rc = cord_set_string(pRecordName, pValue->Variant.varString, CORD_FLAG_PERSIST_SYNC);
+        break;
+    case SLAP_VAR_SYNTAX_TYPE_ucharArray:
+    {
+        SLAP_UCHAR_ARRAY* var_uchar_array = pValue->Variant.varUcharArray;
+        if (var_uchar_array == NULL)
+            return CCSP_CR_ERR_INVALID_PARAM;
+        cord_rc = cord_set_blob(pRecordName,
+                                var_uchar_array->Array.arrayUchar,
+                                var_uchar_array->VarCount,
+                                CORD_FLAG_PERSIST_SYNC);
+        break;
+    }
+    default:
+        return CCSP_CR_ERR_INVALID_PARAM;
+    }
+
+    switch (cord_rc) {
+    case CORD_RC_SUCCESS: return CCSP_SUCCESS;   
+    case CORD_RC_NOT_OPEN: return CCSP_Message_Bus_ERROR;  
+    case CORD_RC_INVALID_NAME: return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    case CORD_RC_INVALID_FLAG: return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    case CORD_RC_PERMISSION_DENIED: return CCSP_ERR_REQUEST_REJECTED;  
+    case CORD_RC_PERSIST_FAILED: return CCSP_Message_Bus_OOM;  
+    case CORD_RC_INVALID_ARG: return CCSP_ERR_INVALID_PARAMETER_VALUE; 
+    }
+    return CCSP_Message_Bus_ERROR;
+
+#else /* !CORD_ENABLED */
+
     parameterValStruct_t val[1];
     char buf[128];
     char*  var_string = 0;
@@ -3061,6 +3117,8 @@ int PSM_Set_Record_Value
     if(var_string)
         bus_info->freefunc(var_string);
     return ret;
+
+#endif /* CORD_ENABLED */
 }
 
 int PSM_Get_Record_Value
