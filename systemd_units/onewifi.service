@@ -34,5 +34,5 @@ Environment=OSW_DRV_TARGET_DISABLED=1
 Environment="LD_PRELOAD=/usr/lib/libbreakpadwrapper.so.0"
 ExecStart=/bin/sh -c '/usr/bin/OneWifi -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting OneWifi" >> ${PROCESS_RESTART_LOG}'
-TimeoutStartSec=120
+TimeoutStartSec=180
 Restart=always
