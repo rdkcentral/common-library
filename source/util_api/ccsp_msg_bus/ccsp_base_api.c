@@ -47,6 +47,12 @@
 #endif
 #include <ccsp_psm_helper.h>
 #include "ccsp_trace.h"
+#include <errno.h>
+#include <time.h>
+#include <inttypes.h>
+#ifdef CORD_ENABLED
+#include <cord.h>
+#endif
 
 /* For AnscEqualString */
 #include "ansc_platform.h"
@@ -2984,6 +2990,59 @@ int PSM_Set_Record_Value
 {
     UNREFERENCED_PARAMETER(ulRecordType);
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
+
+#ifdef CORD_ENABLED
+    UNREFERENCED_PARAMETER(bus_handle);
+
+    if (pRecordName == NULL || pValue == NULL)
+        return CCSP_CR_ERR_INVALID_PARAM;
+
+    cord_rc_t cord_rc;
+
+    switch (pValue->Syntax)
+    {
+    case SLAP_VAR_SYNTAX_int:
+        cord_rc = cord_set_i32(pRecordName, (int32_t)pValue->Variant.varInt, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    case SLAP_VAR_SYNTAX_uint32:
+        cord_rc = cord_set_u32(pRecordName, (uint32_t)pValue->Variant.varUint32, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    case SLAP_VAR_SYNTAX_bool:
+        cord_rc = cord_set_bool(pRecordName, (pValue->Variant.varBool != 0), CORD_FLAG_PERSIST_ASYNC);
+        break;
+    case SLAP_VAR_SYNTAX_string:
+        if (pValue->Variant.varString == NULL)
+            return CCSP_CR_ERR_INVALID_PARAM;
+        cord_rc = cord_set_string(pRecordName, pValue->Variant.varString, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    case SLAP_VAR_SYNTAX_TYPE_ucharArray:
+    {
+        SLAP_UCHAR_ARRAY* var_uchar_array = pValue->Variant.varUcharArray;
+        if (var_uchar_array == NULL)
+            return CCSP_CR_ERR_INVALID_PARAM;
+        cord_rc = cord_set_blob(pRecordName,
+                                var_uchar_array->Array.arrayUchar,
+                                var_uchar_array->VarCount,
+                                CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
+    default:
+        return CCSP_CR_ERR_INVALID_PARAM;
+    }
+
+    switch (cord_rc) {
+    case CORD_RC_SUCCESS: return CCSP_SUCCESS;   
+    case CORD_RC_NOT_OPEN: return CCSP_Message_Bus_ERROR;  
+    case CORD_RC_INVALID_NAME: return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    case CORD_RC_INVALID_FLAG: return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    case CORD_RC_PERMISSION_DENIED: return CCSP_ERR_REQUEST_REJECTED;  
+    case CORD_RC_PERSIST_FAILED: return CCSP_Message_Bus_OOM;  
+    case CORD_RC_INVALID_ARG: return CCSP_ERR_INVALID_PARAMETER_VALUE; 
+    }
+    return CCSP_Message_Bus_ERROR;
+
+#else /* !CORD_ENABLED */
+
     parameterValStruct_t val[1];
     char buf[128];
     char*  var_string = 0;
@@ -3061,6 +3120,8 @@ int PSM_Set_Record_Value
     if(var_string)
         bus_info->freefunc(var_string);
     return ret;
+
+#endif /* CORD_ENABLED */
 }
 
 int PSM_Get_Record_Value
@@ -3073,11 +3134,86 @@ int PSM_Get_Record_Value
 )
 {
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+
+#ifdef CORD_ENABLED
+
+    if (pRecordName == NULL || pValue == NULL)
+        return CCSP_CR_ERR_INVALID_PARAM;
+
+    cord_value_t *pCordValue = NULL;
+    cord_rc_t cord_rc = cord_get(pRecordName, &pCordValue);
+
+    switch (cord_rc) {
+    case CORD_RC_SUCCESS:           break;
+    case CORD_RC_NOT_OPEN:          return CCSP_Message_Bus_ERROR;
+    case CORD_RC_INVALID_NAME:      return CCSP_ERR_NOT_EXIST;
+    case CORD_RC_PERMISSION_DENIED: return CCSP_ERR_REQUEST_REJECTED;
+    case CORD_RC_OUT_OF_MEMORY:     return CCSP_ERR_MEMORY_ALLOC_FAIL;
+    default:                        return CCSP_Message_Bus_ERROR;
+    }
+
+    int ret = CCSP_SUCCESS;
+
+    switch (pCordValue->valueType)
+    {
+    case CORD_TYPE_I32:
+        if (ulRecordType) *ulRecordType = ccsp_int;
+        pValue->Syntax = SLAP_VAR_SYNTAX_int;
+        pValue->Variant.varInt = (int)pCordValue->i32Value;
+        break;
+    case CORD_TYPE_U32:
+        if (ulRecordType) *ulRecordType = ccsp_unsignedInt;
+        pValue->Syntax = SLAP_VAR_SYNTAX_uint32;
+        pValue->Variant.varUint32 = (uint32_t)pCordValue->u32Value;
+        break;
+    case CORD_TYPE_BOOL:
+        if (ulRecordType) *ulRecordType = ccsp_boolean;
+        pValue->Syntax = SLAP_VAR_SYNTAX_bool;
+        pValue->Variant.varBool = pCordValue->boolValue ? TRUE : SLAP_FALSE;
+        break;
+    case CORD_TYPE_STRING:
+    {
+        if (ulRecordType) *ulRecordType = ccsp_string;
+        pValue->Syntax = SLAP_VAR_SYNTAX_string;
+        if (pValue->Variant.varString)
+            bus_info->freefunc(pValue->Variant.varString);
+        size_t str_len = strlen(pCordValue->stringValue);
+        pValue->Variant.varString = (char *)bus_info->mallocfunc(str_len + 1);
+        if (pValue->Variant.varString == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(pValue->Variant.varString, pCordValue->stringValue);
+        break;
+    }
+    case CORD_TYPE_BLOB:
+    {
+        if (ulRecordType) *ulRecordType = ccsp_byte;
+        pValue->Syntax = SLAP_VAR_SYNTAX_TYPE_ucharArray;
+        size_t blob_len = pCordValue->blobValue.length;
+        SLAP_UCHAR_ARRAY *var_ucharArray = (SLAP_UCHAR_ARRAY *)bus_info->mallocfunc(sizeof(SLAP_UCHAR_ARRAY) + blob_len);
+        if (var_ucharArray == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        var_ucharArray->Size     = sizeof(SLAP_UCHAR_ARRAY) + blob_len;
+        var_ucharArray->VarCount = (ULONG)blob_len;
+        var_ucharArray->Syntax   = SLAP_VAR_SYNTAX_ucharArray;
+        memcpy(var_ucharArray->Array.arrayUchar, pCordValue->blobValue.pData, blob_len);
+        if (pValue->Variant.varUcharArray)
+            bus_info->freefunc(pValue->Variant.varUcharArray);
+        pValue->Variant.varUcharArray = var_ucharArray;
+        break;
+    }
+    default:
+        cord_free_values(pCordValue);
+        return CCSP_CR_ERR_UNSUPPORTED_DATATYPE;
+    }
+
+    cord_free_values(pCordValue);
+    return ret;
+
+#else /* !CORD_ENABLED */
+
     char* parameterNames[1];
     int size = 0;
     parameterValStruct_t **val = 0;
     int ret = -1;
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     parameterNames[0] = (char *)pRecordName;
     ret = PSM_Get_Record_Value_rbus(bus_handle, parameterNames, 1, &size, &val);
     if(ret != CCSP_SUCCESS )
@@ -3168,6 +3304,8 @@ int PSM_Get_Record_Value
     }
     free_parameterValStruct_t(bus_handle , size, val);
     return ret;
+
+#endif /* CORD_ENABLED */
 }
 #endif
 
@@ -3181,6 +3319,127 @@ int PSM_Set_Record_Value2
 )
 {
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
+
+#ifdef CORD_ENABLED
+    UNREFERENCED_PARAMETER(bus_handle);
+
+    if (pRecordName == NULL || pVal == NULL)
+        return CCSP_CR_ERR_INVALID_PARAM;
+
+    cord_rc_t cord_rc;
+
+    char *endptr = NULL;
+    switch (ulRecordType)
+    {
+    case ccsp_int:
+    {
+        errno = 0;
+        long val_l = strtol(pVal, &endptr, 10);
+        if (errno != 0 || endptr == pVal || *endptr != '\0')
+            return CCSP_ERR_INVALID_PARAMETER_VALUE;
+        cord_rc = cord_set_i32(pRecordName, (int32_t)val_l, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
+    case ccsp_unsignedInt:
+    {
+        errno = 0;
+        unsigned long val_ul = strtoul(pVal, &endptr, 10);
+        if (errno != 0 || endptr == pVal || *endptr != '\0')
+            return CCSP_ERR_INVALID_PARAMETER_VALUE;
+        cord_rc = cord_set_u32(pRecordName, (uint32_t)val_ul, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
+    case ccsp_boolean:
+        if (strcmp(pVal, PSM_FALSE) && strcmp(pVal, PSM_TRUE))
+            return CCSP_CR_ERR_INVALID_PARAM;
+        cord_rc = cord_set_bool(pRecordName, (strcasecmp(pVal, PSM_TRUE) == 0), CORD_FLAG_PERSIST_ASYNC);
+        break;
+    case ccsp_string:
+        cord_rc = cord_set_string(pRecordName, pVal, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    case ccsp_long:
+    {
+        errno = 0;
+        long long val_ll = strtoll(pVal, &endptr, 10);
+        if (errno != 0 || endptr == pVal || *endptr != '\0')
+            return CCSP_ERR_INVALID_PARAMETER_VALUE;
+        cord_rc = cord_set_i64(pRecordName, (int64_t)val_ll, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
+    case ccsp_unsignedLong:
+    {
+        errno = 0;
+        unsigned long long val_ull = strtoull(pVal, &endptr, 10);
+        if (errno != 0 || endptr == pVal || *endptr != '\0')
+            return CCSP_ERR_INVALID_PARAMETER_VALUE;
+        cord_rc = cord_set_u64(pRecordName, (uint64_t)val_ull, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
+    case ccsp_float:
+    case ccsp_double:
+    {
+        errno = 0;
+        double val_d = strtod(pVal, &endptr);
+        if (errno != 0 || endptr == pVal || *endptr != '\0')
+            return CCSP_ERR_INVALID_PARAMETER_VALUE;
+        cord_rc = cord_set_double(pRecordName, val_d, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
+    case ccsp_byte:
+    {
+        errno = 0;
+        long val_b = strtol(pVal, &endptr, 10);
+        if (errno != 0 || endptr == pVal || *endptr != '\0')
+            return CCSP_ERR_INVALID_PARAMETER_VALUE;
+        cord_rc = cord_set_i32(pRecordName, (int32_t)val_b, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
+    case ccsp_dateTime:
+    {
+        struct tm tm_val;
+        memset(&tm_val, 0, sizeof(tm_val));
+        time_t time_val;
+        char *parse_end = strptime(pVal, "%Y-%m-%dT%H:%M:%S", &tm_val);
+        if (parse_end != NULL)
+        {
+            tm_val.tm_isdst = -1;
+            time_val = mktime(&tm_val);
+            if (time_val == (time_t)-1)
+                return CCSP_ERR_INVALID_PARAMETER_VALUE;
+        }
+        else
+        {
+            errno = 0;
+            long val_t = strtol(pVal, &endptr, 10);
+            if (errno != 0 || endptr == pVal || *endptr != '\0')
+                return CCSP_ERR_INVALID_PARAMETER_VALUE;
+            time_val = (time_t)val_t;
+        }
+        cord_rc = cord_set_datetime(pRecordName, time_val, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
+    case ccsp_base64:
+        cord_rc = cord_set_string(pRecordName, pVal, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    case ccsp_none:
+        return CCSP_CR_ERR_UNSUPPORTED_DATATYPE;
+    default:
+        return CCSP_CR_ERR_INVALID_PARAM;
+    }
+
+    switch (cord_rc) {
+    case CORD_RC_SUCCESS:          return CCSP_SUCCESS;
+    case CORD_RC_NOT_OPEN:         return CCSP_Message_Bus_ERROR;
+    case CORD_RC_INVALID_NAME:     return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    case CORD_RC_INVALID_FLAG:     return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    case CORD_RC_PERMISSION_DENIED: return CCSP_ERR_REQUEST_REJECTED;
+    case CORD_RC_PERSIST_FAILED:   return CCSP_Message_Bus_OOM;
+    case CORD_RC_INVALID_ARG:      return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    }
+    return CCSP_Message_Bus_ERROR;
+
+#else /* !CORD_ENABLED */
+
     parameterValStruct_t val[1];
     if(ulRecordType == ccsp_boolean)
     {
@@ -3193,6 +3452,8 @@ int PSM_Set_Record_Value2
     val[0].type = ulRecordType;
     val[0].parameterValue = (char *)pVal;
     return PSM_Set_Record_Value_rbus(bus_handle, 1, val);
+
+#endif /* CORD_ENABLED */
 }
 
 int PSM_Get_Record_Value2
@@ -3204,9 +3465,100 @@ int PSM_Get_Record_Value2
     char**                      pValue
 )
 {
-    int ret = 0;
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
     *pValue = NULL;
+
+#ifdef CORD_ENABLED
+
+    if (pRecordName == NULL || pValue == NULL)
+        return CCSP_CR_ERR_INVALID_PARAM;
+
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+    cord_value_t *pCordValue = NULL;
+    cord_rc_t cord_rc = cord_get(pRecordName, &pCordValue);
+
+    switch (cord_rc) {
+    case CORD_RC_SUCCESS:           break;
+    case CORD_RC_NOT_OPEN:          return CCSP_Message_Bus_ERROR;
+    case CORD_RC_INVALID_NAME:      return CCSP_ERR_NOT_EXIST;
+    case CORD_RC_PERMISSION_DENIED: return CCSP_ERR_REQUEST_REJECTED;
+    case CORD_RC_OUT_OF_MEMORY:     return CCSP_ERR_MEMORY_ALLOC_FAIL;
+    default:                        return CCSP_Message_Bus_ERROR;
+    }
+
+    char buf[64];
+    int ret = CCSP_SUCCESS;
+
+    switch (pCordValue->valueType)
+    {
+    case CORD_TYPE_I32:
+        if (ulRecordType) *ulRecordType = ccsp_int;
+        snprintf(buf, sizeof(buf), "%d", (int)pCordValue->i32Value);
+        *pValue = bus_info->mallocfunc(strlen(buf) + 1);
+        if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(*pValue, buf);
+        break;
+    case CORD_TYPE_U32:
+        if (ulRecordType) *ulRecordType = ccsp_unsignedInt;
+        snprintf(buf, sizeof(buf), "%u", (unsigned int)pCordValue->u32Value);
+        *pValue = bus_info->mallocfunc(strlen(buf) + 1);
+        if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(*pValue, buf);
+        break;
+    case CORD_TYPE_BOOL:
+    {
+        if (ulRecordType) *ulRecordType = ccsp_boolean;
+        const char *bstr = pCordValue->boolValue ? PSM_TRUE : PSM_FALSE;
+        *pValue = bus_info->mallocfunc(strlen(bstr) + 1);
+        if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(*pValue, bstr);
+        break;
+    }
+    case CORD_TYPE_STRING:
+        if (ulRecordType) *ulRecordType = ccsp_string;
+        *pValue = bus_info->mallocfunc(strlen(pCordValue->stringValue) + 1);
+        if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(*pValue, pCordValue->stringValue);
+        break;
+    case CORD_TYPE_I64:
+        if (ulRecordType) *ulRecordType = ccsp_long;
+        snprintf(buf, sizeof(buf), "%" PRId64, (int64_t)pCordValue->i64Value);
+        *pValue = bus_info->mallocfunc(strlen(buf) + 1);
+        if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(*pValue, buf);
+        break;
+    case CORD_TYPE_U64:
+        if (ulRecordType) *ulRecordType = ccsp_unsignedLong;
+        snprintf(buf, sizeof(buf), "%" PRIu64, (uint64_t)pCordValue->u64Value);
+        *pValue = bus_info->mallocfunc(strlen(buf) + 1);
+        if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(*pValue, buf);
+        break;
+    case CORD_TYPE_DOUBLE:
+        if (ulRecordType) *ulRecordType = ccsp_double;
+        snprintf(buf, sizeof(buf), "%.17g", pCordValue->doubleValue);
+        *pValue = bus_info->mallocfunc(strlen(buf) + 1);
+        if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(*pValue, buf);
+        break;
+    case CORD_TYPE_DATETIME:
+        if (ulRecordType) *ulRecordType = ccsp_dateTime;
+        snprintf(buf, sizeof(buf), "%ld", (long)pCordValue->dateTimeValue);
+        *pValue = bus_info->mallocfunc(strlen(buf) + 1);
+        if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        strcpy(*pValue, buf);
+        break;
+    default:
+        cord_free_values(pCordValue);
+        return CCSP_CR_ERR_UNSUPPORTED_DATATYPE;
+    }
+
+    cord_free_values(pCordValue);
+    return ret;
+
+#else /* !CORD_ENABLED */
+
+    int ret = 0;
     int n = 0;
     int size;
     char* pTmp = NULL;
@@ -3233,6 +3585,8 @@ int PSM_Get_Record_Value2
     }
     free_parameterValStruct_t(bus_handle , size, val);
     return ret;
+
+#endif /* CORD_ENABLED */
 }
 
 int PSM_Del_Record
