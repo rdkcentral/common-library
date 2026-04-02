@@ -3596,6 +3596,45 @@ int PSM_Del_Record
     char const * const          pRecordName
 )
 {
+#ifdef CORD_ENABLED 
+ char psmName[512] = "";
+    errno_t rc = -1;
+    cord_rc_t crc = CORD_RC_SUCCESS;
+
+    if (!pRecordName) {
+        return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    }
+
+    if (pSubSystemPrefix && pSubSystemPrefix[0] != 0) {
+        rc = strcpy_s(psmName, sizeof(psmName), pSubSystemPrefix);
+        ERR_CHK(rc);
+    }
+    rc = strcat_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
+    ERR_CHK(rc);
+    rc = strcat_s(psmName, sizeof(psmName), ".");
+    ERR_CHK(rc);
+    rc = strcat_s(psmName, sizeof(psmName), pRecordName);
+    ERR_CHK(rc);
+
+    if ( pRecordName[strlen(pRecordName)-1] == '.' ) {
+        crc = cord_default_multi(psmName, CORD_FLAG_PERSIST_ASYNC);
+    }
+    else {
+        crc = cord_default(psmName, CORD_FLAG_PERSIST_ASYNC);
+    }
+    switch (crc) {
+    case CORD_RC_SUCCESS: return CCSP_SUCCESS;
+    case CORD_RC_NOT_OPEN: return CCSP_Message_Bus_ERROR;
+    case CORD_RC_INVALID_NAME: return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    case CORD_RC_INVALID_FLAG: return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    case CORD_RC_PERMISSION_DENIED: return CCSP_ERR_REQUEST_REJECTED;
+    case CORD_RC_PERSIST_FAILED: return CCSP_Message_Bus_OOM;
+    case CORD_RC_INVALID_ARG: return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    }
+    return CCSP_Message_Bus_ERROR;
+
+#else /* !CORD_ENABLED */
+    	
     parameterAttributeStruct_t attr_val[1];
     parameterInfoStruct_t **parameter;
     char psmName[256];
@@ -3670,6 +3709,8 @@ int PSM_Del_Record
                   1
                  );
     }
+#endif /* CORD_ENABLED */
+    
 }
 
 int PsmGroupGet(void *bus_handle, const char *subsys,
@@ -3691,6 +3732,41 @@ void PsmFreeRecords(void *bus_handle, parameterValStruct_t **records, int nrec)
     free_parameterValStruct_t(bus_handle, nrec, records);
 }
 
+#ifdef CORD_ENABLED
+typedef struct cord_list_GetNextLevelInstances_List {
+    unsigned int* pInstanceArray;
+    size_t nCount, nCapacity;
+    bool callbackError;
+}GNLInstanceList;
+static void cord_list_callback_GetNextLevelInstances(const char* pParameterName, cord_value_type_t valueType, void* pUserData) {
+    static const size_t kDefaultArraySize = 32;
+    GNLInstanceList *pList = (GNLInstanceList*)pUserData;
+
+    if (!pList) return;
+    const size_t len = strlen(pParameterName);
+    if (valueType != CORD_TYPE_OBJECT_PATH || pParameterName[len - 1] != '.') {
+        pList->callbackError = true;
+        return;
+    }
+
+    // Do we need to alloc or grow the array?
+    if (pList->nCount == pList->nCapacity) {
+        const size_t nNewCapacity = pList->nCapacity ? pList->nCapacity * 2 : kDefaultArraySize;
+        unsigned int* pNewInstanceArray = (unsigned int*)realloc(pList->pInstanceArray, sizeof(unsigned int*) * nNewCapacity);
+        if (!pNewInstanceArray) {
+            pList->callbackError = true;
+            return;
+       }
+        pList->pInstanceArray = pNewInstanceArray;
+        pList->nCapacity = nNewCapacity;
+     }
+   // To DO Need to check with LUC
+    //pListItem->pInstanceArray[pList->nCount] = safe_atou(<last node name, e.g. "123">);
+    safe_atou(pParameterName[len-1], pList->pInstanceArray[pList->nCount]);
+    pList->nCount++;
+};
+#endif /* CORD_ENABLED */
+
 int PsmGetNextLevelInstances
 (
    void* bus_handle,
@@ -3700,9 +3776,41 @@ int PsmGetNextLevelInstances
    unsigned int**  ppInstanceArray
 )
 {
-   char psmName[256];
+   char psmName[512] = "";
    errno_t rc = -1;
+#ifdef CORD_ENABLED
+  *ppInstanceArray = NULL;
+    *pulNumInstance = 0;
 
+    if (pSubSystemPrefix && pSubSystemPrefix[0] != 0) {
+        rc = strcpy_s(psmName, sizeof(psmName), pSubSystemPrefix);
+        ERR_CHK(rc);
+    }
+    rc = strcat_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
+    ERR_CHK(rc);
+    rc = strcat_s(psmName, sizeof(psmName), ".");
+    ERR_CHK(rc);
+    rc = strcat_s(psmName, sizeof(psmName), pParentPath);
+    ERR_CHK(rc);
+
+    GNLInstanceList list = {0};
+    cord_rc_t crc = cord_list(psmName, 1, cord_list_callback_GetNextLevelInstances, (void*)&list);
+    if (crc != CORD_RC_SUCCESS) {
+        return CCSP_Message_Bus_ERROR;
+    }
+    if (list.callbackError) {
+        if (list.pInstanceArray) {
+            free(list.pInstanceArray);
+        }
+        return CCSP_Message_Bus_OOM;
+    }
+
+    *ppInstanceArray = list.pInstanceArray;
+    *pulNumInstance = list.nCount;
+
+    return CCSP_SUCCESS;
+
+#else /* !CORD_ENABLED */
    if ( pSubSystemPrefix && pSubSystemPrefix[0] != 0 )
    {
         rc = sprintf_s(psmName, sizeof(psmName), "%s%s", pSubSystemPrefix, CCSP_DBUS_PSM);
@@ -3726,8 +3834,54 @@ int PsmGetNextLevelInstances
 		    pulNumInstance,
 		    ppInstanceArray
 		);
+#endif /* !CORD_ENABLED */
+   
+}
+#ifdef CORD_ENABLED
+typedef struct cord_list_PsmEnumRecords_ListItem {
+    char *pParameterName;
+    cord_value_type_t valueType;
+    struct cord_list_PsmEnumRecords_ListItem *pNext;
+}ERListItem;
+typedef struct cord_list_PsmEnumRecords_List {
+    ERListItem *pHead;
+    size_t nCount;
+    bool nextLevel;
+    bool callbackError;
+}ERList;
+
+static void cord_list_callback_PsmEnumRecords(const char* pParameterName, cord_value_type_t valueType, void* pUserData) {
+    ERList *pList = (ERList*)pUserData;
+
+    if (!pList) return;
+    if (pList->nextLevel == false && valueType == CORD_TYPE_OBJECT_PATH) return; // PSM behaviour - only object/instance returned if nextLevel==true
+
+    const size_t lenNameWithNull = strlen(pParameterName) + 1;
+
+    // Append new list item
+    ERListItem *pListItem = malloc(sizeof(ERListItem) + lenNameWithNull);
+    if (!pListItem) {
+        pList->callbackError = true;
+        return;
+    }
+    pListItem->pParameterName = (char*)(pListItem + 1);
+    memcpy(pListItem->pParameterName, pParameterName, lenNameWithNull);
+    pListItem->valueType = valueType;
+    pListItem->pNext = pList->pHead;
+    pList->pHead = pListItem;
+    pList->nCount++;
 }
 
+void FreeList(ERList* pList)
+{
+        if(!pList->pHead) return;
+        while (pList->pHead) {
+        ERListItem *pItem = pList->pHead;
+        pList->pHead = pItem->pNext;
+        free(pItem);
+        }
+}
+#endif /* CORD_ENABLED */
 
 int PsmEnumRecords
 (
@@ -3739,9 +3893,82 @@ int PsmEnumRecords
     PCCSP_BASE_RECORD*  ppRecArray
 )
 {
-   char psmName[256];
+   char psmName[512] = "";
    errno_t rc = -1;
+#ifdef CORD_ENABLED
+  *ppRecArray = NULL;
+    *pulNumRec  = 0;
 
+    if (pSubSystemPrefix && pSubSystemPrefix[0] != 0) {
+        rc = strcpy_s(psmName, sizeof(psmName), pSubSystemPrefix);
+        ERR_CHK(rc);
+    }
+    rc = strcat_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
+    ERR_CHK(rc);
+    rc = strcat_s(psmName, sizeof(psmName), ".");
+    ERR_CHK(rc);
+    rc = strcat_s(psmName, sizeof(psmName), pParentPath);
+    ERR_CHK(rc);
+
+    ERList list = {0};
+    list.nextLevel = nextLevel;
+    const size_t depth = nextLevel ? 1 : 0;
+    cord_rc_t crc = cord_list(psmName, depth, cord_list_callback_PsmEnumRecords, (void*)&list);
+    if (crc != CORD_RC_SUCCESS) {
+        return CCSP_Message_Bus_ERROR;
+    }
+    if (list.callbackError) {
+        //free linked list
+        FreeList(&list);
+        return CCSP_Message_Bus_OOM;
+    }
+
+    // Alloc output array
+    PCCSP_BASE_RECORD pRecArray = (PCCSP_BASE_RECORD)calloc(list.nCount, sizeof(CCSP_BASE_RECORD));
+    if (!pRecArray) {
+        //free linked list
+        FreeList(&list);
+        return CCSP_Message_Bus_OOM;
+    }
+    size_t idxRecArray = 0;
+    size_t len = 0;
+
+    // Traverse list, transcode to expected format.
+    while (list.pHead) {
+        ERListItem *pItem = list.pHead;
+
+        if (pItem->valueType == CORD_TYPE_OBJECT_PATH) {
+                //last node name is all integer digits
+            len = strlen(pItem->pParameterName);
+            if (pItem->pParameterName[len-1] != '.') {
+                pRecArray[idxRecArray].RecordType = CCSP_BASE_INSTANCE;
+                //pRecArray[idxRecArray].InstanceNumber = safe_atou(<last node name, e.g. "123">);
+                safe_atou(pItem->pParameterName[len-1], &(pRecArray[idxRecArray].Instance.InstanceNumber));
+            }
+            else {
+                pRecArray[idxRecArray].RecordType = CCSP_BASE_OBJECT;
+                strncpy(pRecArray[idxRecArray].Instance.Name, pItem->pParameterName, CCSP_BASE_PARAM_LENGTH-1);
+            }
+        }
+        else {
+            strncpy(pRecArray[idxRecArray].Instance.Name, pItem->pParameterName, CCSP_BASE_PARAM_LENGTH-1);
+        }
+
+        list.pHead = pItem->pNext;   // Unlink this list item from list
+        free(pItem);
+
+        idxRecArray++;
+    }
+
+    *ppRecArray = pRecArray;
+    *pulNumRec  = list.nCount;
+
+    return CCSP_SUCCESS;
+
+
+
+#else /* !CORD_ENABLED */
+   
    if ( pSubSystemPrefix && pSubSystemPrefix[0] != 0 )
    {
         rc = sprintf_s(psmName, sizeof(psmName), "%s%s", pSubSystemPrefix, CCSP_DBUS_PSM);
@@ -3766,6 +3993,8 @@ int PsmEnumRecords
 		    pulNumRec,
 		    ppRecArray
 		);
+#endif /* CORD_ENABLED */
+   
 }
 
 int PSM_Reset_UserChangeFlag
@@ -3775,11 +4004,34 @@ int PSM_Reset_UserChangeFlag
     char const * const          pathName
 )
 {
+
+#ifdef CORD_ENABLED
+    static const char   kPrefix[] = "UserChanged.";
+    static const size_t kPrefixLen = sizeof(kPrefix) - 1;
+    enum { kBufSize = 256 };
+    static const size_t kMaxPathLen = kBufSize - kPrefixLen - 1;
+
+    if (!pathName) {
+        return CCSP_ERR_INVALID_PARAMETER_VALUE;
+    }
+
+    const size_t path_len = strnlen(pathName, kMaxPathLen + 1);
+    if (path_len >  kMaxPathLen) {
+        return CCSP_ERR_INVALID_PARAMETER_VALUE;  /* or a better “name too long” error */
+    }
+    char record_name[kBufSize] = "UserChanged.";
+    memcpy(record_name + kPrefixLen, pathName, path_len);
+    record_name[kPrefixLen + path_len] = '\0';
+
+#else /* !CORD_ENABLED */
+
     char record_name[256];
 
     snprintf(record_name, sizeof(record_name), "UserChanged.%s", pathName);
 
+#endif /* CORD_ENABLED */
     return PSM_Del_Record(bus_handle, pSubSystemPrefix, record_name);
+    
 }
 
 /* The function is called to register event, if the interface name and data path is NULL. Default is register the base interface*/
