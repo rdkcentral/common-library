@@ -1461,8 +1461,10 @@ CcspBaseIf_GetNextLevelInstances
  */
 static int registerComponentWithCr_rbus(rbusHandle_t rbus_handle, const char *component_name)
 {
+	UNREFERENCED_PARAMETER(rbus_handle);
+	UNREFERENCED_PARAMETER(component_name);
     int err = RBUS_ERROR_SUCCESS;
-    rbusObject_t inParams = NULL, outParams = NULL;
+    /*rbusObject_t inParams = NULL, outParams = NULL;
     rbusObject_Init(&inParams, NULL);
     rbusValue_t Value;
     rbusValue_Init(&Value);
@@ -1481,7 +1483,7 @@ static int registerComponentWithCr_rbus(rbusHandle_t rbus_handle, const char *co
     if(err != 0)
     {
         RBUS_LOG_ERR("registerComponentWithCr for Device.CR.RegisterComponent() for %s got returnCode Err: %d\n", component_name, err);
-    }
+    }*/
     return err;
 }
 
