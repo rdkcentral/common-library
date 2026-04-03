@@ -1233,7 +1233,7 @@ DslhDmagntCheckBaseObjNames
                 }
                 else if( buffer[AnscSizeOfString(buffer) - 1] != '.')
                 {
-                    rc = sprintf_s(pFullName, sizeof(pFullName), "%s%s.", pRootName, buffer);
+                    rc = sprintf_s(pFullName, sizeof(pFullName), "%s%s%s.", pRootName, buffer);
                     if(rc < EOK)
                     {
                        ERR_CHK(rc);
