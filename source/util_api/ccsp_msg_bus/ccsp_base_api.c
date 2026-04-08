@@ -3733,6 +3733,53 @@ void PsmFreeRecords(void *bus_handle, parameterValStruct_t **records, int nrec)
 }
 
 #ifdef CORD_ENABLED
+/**
+ * safe_atou - safely extract and convert the last path segment of pParameterName
+ * to an unsigned int. Skips any trailing dot before locating the segment.
+ * Returns 0 on success, -1 on NULL input, empty segment, non-numeric chars, or overflow.
+ */
+static inline int safe_atou(const char *pParameterName, unsigned int *out)
+{
+    if (!pParameterName || !out)
+        return -1;
+
+    const size_t len = strlen(pParameterName);
+    if (len == 0)
+        return -1;
+
+    /* Find end of last segment, skipping any trailing dot */
+    const char *end = pParameterName + len;
+    if (*(end - 1) == '.')
+        end--;
+
+    if (end == pParameterName)
+        return -1;
+
+    /* Find start of last segment */
+    const char *start = end;
+    while (start > pParameterName && *(start - 1) != '.')
+        start--;
+
+    /* Copy segment into a local buffer for strtoul */
+    size_t segLen = (size_t)(end - start);
+    if (segLen == 0 || segLen >= 32)
+        return -1;
+
+    char buf[32];
+    memcpy(buf, start, segLen);
+    buf[segLen] = '\0';
+
+    char *endptr;
+    unsigned long val;
+    errno = 0;
+    val = strtoul(buf, &endptr, 10);
+    if (errno != 0 || endptr == buf || *endptr != '\0' || val > UINT_MAX)
+        return -1;
+
+    *out = (unsigned int)val;
+    return 0;
+}
+
 typedef struct cord_list_GetNextLevelInstances_List {
     unsigned int* pInstanceArray;
     size_t nCount, nCapacity;
@@ -3760,9 +3807,8 @@ static void cord_list_callback_GetNextLevelInstances(const char* pParameterName,
         pList->pInstanceArray = pNewInstanceArray;
         pList->nCapacity = nNewCapacity;
      }
-   // To DO Need to check with LUC
     //pListItem->pInstanceArray[pList->nCount] = safe_atou(<last node name, e.g. "123">);
-    safe_atou(pParameterName[len-1], pList->pInstanceArray[pList->nCount]);
+    safe_atou(pParameterName, &pList->pInstanceArray[pList->nCount]);
     pList->nCount++;
 };
 #endif /* CORD_ENABLED */
@@ -3943,7 +3989,7 @@ int PsmEnumRecords
             if (pItem->pParameterName[len-1] != '.') {
                 pRecArray[idxRecArray].RecordType = CCSP_BASE_INSTANCE;
                 //pRecArray[idxRecArray].InstanceNumber = safe_atou(<last node name, e.g. "123">);
-                safe_atou(pItem->pParameterName[len-1], &(pRecArray[idxRecArray].Instance.InstanceNumber));
+                safe_atou(pItem->pParameterName, &(pRecArray[idxRecArray].Instance.InstanceNumber));
             }
             else {
                 pRecArray[idxRecArray].RecordType = CCSP_BASE_OBJECT;
