@@ -3396,6 +3396,7 @@ int PSM_Set_Record_Value2
     char const * const          pVal
 )
 {
+    UNREFERENCED_PARAMETER(bus_handle);
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
     if(ulRecordType == ccsp_boolean)
     {
