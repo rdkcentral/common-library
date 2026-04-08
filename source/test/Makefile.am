@@ -23,6 +23,20 @@ ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS = CcspCommonLibrary_gtest.bin
 
-CcspCommonLibrary_gtest_bin_CPPFLAGS = -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/gtest -I${top_srcdir}/gtest/include -I${top_srcdir}/source -I${top_srcdir}/source/include
-CcspCommonLibrary_gtest_bin_SOURCES = CcspCommonLibTest.cpp gtest_main.cpp
-CcspCommonLibrary_gtest_bin_LDFLAGS = -lgtest -lgmock -lgcov -lpthread
+CcspCommonLibrary_gtest_bin_CPPFLAGS = \
+    -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/gtest \
+    -I${top_srcdir}/gtest/include \
+    -I${top_srcdir}/source \
+    -I${top_srcdir}/source/include \
+    -I${top_srcdir}/source/ccsp/include \
+    -I${top_srcdir}/source/util_api/ansc/include \
+    $(SQLITE3_CFLAGS) \
+    -DPSM_DB_PATH=\"/tmp/psm_sqlite_api_test.db\"
+
+CcspCommonLibrary_gtest_bin_SOURCES = \
+    CcspCommonLibTest.cpp \
+    gtest_main.cpp \
+    psm_sqlite_api_test.cpp
+
+CcspCommonLibrary_gtest_bin_LDFLAGS = -lgtest -lgmock -lgcov -lpthread $(SQLITE3_LIBS)
+CcspCommonLibrary_gtest_bin_LDADD   = -lccsp_common

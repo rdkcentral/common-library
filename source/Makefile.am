@@ -61,9 +61,10 @@ libccsp_common_la_CPPFLAGS = \
 	-I$(top_srcdir)/util_api/stun/include \
 	-I$(top_srcdir)/util_api/http/include \
 	-I$(top_srcdir)/util_api/http/utilities/include \
-	-I$(top_srcdir)/util_api/asn.1/include
+	-I$(top_srcdir)/util_api/asn.1/include \
+	$(SQLITE3_CFLAGS)
 
-libccsp_common_la_LDFLAGS = -shared -fPIC -lssl -lcrypto -lrbus
+libccsp_common_la_LDFLAGS = -shared -fPIC -lssl -lcrypto -lrbus $(SQLITE3_LIBS)
 libccsp_common_la_SOURCES =
 libccsp_common_la_DEPENDENCIES = \
 	cosa/utilities/AnscObjectArray/AnscByteArray/libCcspCommonLibrary_AnscByteArray.la \

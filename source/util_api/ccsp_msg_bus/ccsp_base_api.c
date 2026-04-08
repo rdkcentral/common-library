@@ -3433,7 +3433,16 @@ int PSM_Get_Record_Value2
         {
             n = snprintf(pTmp, 0, "FALSE") + 1;
             *pValue = bus_info->mallocfunc(n);
-            snprintf(*pValue, (unsigned int)n, "%s", (strcasecmp(val[0]->parameterValue, "true") == 0)  ? "TRUE" : "FALSE");
+            /*
+             * Boolean values are stored as "1"/"0" (PSM_TRUE/PSM_FALSE) via the
+             * direct SQLite path.  The legacy rbus path normalised to "true"/"false"
+             * before writing.  Accept both representations here so that the returned
+             * "TRUE"/"FALSE" string matches the contract callers expect regardless
+             * of which path wrote the record.
+             */
+            int is_true = (strcasecmp(val[0]->parameterValue, "true") == 0)
+                       || (strcmp(val[0]->parameterValue, "1") == 0);
+            snprintf(*pValue, (unsigned int)n, "%s", is_true ? "TRUE" : "FALSE");
         }
         else
         {
