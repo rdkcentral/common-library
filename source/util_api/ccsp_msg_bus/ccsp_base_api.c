@@ -47,6 +47,7 @@
 #endif
 #include <ccsp_psm_helper.h>
 #include "ccsp_trace.h"
+#include <sqlite3.h>
 
 /* For AnscEqualString */
 #include "ansc_platform.h"
@@ -3171,6 +3172,221 @@ int PSM_Get_Record_Value
 }
 #endif
 
+/* ---------------------------------------------------------------------------
+ * PSM SQLite helpers — Tasks 3.1–3.4
+ *
+ * These replace the RBUS round-trip for PSM_Get_Record_Value2 /
+ * PSM_Set_Record_Value2 on single-processor RDK-B deployments (design D1).
+ *
+ * Connection caching strategy (design D3): a module-level singleton protected
+ * by SQLITE_OPEN_FULLMUTEX (serialized mode).  The connection is opened on
+ * first use and held for the lifetime of the process.  This avoids per-call
+ * open/close latency while keeping the implementation simple.
+ * ---------------------------------------------------------------------------*/
+
+#ifndef PSM_DB_PATH
+#define PSM_DB_PATH "/nvram/psm.db"
+#endif
+
+static sqlite3 *s_psm_db  = NULL;
+static pthread_mutex_t s_psm_db_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/*
+ * psm_sqlite_get_connection — return the cached (or newly opened) connection.
+ * Returns NULL if the database cannot be opened.
+ */
+static sqlite3 *psm_sqlite_get_connection(void)
+{
+    pthread_mutex_lock(&s_psm_db_mutex);
+    if (s_psm_db == NULL)
+    {
+        int rc = sqlite3_open_v2(PSM_DB_PATH, &s_psm_db,
+                                 SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX,
+                                 NULL);
+        if (rc != SQLITE_OK)
+        {
+            CcspTraceError(("PSM SQLite: cannot open %s: %s\n",
+                            PSM_DB_PATH, s_psm_db ? sqlite3_errmsg(s_psm_db) : "unknown"));
+            if (s_psm_db)
+            {
+                sqlite3_close(s_psm_db);
+                s_psm_db = NULL;
+            }
+        }
+    }
+    pthread_mutex_unlock(&s_psm_db_mutex);
+    return s_psm_db;
+}
+
+/*
+ * PSM_Get_Record_Value_sqlite — parameterized SELECT for a single record name.
+ *
+ * On success:  returns CCSP_SUCCESS; populates *val_size and *parameterval.
+ * On "no row": returns CCSP_CR_ERR_INVALID_PARAM.
+ * On error:    returns CCSP_FAILURE and logs via RDK Logger.
+ */
+static int PSM_Get_Record_Value_sqlite(
+    void          *bus_handle,
+    const char    *pRecordName,
+    int           *val_size,
+    parameterValStruct_t ***parameterval)
+{
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+    sqlite3 *db;
+    sqlite3_stmt *stmt = NULL;
+    int rc;
+    int ret = CCSP_FAILURE;
+    parameterValStruct_t **val = NULL;
+    const char *stored_value;
+    int stored_type;
+    size_t vlen;
+
+    if (pRecordName == NULL)
+        return CCSP_CR_ERR_INVALID_PARAM;
+
+    db = psm_sqlite_get_connection();
+    if (db == NULL)
+    {
+        CcspTraceError(("PSM SQLite GET: database unavailable for %s\n", pRecordName));
+        return CCSP_FAILURE;
+    }
+
+    rc = sqlite3_prepare_v2(db,
+        "SELECT type, value FROM psm_records WHERE name = ?1 LIMIT 1;",
+        -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        CcspTraceError(("PSM SQLite GET: prepare failed: %s\n", sqlite3_errmsg(db)));
+        return CCSP_FAILURE;
+    }
+
+    sqlite3_bind_text(stmt, 1, pRecordName, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW)
+    {
+        stored_type  = sqlite3_column_int(stmt, 0);
+        stored_value = (const char *)sqlite3_column_text(stmt, 1);
+
+        val = bus_info->mallocfunc(sizeof(parameterValStruct_t *));
+        if (val == NULL)
+        {
+            ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+            goto cleanup;
+        }
+        val[0] = bus_info->mallocfunc(sizeof(parameterValStruct_t));
+        if (val[0] == NULL)
+        {
+            bus_info->freefunc(val);
+            val = NULL;
+            ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+            goto cleanup;
+        }
+
+        /* name */
+        size_t nlen = strlen(pRecordName) + 1;
+        val[0]->parameterName = bus_info->mallocfunc(nlen);
+        if (val[0]->parameterName == NULL)
+        {
+            bus_info->freefunc(val[0]);
+            bus_info->freefunc(val);
+            val = NULL;
+            ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+            goto cleanup;
+        }
+        memcpy(val[0]->parameterName, pRecordName, nlen);
+
+        /* type */
+        val[0]->type = (enum dataType_e)stored_type;
+
+        /* value */
+        vlen = stored_value ? strlen(stored_value) + 1 : 1;
+        val[0]->parameterValue = bus_info->mallocfunc(vlen);
+        if (val[0]->parameterValue == NULL)
+        {
+            bus_info->freefunc(val[0]->parameterName);
+            bus_info->freefunc(val[0]);
+            bus_info->freefunc(val);
+            val = NULL;
+            ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+            goto cleanup;
+        }
+        memcpy(val[0]->parameterValue, stored_value ? stored_value : "", vlen);
+
+        *val_size     = 1;
+        *parameterval = val;
+        ret = CCSP_SUCCESS;
+    }
+    else if (rc == SQLITE_DONE)
+    {
+        /* No matching row */
+        ret = CCSP_CR_ERR_INVALID_PARAM;
+    }
+    else
+    {
+        CcspTraceError(("PSM SQLite GET: sqlite3_step error: %s\n", sqlite3_errmsg(db)));
+        ret = CCSP_FAILURE;
+    }
+
+cleanup:
+    sqlite3_finalize(stmt);
+    return ret;
+}
+
+/*
+ * PSM_Set_Record_Value_sqlite — parameterized INSERT OR REPLACE for a single record.
+ *
+ * On success:  returns CCSP_SUCCESS.
+ * On error:    returns CCSP_FAILURE and logs via RDK Logger.
+ */
+static int PSM_Set_Record_Value_sqlite(
+    const char   *pRecordName,
+    unsigned int  ulRecordType,
+    const char   *pVal)
+{
+    sqlite3 *db;
+    sqlite3_stmt *stmt = NULL;
+    int rc;
+    int ret = CCSP_FAILURE;
+
+    if (pRecordName == NULL || pVal == NULL)
+        return CCSP_CR_ERR_INVALID_PARAM;
+
+    db = psm_sqlite_get_connection();
+    if (db == NULL)
+    {
+        CcspTraceError(("PSM SQLite SET: database unavailable for %s\n", pRecordName));
+        return CCSP_FAILURE;
+    }
+
+    rc = sqlite3_prepare_v2(db,
+        "INSERT OR REPLACE INTO psm_records (name, type, value) VALUES (?1, ?2, ?3);",
+        -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        CcspTraceError(("PSM SQLite SET: prepare failed: %s\n", sqlite3_errmsg(db)));
+        return CCSP_FAILURE;
+    }
+
+    sqlite3_bind_text(stmt, 1, pRecordName,        -1, SQLITE_STATIC);
+    sqlite3_bind_int (stmt, 2, (int)ulRecordType);
+    sqlite3_bind_text(stmt, 3, pVal,               -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_DONE)
+    {
+        ret = CCSP_SUCCESS;
+    }
+    else
+    {
+        CcspTraceError(("PSM SQLite SET: sqlite3_step error for %s: %s\n",
+                        pRecordName, sqlite3_errmsg(db)));
+    }
+
+    sqlite3_finalize(stmt);
+    return ret;
+}
+
 int PSM_Set_Record_Value2
 (
     void*                       bus_handle,
@@ -3181,7 +3397,6 @@ int PSM_Set_Record_Value2
 )
 {
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
-    parameterValStruct_t val[1];
     if(ulRecordType == ccsp_boolean)
     {
         if(strcmp(pVal,PSM_FALSE) && strcmp(pVal, PSM_TRUE))
@@ -3189,10 +3404,7 @@ int PSM_Set_Record_Value2
             return CCSP_CR_ERR_INVALID_PARAM;
         }
     }
-    val[0].parameterName  = (char *)pRecordName;
-    val[0].type = ulRecordType;
-    val[0].parameterValue = (char *)pVal;
-    return PSM_Set_Record_Value_rbus(bus_handle, 1, val);
+    return PSM_Set_Record_Value_sqlite(pRecordName, ulRecordType, pVal);
 }
 
 int PSM_Get_Record_Value2
@@ -3208,13 +3420,11 @@ int PSM_Get_Record_Value2
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
     *pValue = NULL;
     int n = 0;
-    int size;
+    int size = 0;
     char* pTmp = NULL;
-    char* parameterNames[1];
     parameterValStruct_t** val = 0;
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
-    parameterNames[0] = (char*)pRecordName;
-    ret = PSM_Get_Record_Value_rbus(bus_handle, parameterNames, 1, &size, &val);
+    ret = PSM_Get_Record_Value_sqlite(bus_handle, pRecordName, &size, &val);
     if(ret == CCSP_SUCCESS)
     {
         if (ulRecordType)

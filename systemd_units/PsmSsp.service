@@ -20,6 +20,8 @@
 Description=PsmSsp service
 
 After=CcspCrSsp.service
+Before=CcspPandMSsp.service CcspTr069PaSsp.service CcspWanAgent.service CcspCMAgent.service ccspwifiagent.service
+Wants=CcspCrSsp.service
 
 [Service]
 Type=forking
