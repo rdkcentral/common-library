@@ -3420,9 +3420,7 @@ int PSM_Get_Record_Value2
     int ret = 0;
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
     *pValue = NULL;
-    int n = 0;
     int size = 0;
-    char* pTmp = NULL;
     parameterValStruct_t** val = 0;
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     ret = PSM_Get_Record_Value_sqlite(bus_handle, pRecordName, &size, &val);
@@ -3430,26 +3428,14 @@ int PSM_Get_Record_Value2
     {
         if (ulRecordType)
             *ulRecordType = val[0]->type;
-        if (val[0]->type == ccsp_boolean)
-        {
-            n = snprintf(pTmp, 0, "FALSE") + 1;
-            *pValue = bus_info->mallocfunc(n);
-            /*
-             * Boolean values are stored as "1"/"0" (PSM_TRUE/PSM_FALSE) via the
-             * direct SQLite path.  The legacy rbus path normalised to "true"/"false"
-             * before writing.  Accept both representations here so that the returned
-             * "TRUE"/"FALSE" string matches the contract callers expect regardless
-             * of which path wrote the record.
-             */
-            int is_true = (strcasecmp(val[0]->parameterValue, "true") == 0)
-                       || (strcmp(val[0]->parameterValue, "1") == 0);
-            snprintf(*pValue, (unsigned int)n, "%s", is_true ? "TRUE" : "FALSE");
-        }
-        else
-        {
-            *pValue = bus_info->mallocfunc(strlen(val[0]->parameterValue)+1);
-            strcpy(*pValue, val[0]->parameterValue);
-        }
+        /*
+         * Return the raw stored value unchanged.  PSM callers compare the
+         * returned string directly against PSM_TRUE ("1") / PSM_FALSE ("0")
+         * or against "true"/"false" depending on what was written.
+         * Normalising here would break those comparisons.
+         */
+        *pValue = bus_info->mallocfunc(strlen(val[0]->parameterValue)+1);
+        strcpy(*pValue, val[0]->parameterValue);
     }
     free_parameterValStruct_t(bus_handle , size, val);
     return ret;

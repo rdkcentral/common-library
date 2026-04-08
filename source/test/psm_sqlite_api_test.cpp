@@ -161,9 +161,10 @@ TEST_F(PsmSqliteApiTest, GetRecordDatabaseUnavailable_ReturnsNonSuccess)
     EXPECT_EQ(nullptr, pValue);
 }
 
-TEST_F(PsmSqliteApiTest, GetRecord_BooleanTrue_ReturnsTRUE)
+TEST_F(PsmSqliteApiTest, GetRecord_BooleanTrue_ReturnsStoredValue)
 {
-    /* PSM_TRUE is "1" — stored to DB via Set, verified the normalized output */
+    /* PSM_TRUE is "1" — Get must return the raw stored value so callers
+     * comparing against PSM_TRUE ("1") work correctly. */
     seed("Device.Bool.TrueParam", ccsp_boolean, "1");
 
     char *pValue = nullptr;
@@ -173,12 +174,13 @@ TEST_F(PsmSqliteApiTest, GetRecord_BooleanTrue_ReturnsTRUE)
 
     EXPECT_EQ(CCSP_SUCCESS, ret);
     ASSERT_NE(nullptr, pValue);
-    EXPECT_STREQ("TRUE", pValue);   /* Get normalises to uppercase TRUE/FALSE */
+    EXPECT_STREQ("1", pValue);   /* raw stored value, as PSM_TRUE is defined */
     free(pValue);
 }
 
-TEST_F(PsmSqliteApiTest, GetRecord_BooleanFalse_ReturnsFALSE)
+TEST_F(PsmSqliteApiTest, GetRecord_BooleanFalse_ReturnsStoredValue)
 {
+    /* PSM_FALSE is "0" — Get must return the raw stored value. */
     seed("Device.Bool.FalseParam", ccsp_boolean, "0");
 
     char *pValue = nullptr;
@@ -188,7 +190,7 @@ TEST_F(PsmSqliteApiTest, GetRecord_BooleanFalse_ReturnsFALSE)
 
     EXPECT_EQ(CCSP_SUCCESS, ret);
     ASSERT_NE(nullptr, pValue);
-    EXPECT_STREQ("FALSE", pValue);
+    EXPECT_STREQ("0", pValue);   /* raw stored value, as PSM_FALSE is defined */
     free(pValue);
 }
 
