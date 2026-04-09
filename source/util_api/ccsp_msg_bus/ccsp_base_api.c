@@ -3057,7 +3057,7 @@ int PSM_Set_Record_Value
         return CCSP_CR_ERR_INVALID_PARAM;
     }
 
-    ret = PSM_Set_Record_Value_rbus(bus_handle, 1, val);
+    ret = PSM_Set_Record_Value_sqlite(val[0].parameterName, val[0].type, val[0].parameterValue);
 
     if(var_string)
         bus_info->freefunc(var_string);
@@ -3074,13 +3074,11 @@ int PSM_Get_Record_Value
 )
 {
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
-    char* parameterNames[1];
     int size = 0;
     parameterValStruct_t **val = 0;
     int ret = -1;
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
-    parameterNames[0] = (char *)pRecordName;
-    ret = PSM_Get_Record_Value_rbus(bus_handle, parameterNames, 1, &size, &val);
+    ret = PSM_Get_Record_Value_sqlite(bus_handle, pRecordName, &size, &val);
     if(ret != CCSP_SUCCESS )
         return ret;
     if(size < 1)
@@ -3212,6 +3210,12 @@ static sqlite3 *psm_sqlite_get_connection(void)
                 sqlite3_close(s_psm_db);
                 s_psm_db = NULL;
             }
+        }
+        else
+        {
+            /* Wait up to 5 s when another process (e.g. psmcli) holds a
+             * write lock rather than immediately returning SQLITE_BUSY. */
+            sqlite3_busy_timeout(s_psm_db, 5000);
         }
     }
     pthread_mutex_unlock(&s_psm_db_mutex);
@@ -3448,94 +3452,102 @@ int PSM_Del_Record
     char const * const          pRecordName
 )
 {
-    parameterAttributeStruct_t attr_val[1];
-    parameterInfoStruct_t **parameter;
-    char psmName[256];
-    int size;
-    int orgSize;
-    int ret;
-    errno_t rc = -1;
-    if ( pSubSystemPrefix && pSubSystemPrefix[0] != 0 )
+    UNREFERENCED_PARAMETER(bus_handle);
+    UNREFERENCED_PARAMETER(pSubSystemPrefix);
+
+    sqlite3        *db;
+    sqlite3_stmt   *stmt = NULL;
+    int             rc;
+    int             ret  = CCSP_FAILURE;
+
+    if (pRecordName == NULL)
+        return CCSP_CR_ERR_INVALID_PARAM;
+
+    db = psm_sqlite_get_connection();
+    if (db == NULL)
     {
-        rc = sprintf_s(psmName, sizeof(psmName), "%s%s", pSubSystemPrefix, CCSP_DBUS_PSM);
-        if(rc < EOK)
+        CcspTraceError(("PSM SQLite DEL: database unavailable for %s\n", pRecordName));
+        return CCSP_FAILURE;
+    }
+
+    /*
+     * If the name ends with '.' it is a prefix — delete all rows whose name
+     * starts with that prefix (e.g. "eRT.some.table." deletes all sub-keys).
+     * Otherwise delete the single exact row.
+     */
+    if (pRecordName[strlen(pRecordName) - 1] == '.')
+    {
+        char pattern[512];
+        snprintf(pattern, sizeof(pattern), "%s%%", pRecordName);
+        rc = sqlite3_prepare_v2(db,
+                 "DELETE FROM psm_records WHERE name LIKE ?1;",
+                 -1, &stmt, NULL);
+        if (rc != SQLITE_OK)
         {
-            ERR_CHK(rc);
+            CcspTraceError(("PSM SQLite DEL prefix: prepare failed: %s\n", sqlite3_errmsg(db)));
+            return CCSP_FAILURE;
         }
+        sqlite3_bind_text(stmt, 1, pattern, -1, SQLITE_TRANSIENT);
     }
     else
     {
-        rc = strcpy_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
-        ERR_CHK(rc);
-    }
-    RBUS_LOG("Inside %s : pRecordName: %s\n",__func__, pRecordName);
-    if ( pRecordName[strlen(pRecordName)-1] == '.' )
-    {
-        ret = CcspBaseIf_getParameterNames(
-                bus_handle,
-                psmName,
-                CCSP_DBUS_PATH_PSM,
-                (char *)pRecordName,
-                0,
-                &size ,
-                &parameter
-               );
-        if( ret != CCSP_SUCCESS)
-            return ret;
-        orgSize = size;
-        for ( ; size > 0; size-- )
+        rc = sqlite3_prepare_v2(db,
+                 "DELETE FROM psm_records WHERE name = ?1;",
+                 -1, &stmt, NULL);
+        if (rc != SQLITE_OK)
         {
-            attr_val[0].parameterName = parameter[size-1]->parameterName;
-            attr_val[0].notificationChanged = 0;
-            attr_val[0].notification = 0;
-            attr_val[0].access = 0;
-            attr_val[0].accessControlChanged = 1;
-            attr_val[0].accessControlBitmask = 0;
-            ret = CcspBaseIf_setParameterAttributes(
-                    bus_handle,
-                    psmName,
-                    CCSP_DBUS_PATH_PSM,
-                    0,
-                    attr_val,
-                    1
-                   );
-            if ( ret != CCSP_SUCCESS )
-                break;
+            CcspTraceError(("PSM SQLite DEL: prepare failed: %s\n", sqlite3_errmsg(db)));
+            return CCSP_FAILURE;
         }
-        free_parameterInfoStruct_t(bus_handle, orgSize, parameter);
-        return ret;
+        sqlite3_bind_text(stmt, 1, pRecordName, -1, SQLITE_STATIC);
     }
-    else
-    {
-        attr_val[0].parameterName = (char *)pRecordName;
-        attr_val[0].notificationChanged = 0;
-        attr_val[0].notification = 0;
-        attr_val[0].access = 0;
-        attr_val[0].accessControlChanged = 1;
-        attr_val[0].accessControlBitmask = 0;
-        return  CcspBaseIf_setParameterAttributes(
-                  bus_handle,
-                  psmName,
-                  CCSP_DBUS_PATH_PSM,
-                  0,
-                  attr_val,
-                  1
-                 );
-    }
+
+    rc = sqlite3_step(stmt);
+    ret = (rc == SQLITE_DONE) ? CCSP_SUCCESS : CCSP_FAILURE;
+    if (rc != SQLITE_DONE)
+        CcspTraceError(("PSM SQLite DEL: step error for '%s': %s\n",
+                        pRecordName, sqlite3_errmsg(db)));
+
+    sqlite3_finalize(stmt);
+    return ret;
 }
 
 int PsmGroupGet(void *bus_handle, const char *subsys,
         const char *names[], int nname, parameterValStruct_t ***records, int *nrec)
 {
-    char psmName[256];
+    UNREFERENCED_PARAMETER(subsys);
+    int i;
+    int total = 0;
+    parameterValStruct_t **all = NULL;
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
 
     if (!bus_handle || !names || !records || !nrec)
         return CCSP_FAILURE;
 
-    snprintf(psmName, sizeof(psmName), "%s%s", (subsys ? subsys : ""), CCSP_DBUS_PSM);
+    all = bus_info->mallocfunc(nname * sizeof(parameterValStruct_t *));
+    if (!all)
+        return CCSP_ERR_MEMORY_ALLOC_FAIL;
 
-    return CcspBaseIf_getParameterValues(bus_handle, psmName, CCSP_DBUS_PATH_PSM,
-            (char **)names, nname, nrec, records);
+    for (i = 0; i < nname; i++)
+    {
+        int size = 0;
+        parameterValStruct_t **val = NULL;
+        int ret = PSM_Get_Record_Value_sqlite(bus_handle, names[i], &size, &val);
+        if (ret == CCSP_SUCCESS && size == 1)
+        {
+            all[total++] = val[0];
+            bus_info->freefunc(val); /* free the container, keep the struct */
+        }
+        else
+        {
+            if (val)
+                free_parameterValStruct_t(bus_handle, size, val);
+        }
+    }
+
+    *records = all;
+    *nrec    = total;
+    return CCSP_SUCCESS;
 }
 
 void PsmFreeRecords(void *bus_handle, parameterValStruct_t **records, int nrec)
@@ -3552,32 +3564,80 @@ int PsmGetNextLevelInstances
    unsigned int**  ppInstanceArray
 )
 {
-   char psmName[256];
-   errno_t rc = -1;
+    UNREFERENCED_PARAMETER(pSubSystemPrefix);
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+    sqlite3       *db;
+    sqlite3_stmt  *stmt = NULL;
+    int            rc;
+    char           pattern[512];
+    unsigned int  *arr  = NULL;
+    unsigned int   count = 0;
+    unsigned int   capacity = 16;
 
-   if ( pSubSystemPrefix && pSubSystemPrefix[0] != 0 )
-   {
-        rc = sprintf_s(psmName, sizeof(psmName), "%s%s", pSubSystemPrefix, CCSP_DBUS_PSM);
-        if(rc < EOK)
+    if (!bus_handle || !pParentPath || !pulNumInstance || !ppInstanceArray)
+        return CCSP_FAILURE;
+
+    db = psm_sqlite_get_connection();
+    if (!db)
+        return CCSP_FAILURE;
+
+    /*
+     * Find the next-level numeric instance indices under pParentPath.
+     * e.g. pParentPath = "eRT.dmsb.l3net." → matches "eRT.dmsb.l3net.1",
+     *      "eRT.dmsb.l3net.2", etc. and returns {1, 2}.
+     */
+    snprintf(pattern, sizeof(pattern), "%s%%", pParentPath);
+    /*
+     * SQLite does not allow SELECT-level aliases in the WHERE clause — only
+     * in ORDER BY.  Repeat the CAST expression in the WHERE predicate so that
+     * rows where the token after the prefix is not a positive integer are
+     * filtered out before they reach the C loop.  ?1 is used twice; SQLite
+     * binds both occurrences from the single sqlite3_bind_int call below.
+     */
+    rc = sqlite3_prepare_v2(db,
+             "SELECT DISTINCT CAST(SUBSTR(name, ?1) AS INTEGER) AS inst"
+             " FROM psm_records"
+             " WHERE name LIKE ?2"
+             "   AND CAST(SUBSTR(name, ?1) AS INTEGER) > 0"
+             " ORDER BY inst;",
+             -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        CcspTraceError(("PsmGetNextLevelInstances: prepare failed: %s\n", sqlite3_errmsg(db)));
+        return CCSP_FAILURE;
+    }
+
+    sqlite3_bind_int (stmt, 1, (int)(strlen(pParentPath) + 1));
+    sqlite3_bind_text(stmt, 2, pattern, -1, SQLITE_TRANSIENT);
+
+    arr = bus_info->mallocfunc(capacity * sizeof(unsigned int));
+    if (!arr)
+    {
+        sqlite3_finalize(stmt);
+        return CCSP_ERR_MEMORY_ALLOC_FAIL;
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        unsigned int inst = (unsigned int)sqlite3_column_int(stmt, 0);
+        if (inst == 0)
+            continue;
+        if (count == capacity)
         {
-            ERR_CHK(rc);
+            capacity *= 2;
+            unsigned int *tmp = bus_info->mallocfunc(capacity * sizeof(unsigned int));
+            if (!tmp) break;
+            memcpy(tmp, arr, count * sizeof(unsigned int));
+            bus_info->freefunc(arr);
+            arr = tmp;
         }
-   }
-   else
-   {
-        rc = strcpy_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
-        ERR_CHK(rc);
-   }
+        arr[count++] = inst;
+    }
+    sqlite3_finalize(stmt);
 
-   return CcspBaseIf_GetNextLevelInstances
-		(
-		    bus_handle,
-		    psmName,
-		    CCSP_DBUS_PATH_PSM,
-		    (char *)pParentPath,
-		    pulNumInstance,
-		    ppInstanceArray
-		);
+    *pulNumInstance  = count;
+    *ppInstanceArray = arr;
+    return CCSP_SUCCESS;
 }
 
 
@@ -3591,33 +3651,88 @@ int PsmEnumRecords
     PCCSP_BASE_RECORD*  ppRecArray
 )
 {
-   char psmName[256];
-   errno_t rc = -1;
+    UNREFERENCED_PARAMETER(pSubSystemPrefix);
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+    sqlite3       *db;
+    sqlite3_stmt  *stmt = NULL;
+    int            rc;
+    char           pattern[512];
+    PCCSP_BASE_RECORD arr   = NULL;
+    unsigned int   count    = 0;
+    unsigned int   capacity = 32;
+    size_t         prefix_len;
 
-   if ( pSubSystemPrefix && pSubSystemPrefix[0] != 0 )
-   {
-        rc = sprintf_s(psmName, sizeof(psmName), "%s%s", pSubSystemPrefix, CCSP_DBUS_PSM);
-        if(rc < EOK)
+    if (!bus_handle || !pParentPath || !pulNumRec || !ppRecArray)
+        return CCSP_FAILURE;
+
+    db = psm_sqlite_get_connection();
+    if (!db)
+        return CCSP_FAILURE;
+
+    prefix_len = strlen(pParentPath);
+    snprintf(pattern, sizeof(pattern), "%s%%", pParentPath);
+
+    /*
+     * nextLevel=TRUE  → return only the direct children (no '.' after prefix)
+     * nextLevel=FALSE → return all descendants
+     */
+    rc = sqlite3_prepare_v2(db,
+             "SELECT name, type, value FROM psm_records WHERE name LIKE ?1;",
+             -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+        return CCSP_FAILURE;
+
+    sqlite3_bind_text(stmt, 1, pattern, -1, SQLITE_TRANSIENT);
+
+    arr = bus_info->mallocfunc(capacity * sizeof(CCSP_BASE_RECORD));
+    if (!arr)
+    {
+        sqlite3_finalize(stmt);
+        return CCSP_ERR_MEMORY_ALLOC_FAIL;
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        const char *name  = (const char *)sqlite3_column_text(stmt, 0);
+        int         type  = sqlite3_column_int(stmt, 1);
+        const char *value = (const char *)sqlite3_column_text(stmt, 2);
+
+        /* If nextLevel, skip names that have '.' after the prefix */
+        if (nextLevel && name && strchr(name + prefix_len, '.') != NULL)
+            continue;
+
+        if (count == capacity)
         {
-            ERR_CHK(rc);
+            capacity *= 2;
+            PCCSP_BASE_RECORD tmp = bus_info->mallocfunc(capacity * sizeof(CCSP_BASE_RECORD));
+            if (!tmp) break;
+            memcpy(tmp, arr, count * sizeof(CCSP_BASE_RECORD));
+            bus_info->freefunc(arr);
+            arr = tmp;
         }
-   }
-   else
-   {
-        rc = strcpy_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
-        ERR_CHK(rc);
-   }
 
-   return CcspBaseIf_EnumRecords
-		(
-		    bus_handle,
-		    psmName,
-		    CCSP_DBUS_PATH_PSM,
-		    (char *)pParentPath,
-		    nextLevel,
-		    pulNumRec,
-		    ppRecArray
-		);
+        memset(&arr[count], 0, sizeof(CCSP_BASE_RECORD));
+        if (name)
+        {
+            arr[count].RecordName = bus_info->mallocfunc(strlen(name) + 1);
+            if (arr[count].RecordName)
+                strcpy(arr[count].RecordName, name);
+        }
+        arr[count].RecordType  = (unsigned int)type;
+        arr[count].Writable    = 1;
+        if (value)
+        {
+            arr[count].RecordData.varString = bus_info->mallocfunc(strlen(value) + 1);
+            if (arr[count].RecordData.varString)
+                strcpy(arr[count].RecordData.varString, value);
+        }
+        count++;
+    }
+    sqlite3_finalize(stmt);
+
+    *pulNumRec  = count;
+    *ppRecArray = arr;
+    return CCSP_SUCCESS;
 }
 
 int PSM_Reset_UserChangeFlag
