@@ -2262,6 +2262,22 @@ int CcspBaseIf_getHealth_rbus(
         CcspTraceError(("%s  failed with dst_component_id is NULL failed\n", __FUNCTION__));
         return CCSP_FAILURE;
     }
+
+    /*
+     * PSM shortcut: PSM is now a oneshot process that exits after psm_db_init().
+     * If the SQLite ready flag exists, PSM DB is healthy — return green directly
+     * without an RBus call (PSM process may already be gone).
+     */
+    if (strstr(dst_component_id, "ccsp.psm") != NULL)
+    {
+        if (access("/tmp/psm_sqlite_ready", F_OK) == 0)
+        {
+            *health = 2; /* eRSHealthy_Green */
+            CcspTraceInfo(("%s: PSM sqlite ready flag present, returning green\n", __FUNCTION__));
+            return CCSP_SUCCESS;
+        }
+    }
+
     *health = 0;
     snprintf(methodName, RBUS_MAX_NAME_LENGTH, "%s.%s", dst_component_id, "GetHealth()");
     int ret_val = rbusMethod_Invoke(bus_info->rbus_handle, methodName, NULL, &outParams);
