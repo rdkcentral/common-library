@@ -3228,6 +3228,7 @@ static sqlite3 *psm_sqlite_get_connection(void)
             /* Wait up to 5 s when another process (e.g. psmcli) holds a
              * write lock rather than immediately returning SQLITE_BUSY. */
             sqlite3_busy_timeout(s_psm_db, 5000);
+            CcspTraceInfo(("PSM SQLite: connection opened to %s (new SQLite flow)\n", PSM_DB_PATH));
         }
     }
     pthread_mutex_unlock(&s_psm_db_mutex);
@@ -3332,10 +3333,12 @@ static int PSM_Get_Record_Value_sqlite(
         *val_size     = 1;
         *parameterval = val;
         ret = CCSP_SUCCESS;
+        CcspTraceInfo(("PSM SQLite GET: found record '%s' (type=%d)\n", pRecordName, stored_type));
     }
     else if (rc == SQLITE_DONE)
     {
         /* No matching row */
+        CcspTraceInfo(("PSM SQLite GET: record '%s' not found in DB\n", pRecordName));
         ret = CCSP_CR_ERR_INVALID_PARAM;
     }
     else
@@ -3391,6 +3394,8 @@ static int PSM_Set_Record_Value_sqlite(
     rc = sqlite3_step(stmt);
     if (rc == SQLITE_DONE)
     {
+        CcspTraceInfo(("PSM SQLite SET: record '%s' stored successfully (type=%u)\n",
+                       pRecordName, ulRecordType));
         ret = CCSP_SUCCESS;
     }
     else
@@ -3519,6 +3524,8 @@ int PSM_Del_Record
     if (rc != SQLITE_DONE)
         CcspTraceError(("PSM SQLite DEL: step error for '%s': %s\n",
                         pRecordName, sqlite3_errmsg(db)));
+    else
+        CcspTraceInfo(("PSM SQLite DEL: record '%s' deleted successfully\n", pRecordName));
 
     sqlite3_finalize(stmt);
     return ret;
