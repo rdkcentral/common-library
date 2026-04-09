@@ -3522,10 +3522,14 @@ int PSM_Del_Record
     rc = sqlite3_step(stmt);
     ret = (rc == SQLITE_DONE) ? CCSP_SUCCESS : CCSP_FAILURE;
     if (rc != SQLITE_DONE)
+    {
         CcspTraceError(("PSM SQLite DEL: step error for '%s': %s\n",
                         pRecordName, sqlite3_errmsg(db)));
+    }
     else
+    {
         CcspTraceInfo(("PSM SQLite DEL: record '%s' deleted successfully\n", pRecordName));
+    }
 
     sqlite3_finalize(stmt);
     return ret;
