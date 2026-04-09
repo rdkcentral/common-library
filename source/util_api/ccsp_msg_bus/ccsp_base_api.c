@@ -2972,6 +2972,18 @@ int CcspBaseIf_Register_Event_rbus
     RBUS_LOG("%s : rbus_registerEvent success for : %s\n", __FUNCTION__, event_name);
     return CCSP_SUCCESS;
 }
+
+/* Forward declarations for the static SQLite helpers defined later in this
+ * translation unit.  Required because PSM_Set_Record_Value and
+ * PSM_Get_Record_Value (inside PSM_SLAP_VAR) call them before the definitions
+ * appear, which causes -Werror=implicit-function-declaration with GCC. */
+static int PSM_Get_Record_Value_sqlite(void *bus_handle, const char *pRecordName,
+                                       int *val_size,
+                                       parameterValStruct_t ***parameterval);
+static int PSM_Set_Record_Value_sqlite(const char *pRecordName,
+                                       unsigned int ulRecordType,
+                                       const char *pVal);
+
 //PSM function
 #ifdef PSM_SLAP_VAR
 int PSM_Set_Record_Value
@@ -3677,7 +3689,7 @@ int PsmEnumRecords
      * nextLevel=FALSE → return all descendants
      */
     rc = sqlite3_prepare_v2(db,
-             "SELECT name, type, value FROM psm_records WHERE name LIKE ?1;",
+             "SELECT name, type FROM psm_records WHERE name LIKE ?1;",
              -1, &stmt, NULL);
     if (rc != SQLITE_OK)
         return CCSP_FAILURE;
@@ -3695,7 +3707,6 @@ int PsmEnumRecords
     {
         const char *name  = (const char *)sqlite3_column_text(stmt, 0);
         int         type  = sqlite3_column_int(stmt, 1);
-        const char *value = (const char *)sqlite3_column_text(stmt, 2);
 
         /* If nextLevel, skip names that have '.' after the prefix */
         if (nextLevel && name && strchr(name + prefix_len, '.') != NULL)
@@ -3714,18 +3725,11 @@ int PsmEnumRecords
         memset(&arr[count], 0, sizeof(CCSP_BASE_RECORD));
         if (name)
         {
-            arr[count].RecordName = bus_info->mallocfunc(strlen(name) + 1);
-            if (arr[count].RecordName)
-                strcpy(arr[count].RecordName, name);
+            strncpy(arr[count].Instance.Name, name,
+                    sizeof(arr[count].Instance.Name) - 1);
+            arr[count].Instance.Name[sizeof(arr[count].Instance.Name) - 1] = '\0';
         }
-        arr[count].RecordType  = (unsigned int)type;
-        arr[count].Writable    = 1;
-        if (value)
-        {
-            arr[count].RecordData.varString = bus_info->mallocfunc(strlen(value) + 1);
-            if (arr[count].RecordData.varString)
-                strcpy(arr[count].RecordData.varString, value);
-        }
+        arr[count].RecordType = type;
         count++;
     }
     sqlite3_finalize(stmt);
