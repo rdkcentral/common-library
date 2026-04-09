@@ -3472,7 +3472,7 @@ int PSM_Del_Record
     int             rc;
     int             ret  = CCSP_FAILURE;
 
-    if (pRecordName == NULL)
+    if (pRecordName == NULL || pRecordName[0] == '\0')
         return CCSP_CR_ERR_INVALID_PARAM;
 
     db = psm_sqlite_get_connection();
@@ -3535,6 +3535,13 @@ int PsmGroupGet(void *bus_handle, const char *subsys,
 
     if (!bus_handle || !names || !records || !nrec)
         return CCSP_FAILURE;
+
+    if (nname == 0)
+    {
+        *records = NULL;
+        *nrec    = 0;
+        return CCSP_SUCCESS;
+    }
 
     all = bus_info->mallocfunc(nname * sizeof(parameterValStruct_t *));
     if (!all)
