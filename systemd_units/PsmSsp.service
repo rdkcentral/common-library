@@ -18,6 +18,11 @@
 ##########################################################################
 [Unit]
 Description=PsmSsp service
+# Guard: if PSM already ran this boot (flag written by psm_db_init), skip re-run.
+# This prevents ccsp_psm.path from double-triggering (Type=oneshot allows re-run
+# even when active). When condition is false systemd immediately marks the job
+# successful, so RemainAfterExit=yes keeps the service active.
+ConditionPathExists=!/tmp/psm_sqlite_ready
 
 After=CcspCrSsp.service
 Before=CcspPandMSsp.service CcspTr069PaSsp.service CcspWanAgent.service CcspCMAgent.service ccspwifiagent.service
