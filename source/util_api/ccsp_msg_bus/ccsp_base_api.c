@@ -2272,7 +2272,7 @@ int CcspBaseIf_getHealth_rbus(
     {
         if (access("/tmp/psm_sqlite_ready", F_OK) == 0)
         {
-            *health = 2; /* eRSHealthy_Green */
+            *health = 3; /* CCSP_COMMON_COMPONENT_HEALTH_Green — value waitConditionReady() checks for */
             CcspTraceInfo(("%s: PSM sqlite ready flag present, returning green\n", __FUNCTION__));
             return CCSP_SUCCESS;
         }
