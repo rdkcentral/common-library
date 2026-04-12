@@ -53,6 +53,9 @@
 
 #include <sys/time.h>
 #include <time.h>
+#ifdef CORD_ENABLED
+#include <cord.h>
+#endif
 
 #ifdef _DEBUG
 // #define _DEBUG_LOCAL_
@@ -1115,6 +1118,9 @@ CCSP_Message_Bus_Init
         }
         /*CID: 110434 Resource leak*/
         fclose(fp);
+#ifdef CORD_ENABLED
+        cord_open();
+#endif
         return 0;
 }
 
@@ -1136,6 +1142,9 @@ CCSP_Message_Bus_Exit
         CcspTraceError(("<%s>: rbus_close fails with %d\n", __FUNCTION__,rc));
     bus_info->freefunc(bus_info);
     bus_info = NULL;
+#ifdef CORD_ENABLED
+    cord_close();
+#endif
 }
 
 static void
