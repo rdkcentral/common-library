@@ -26,7 +26,7 @@ Type=forking
 Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 PIDFile=/var/tmp/memtraced.pid
-ExecStartPre=/bin/sh -c 'val=`syscfg get memtraced_enable`; if [ "$val" == "false" ]; then `systemctl stop memtraced`; fi'
+ExecStartPre=/bin/sh -c 'val=`syscfg get MemTrace_Enable`; if [ "$val" == "false" ]; then `systemctl stop memtraced`; fi'
 ExecStart=/usr/bin/memtraced
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting memtraced" >> ${PROCESS_RESTART_LOG}'
 Restart=always
