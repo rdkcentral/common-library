@@ -446,9 +446,13 @@ cssp_RbusSubscribe_handler
 
     //determine if eventName is a parameter
     slen = strlen(eventName);
-    if(slen < 7 || strncmp(eventName, "Device.", 7) != 0 || eventName[slen-1] == '!')
+    /* allow custom PAM events explicitly */
+    if( (strcmp(eventName, "wan_ready_to_go") == 0) || (strcmp(eventName, "wifi_ready_to_go") == 0) )
     {
-        //not a parameter so return special error so rbus_core will search its registered event list for actual events like CCSP_SYSTEM_READY_SIGNAL
+        CcspTraceInfo(("%s: allowing custom event %s\n", __FUNCTION__, eventName));
+    }
+    else if(slen < 7 || strncmp(eventName, "Device.", 7) != 0 || eventName[slen-1] == '!')
+    {
         CcspTraceError(("%s: ignored %s\n", __FUNCTION__, eventName));
         return RBUSCORE_ERROR_SUBSCRIBE_NOT_HANDLED;
     }
