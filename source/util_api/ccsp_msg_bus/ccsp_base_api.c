@@ -3799,7 +3799,7 @@ static void cord_list_callback_GetNextLevelInstances(const char* pParameterName,
     // Do we need to alloc or grow the array?
     if (pList->nCount == pList->nCapacity) {
         const size_t nNewCapacity = pList->nCapacity ? pList->nCapacity * 2 : kDefaultArraySize;
-        unsigned int* pNewInstanceArray = (unsigned int*)realloc(pList->pInstanceArray, sizeof(unsigned int*) * nNewCapacity);
+        unsigned int* pNewInstanceArray = (unsigned int*)realloc(pList->pInstanceArray, sizeof(*pList->pInstanceArray) * nNewCapacity);
         if (!pNewInstanceArray) {
             pList->callbackError = true;
             return;
