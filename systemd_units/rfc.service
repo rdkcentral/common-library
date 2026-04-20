@@ -21,10 +21,10 @@ Description=RFC service
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/sh -c 'echo "RFC execPre START: $(date)"; sleep 300; echo "RFC execPre END: $(date)"'
+ExecStartPre=/bin/sh -c 'echo "RFC execPre START: $(date)"; sleep 600; echo "RFC execPre END: $(date)"'
 EnvironmentFile=/etc/device.properties
 ExecStart=/bin/sh -c 'echo " $(date) Enable RFC feature" >> ${PARODUS_START_LOG_FILE}'
-ExecStart=/bin/sh -c 'echo "RFC execStart START: $(date)"; /lib/rdk/rfc.service & echo "RFC execStart END: $(date)"'
+ExecStart=/bin/sh -c 'echo "RFC execStart START: $(date)"; sleep 60; echo "RFC execStart END: $(date)"'
 RemainAfterExit=yes
 
 
