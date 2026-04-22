@@ -1119,7 +1119,9 @@ CCSP_Message_Bus_Init
         /*CID: 110434 Resource leak*/
         fclose(fp);
 #ifdef CORD_ENABLED
-        cord_open();
+        if(CORD_RC_SUCCESS != cord_open())
+		CcspTraceError(("<%s>: Cord open failed\n", __FUNCTION__));
+
 #endif
         return 0;
 }

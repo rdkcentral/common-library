@@ -3784,12 +3784,14 @@ typedef struct cord_list_GetNextLevelInstances_List {
     unsigned int* pInstanceArray;
     size_t nCount, nCapacity;
     bool callbackError;
+    void* bus_handle;    
 }GNLInstanceList;
 static void cord_list_callback_GetNextLevelInstances(const char* pParameterName, cord_value_type_t valueType, void* pUserData) {
     static const size_t kDefaultArraySize = 32;
     GNLInstanceList *pList = (GNLInstanceList*)pUserData;
-
+    
     if (!pList) return;
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)pList->bus_handle;    
     const size_t len = strlen(pParameterName);
     if (valueType != CORD_TYPE_OBJECT_PATH || pParameterName[len - 1] != '.') {
         pList->callbackError = true;
@@ -3799,7 +3801,8 @@ static void cord_list_callback_GetNextLevelInstances(const char* pParameterName,
     // Do we need to alloc or grow the array?
     if (pList->nCount == pList->nCapacity) {
         const size_t nNewCapacity = pList->nCapacity ? pList->nCapacity * 2 : kDefaultArraySize;
-        unsigned int* pNewInstanceArray = (unsigned int*)realloc(pList->pInstanceArray, sizeof(*pList->pInstanceArray) * nNewCapacity);
+        unsigned int* pNewInstanceArray = bus_info->mallocfunc(sizeof(*pList->pInstanceArray) * nNewCapacity);
+
         if (!pNewInstanceArray) {
             pList->callbackError = true;
             return;
@@ -3808,8 +3811,12 @@ static void cord_list_callback_GetNextLevelInstances(const char* pParameterName,
         pList->nCapacity = nNewCapacity;
      }
     //pListItem->pInstanceArray[pList->nCount] = safe_atou(<last node name, e.g. "123">);
-    safe_atou(pParameterName, &pList->pInstanceArray[pList->nCount]);
-    pList->nCount++;
+    if(0 == safe_atou(pParameterName, &pList->pInstanceArray[pList->nCount]))
+    	pList->nCount++;
+    else {
+    	pList->callbackError = true;
+	return;
+    }
 };
 #endif /* CORD_ENABLED */
 
@@ -3828,6 +3835,7 @@ int PsmGetNextLevelInstances
   *ppInstanceArray = NULL;
     *pulNumInstance = 0;
 
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;    
     if (pSubSystemPrefix && pSubSystemPrefix[0] != 0) {
         rc = strcpy_s(psmName, sizeof(psmName), pSubSystemPrefix);
         ERR_CHK(rc);
@@ -3840,13 +3848,14 @@ int PsmGetNextLevelInstances
     ERR_CHK(rc);
 
     GNLInstanceList list = {0};
+    list.bus_handle = bus_handle;
     cord_rc_t crc = cord_list(psmName, 1, cord_list_callback_GetNextLevelInstances, (void*)&list);
     if (crc != CORD_RC_SUCCESS) {
         return CCSP_Message_Bus_ERROR;
     }
     if (list.callbackError) {
         if (list.pInstanceArray) {
-            free(list.pInstanceArray);
+            bus_info->freefunc(list.pInstanceArray);
         }
         return CCSP_Message_Bus_OOM;
     }
@@ -3918,7 +3927,7 @@ static void cord_list_callback_PsmEnumRecords(const char* pParameterName, cord_v
     pList->nCount++;
 }
 
-void FreeList(ERList* pList)
+static void FreeList(ERList* pList)
 {
         if(!pList->pHead) return;
         while (pList->pHead) {
@@ -3970,7 +3979,19 @@ int PsmEnumRecords
     }
 
     // Alloc output array
-    PCCSP_BASE_RECORD pRecArray = (PCCSP_BASE_RECORD)calloc(list.nCount, sizeof(CCSP_BASE_RECORD));
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+    PCCSP_BASE_RECORD pRecArray = NULL;
+    size_t recArraySize = list.nCount * sizeof(CCSP_BASE_RECORD);
+    if (bus_info && bus_info->mallocfunc) {
+        pRecArray = (PCCSP_BASE_RECORD)bus_info->mallocfunc(recArraySize);
+        if (pRecArray) {
+            memset(pRecArray, 0, recArraySize);
+        }
+    } else {
+        pRecArray = (PCCSP_BASE_RECORD)calloc(list.nCount, sizeof(CCSP_BASE_RECORD));
+    }
+
+    
     if (!pRecArray) {
         //free linked list
         FreeList(&list);
@@ -3989,15 +4010,19 @@ int PsmEnumRecords
             if (pItem->pParameterName[len-1] != '.') {
                 pRecArray[idxRecArray].RecordType = CCSP_BASE_INSTANCE;
                 //pRecArray[idxRecArray].InstanceNumber = safe_atou(<last node name, e.g. "123">);
-                safe_atou(pItem->pParameterName, &(pRecArray[idxRecArray].Instance.InstanceNumber));
+                if(0 != safe_atou(pItem->pParameterName, &(pRecArray[idxRecArray].Instance.InstanceNumber)));
+			CcspTraceError(("%s error while collecting the items\n", __FUNCTION__));
+
             }
             else {
                 pRecArray[idxRecArray].RecordType = CCSP_BASE_OBJECT;
                 strncpy(pRecArray[idxRecArray].Instance.Name, pItem->pParameterName, CCSP_BASE_PARAM_LENGTH-1);
+		pRecArray[idxRecArray].Instance.Name[CCSP_BASE_PARAM_LENGTH-1] = '\0';
             }
         }
         else {
             strncpy(pRecArray[idxRecArray].Instance.Name, pItem->pParameterName, CCSP_BASE_PARAM_LENGTH-1);
+	    pRecArray[idxRecArray].Instance.Name[CCSP_BASE_PARAM_LENGTH-1] = '\0';
         }
 
         list.pHead = pItem->pNext;   // Unlink this list item from list
