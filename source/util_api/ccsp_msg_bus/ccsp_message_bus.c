@@ -1899,13 +1899,16 @@ static int thread_path_message_func_rbus(const char * destination, const char * 
                     }
                 }
                 free_parameterValStruct_t(bus_info, size, val);
-            }
-	    /*CID: 559882: Resource leak (RESOURCE_LEAK)*/
-	    if (req)
-	    {
-		rbusMessage_Release(req);
+            } 
+			else 
+			{
+	            /*CID: 559882: Resource leak (RESOURCE_LEAK)*/
+	            if (req)
+	            {
+		            rbusMessage_Release(req);
+	            }
+			}
 	    }
-	}
         else if(!strncmp(method, METHOD_GETHEALTH, MAX_METHOD_NAME_LENGTH) && func->getHealth)
         {
             int32_t result = 0;
