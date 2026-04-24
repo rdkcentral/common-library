@@ -2104,11 +2104,12 @@ BspTemplateVarStrCat
         break;
     }
     /*CID: 559534:Overflowed integer argument*/
-    if (ulLen < ULONG_MAX)
-    {
-	/* handle overflow */
-	ulLen++;  
-	if (ulLen > pMyObject->Size)
+    if (ulLen >= ULONG_MAX)
+	{
+        AnscTrace("Can't perform StrCat\r\n");
+        return hThisObject;
+	}
+	if (++ulLen > pMyObject->Size)
 	{
 	    /*
 	       pMyObject->Value.str    = (char *)AnscReAllocMemory(pMyObject->Value.str, ulLen);
@@ -2116,7 +2117,7 @@ BspTemplateVarStrCat
 	    pMyObject->Value.str    = 
 		(char *)AnscMemUtilRealloc(pMyObject->Value.str, pMyObject->Size, ulLen);
 	}
-    }
+    
     if (pBuf && pMyObject->Value.str)
     {
         rc = strcat_s(pMyObject->Value.str, ulLen, pBuf);
@@ -2128,7 +2129,7 @@ BspTemplateVarStrCat
             pMyObject->Value.str    = (PCHAR)AnscDupString((PUCHAR)pBuf);
             pMyObject->Size         = AnscSizeOfString(pMyObject->Value.str);
         }
-
+    
     if (pVar->Type != BspVar_String && pBuf)
     {
         AnscFreeMemory(pBuf);
