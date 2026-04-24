@@ -2107,6 +2107,10 @@ BspTemplateVarStrCat
     if (ulLen >= ULONG_MAX)
 	{
         AnscTrace("Can't perform StrCat\r\n");
+		if (pBuf && pVar->Type != BspVar_String)
+        {
+            AnscFreeMemory(pBuf);
+        }
         return hThisObject;
 	}
 	if (++ulLen > pMyObject->Size)
