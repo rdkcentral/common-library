@@ -3839,6 +3839,7 @@ static inline int safe_atou(const char *pParameterName, unsigned int *out)
     val = strtoul(start, &endptr, 10);
     if (errno != 0 || endptr == start || *endptr != '\0' || val > UINT_MAX)
         return -1;
+        
 
     *out = (unsigned int)val;
     return 0;
