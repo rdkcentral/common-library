@@ -3123,6 +3123,58 @@ int PSM_Set_Record_Value
 
 #endif /* CORD_ENABLED */
 }
+#ifdef CORD_ENABLED
+static int8_t b64_table[256];
+
+static void init_b64_table(void) {
+    static int initialized = 0;
+    if (initialized) return;
+    initialized = 1;
+
+    for (int i = 0; i < 256; i++) b64_table[i] = -1;
+    for (int i = 'A'; i <= 'Z'; i++) b64_table[i] = i - 'A';
+    for (int i = 'a'; i <= 'z'; i++) b64_table[i] = i - 'a' + 26;
+    for (int i = '0'; i <= '9'; i++) b64_table[i] = i - '0' + 52;
+    b64_table[(unsigned char)'+'] = 62;
+    b64_table[(unsigned char)'/'] = 63;
+}           
+            
+unsigned char *base64_to_binary(const char *in, size_t in_len, size_t *out_len) {
+    init_b64_table();
+    if (!in || !out_len) return NULL;
+    if (in_len % 4 != 0) return NULL;
+        
+    size_t padding = 0;
+    if (in_len >= 1 && in[in_len - 1] == '=') padding++;
+    if (in_len >= 2 && in[in_len - 2] == '=') padding++;
+                
+    size_t decoded_len = (in_len / 4) * 3 - padding;
+    unsigned char *out = (unsigned char *)malloc(decoded_len ? decoded_len : 1);
+    if (!out) return NULL;
+        
+    size_t o = 0;
+    for (size_t i = 0; i < in_len; i += 4) {
+        int8_t a = b64_table[(unsigned char)in[i]];
+        int8_t b = b64_table[(unsigned char)in[i + 1]];
+        int8_t c = (in[i + 2] == '=') ? 0 : b64_table[(unsigned char)in[i + 2]];
+        int8_t d = (in[i + 3] == '=') ? 0 : b64_table[(unsigned char)in[i + 3]];
+        
+        if (a < 0 || b < 0 || (in[i + 2] != '=' && c < 0) || (in[i + 3] != '=' && d < 0)) {
+            free(out);
+            return NULL;
+        }
+    
+        uint32_t triple = ((uint32_t)a << 18) | ((uint32_t)b << 12) | ((uint32_t)c << 6) | (uint32_t)d;
+    
+        if (o < decoded_len) out[o++] = (triple >> 16) & 0xFF;
+        if (o < decoded_len) out[o++] = (triple >> 8) & 0xFF;
+        if (o < decoded_len) out[o++] = triple & 0xFF;
+    }
+    
+    *out_len = decoded_len;
+    return out;
+}
+#endif /* CORD_ENABLED */
 
 int PSM_Get_Record_Value
 (
@@ -3376,6 +3428,14 @@ int PSM_Set_Record_Value2
         break;
     }
     case ccsp_float:
+    {
+        errno = 0;
+        float val_f = strtof(pVal, &endptr);
+        if (errno != 0 || endptr == pVal || *endptr != '\0')
+            return CCSP_ERR_INVALID_PARAMETER_VALUE;
+        cord_rc = cord_set_float(pRecordName, val_f, CORD_FLAG_PERSIST_ASYNC);
+        break;
+    }
     case ccsp_double:
     {
         errno = 0;
@@ -3419,8 +3479,15 @@ int PSM_Set_Record_Value2
         break;
     }
     case ccsp_base64:
-        cord_rc = cord_set_string(pRecordName, pVal, CORD_FLAG_PERSIST_ASYNC);
+    {
+        size_t outbuf_len = 0;;
+        unsigned char *outbuf = base64_to_binary(pVal,strlen(pVal),&outbuf_len);
+        //Free the pVal, The above fn allocates the buffer for the conversion.
+        bus_info->freefunc((void*)pVal);
+        cord_rc = cord_set_blob(pRecordName,outbuf, outbuf_len, CORD_FLAG_PERSIST_ASYNC);
+        //cord_rc = cord_set_string(pRecordName, pVal, CORD_FLAG_PERSIST_ASYNC);
         break;
+    }
     case ccsp_none:
         return CCSP_CR_ERR_UNSUPPORTED_DATATYPE;
     default:
@@ -3765,14 +3832,10 @@ static inline int safe_atou(const char *pParameterName, unsigned int *out)
     if (segLen == 0 || segLen >= 32)
         return -1;
 
-    char buf[32];
-    memcpy(buf, start, segLen);
-    buf[segLen] = '\0';
-
     char *endptr;
     unsigned long val;
     errno = 0;
-    val = strtoul(buf, &endptr, 10);
+    val = strtoul(start, &endptr, 10);
     if (errno != 0 || endptr == buf || *endptr != '\0' || val > UINT_MAX)
         return -1;
 
