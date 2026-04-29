@@ -88,7 +88,7 @@
 
 **********************************************************************/
 
-#include <stdint.h>
+
 #include "ansc_platform.h"
 #include "ansc_external_storage.h"
 #include "ansc_crypto_interface.h"
@@ -245,7 +245,12 @@ AnscReadFile
 
     if ( pFileInfo->bZlibCompressed )
     {
-	iReturnsize  = _ansc_get_file_size((VOID*)(uintptr_t)pFileInfo->Handle);
+#ifdef _64BIT_ARCH_SUPPORT_
+	ULONG uHandle = pFileInfo->Handle;
+	iReturnsize  = _ansc_get_file_size((VOID*)uHandle);
+#else
+	iReturnsize  = _ansc_get_file_size((VOID*)pFileInfo->Handle);
+#endif
 	if ( iReturnsize < 0 )
 	{
 		return ANSC_STATUS_FAILURE;
@@ -482,7 +487,12 @@ AnscGetFileSize
     {
         int iReadSize = (int)0;
 
-	iReturnSize = _ansc_get_file_size((VOID*)(uintptr_t)pFileInfo->Handle);
+#ifdef _64BIT_ARCH_SUPPORT_
+	ULONG uHandle = pFileInfo->Handle;
+	iReturnSize = _ansc_get_file_size((VOID*)uHandle);
+#else
+	iReturnSize = _ansc_get_file_size((VOID*)pFileInfo->Handle);
+#endif
 	if ( iReturnSize < 0 )
 	{
 		return 0;
@@ -536,7 +546,12 @@ AnscGetFileSize
     else
     {
 	/*CID: 59651 Improper use of negative value*/
-        iReturnSize = _ansc_get_file_size((VOID*)(uintptr_t)pFileInfo->Handle);
+#ifdef _64BIT_ARCH_SUPPORT_
+        ULONG uHandle = pFileInfo->Handle;
+        iReturnSize = _ansc_get_file_size((VOID*)uHandle);
+#else
+        iReturnSize = _ansc_get_file_size((VOID*)pFileInfo->Handle);
+#endif
         if(iReturnSize < 0)
 	{
 		return	0;

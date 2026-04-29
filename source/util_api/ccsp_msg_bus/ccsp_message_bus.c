@@ -38,7 +38,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
-#include <inttypes.h>
 #include <dbus/dbus.h>
 #include <ccsp_message_bus.h>
 #include "ccsp_base_api.h"
@@ -54,6 +53,9 @@
 
 #include <sys/time.h>
 #include <time.h>
+#ifdef CORD_ENABLED
+#include <cord.h>
+#endif
 
 #ifdef _DEBUG
 // #define _DEBUG_LOCAL_
@@ -1116,6 +1118,11 @@ CCSP_Message_Bus_Init
         }
         /*CID: 110434 Resource leak*/
         fclose(fp);
+#ifdef CORD_ENABLED
+        if(CORD_RC_SUCCESS != cord_open())
+		CcspTraceError(("<%s>: Cord open failed\n", __FUNCTION__));
+
+#endif
         return 0;
 }
 
@@ -1137,6 +1144,9 @@ CCSP_Message_Bus_Exit
         CcspTraceError(("<%s>: rbus_close fails with %d\n", __FUNCTION__,rc));
     bus_info->freefunc(bus_info);
     bus_info = NULL;
+#ifdef CORD_ENABLED
+    cord_close();
+#endif
 }
 
 static void
@@ -1567,17 +1577,33 @@ void ccsp_handle_rbus_component_reply (void* bus_handle, rbusMessage msg, rbusVa
         case RBUS_INT64:
         {
             rbusMessage_GetInt64(msg, &i64);
-            n = snprintf(pTmp, 0, "%" PRId64, i64) + 1;
+#ifdef _64BIT_ARCH_SUPPORT_
+            n = snprintf(pTmp, 0, "%ld", i64) + 1;
+#else
+            n = snprintf(pTmp, 0, "%lld", i64) + 1;
+#endif
             *pStringValue = bus_info->mallocfunc(n);
-            snprintf(*pStringValue, (unsigned int)n, "%" PRId64, i64);
+#ifdef _64BIT_ARCH_SUPPORT_
+            snprintf(*pStringValue, (unsigned int)n, "%ld", i64);
+#else
+            snprintf(*pStringValue, (unsigned int)n, "%lld", i64);
+#endif	    
            break;
         }
         case RBUS_UINT64:
         {
             rbusMessage_GetInt64(msg, &i64);
-            n = snprintf(pTmp, 0, "%" PRIu64, (uint64_t)i64) + 1;
+#ifdef _64BIT_ARCH_SUPPORT_
+            n = snprintf(pTmp, 0, "%lu", (uint64_t)i64) + 1;
+#else
+            n = snprintf(pTmp, 0, "%llu", (uint64_t)i64) + 1;
+#endif
             *pStringValue = bus_info->mallocfunc(n);
-            snprintf(*pStringValue, (unsigned int)n, "%" PRIu64, (uint64_t)i64);
+#ifdef _64BIT_ARCH_SUPPORT_
+            snprintf(*pStringValue, (unsigned int)n, "%lu", (uint64_t)i64);
+#else	
+            snprintf(*pStringValue, (unsigned int)n, "%llu", (uint64_t)i64);
+#endif	    
             break;
         }
         case RBUS_SINGLE:
