@@ -79,6 +79,21 @@ int   CcspBaseIf_timeout_getval_seconds = 120; //seconds
 #define  CcspBaseIf_timeout_rbus  (CcspBaseIf_timeout_seconds * 1000) // in milliseconds
 #define  CcspBaseIf_timeout_getval_rbus  (CcspBaseIf_timeout_getval_seconds * 1000) // in milliseconds
 
+static void CcspBaseIf_releasePropertyListIterative(rbusProperty_t props)
+{
+    while(props)
+    {
+        rbusProperty_t next = rbusProperty_GetNext(props);
+        if(next)
+        {
+            rbusProperty_Retain(next);
+            rbusProperty_SetNext(props, NULL);
+        }
+        rbusProperty_Release(props);
+        props = next;
+    }
+}
+
 int CcspBaseIf_freeResources(
     void* bus_handle,
     const char* dst_component_id,
@@ -388,16 +403,47 @@ int PSM_Get_Record_Value_rbus
         {
             *val_size = size;
             val = bus_info->mallocfunc(size*sizeof(parameterValStruct_t *));
+            if(!val)
+            {
+                CcspTraceError(("failed to allocate param value array size=%d\n", size));
+                ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                goto psm_exit;
+            }
             memset(val, 0, size*sizeof(parameterValStruct_t *));
             rbusProperty_t next = rbusObject_GetProperties(outParams);
-            for (i = 0; i < size; i++)
+            for (i = 0; next != NULL && i < size; i++)
             {
                 val[i] = bus_info->mallocfunc(sizeof(parameterValStruct_t));
+                if(!val[i])
+                {
+                    CcspTraceError(("failed to allocate param struct at index %d\n", i));
+                    ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                    break;
+                }
                 memset(val[i], 0, sizeof(parameterValStruct_t));
                 /*Get Name */
-                val[i]->parameterName = bus_info->mallocfunc(strlen(rbusProperty_GetName(next))+1);
-                strcpy_s(val[i]->parameterName, (strlen(rbusProperty_GetName(next))+1), rbusProperty_GetName(next));
+                const char* pname = rbusProperty_GetName(next);
+                if(!pname)
+                {
+                    CcspTraceError(("PSM property name is NULL at index %d\n", i));
+                    ret = CCSP_Message_Bus_ERROR;
+                    break;
+                }
+                val[i]->parameterName = bus_info->mallocfunc(strlen(pname)+1);
+                if(!val[i]->parameterName)
+                {
+                    CcspTraceError(("failed to allocate parameterName at index %d\n", i));
+                    ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                    break;
+                }
+                strcpy_s(val[i]->parameterName, (strlen(pname)+1), pname);
                 rbusValue_t value = rbusProperty_GetValue(next);
+                if(!value)
+                {
+                    CcspTraceError(("PSM property value is NULL at index %d\n", i));
+                    ret = CCSP_ERR_INVALID_PARAMETER_VALUE;
+                    break;
+                }
                 /*Get Type*/
                 rbusValueType_t rbus_type = rbusValue_GetType(value);
                 rbus_type_to_ccsp_type(rbus_type, &val[i]->type);
@@ -406,6 +452,12 @@ int PSM_Get_Record_Value_rbus
                 {
                     int n = snprintf(pTmp, 0, "false") + 1;
                     val[i]->parameterValue = bus_info->mallocfunc(n);
+                    if(!val[i]->parameterValue)
+                    {
+                        CcspTraceError(("failed to allocate boolean parameterValue at index %d\n", i));
+                        ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                        break;
+                    }
                     snprintf(val[i]->parameterValue, (unsigned int)n, "%s", rbusValue_GetBoolean(value) ? "true" : "false");
                 }
                 else
@@ -414,6 +466,13 @@ int PSM_Get_Record_Value_rbus
                     if (sValue)
                     {
                         val[i]->parameterValue = bus_info->mallocfunc(strlen(sValue)+1);
+                        if(!val[i]->parameterValue)
+                        {
+                            bus_info->freefunc(sValue);
+                            CcspTraceError(("failed to allocate string parameterValue at index %d\n", i));
+                            ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                            break;
+                        }
                         /*
                          * LIMITATION
                          * Below strcpy_s() api reverting to strcpy() api,
@@ -433,10 +492,30 @@ int PSM_Get_Record_Value_rbus
     {
         ret = Rbus2_to_CCSP_error_mapper(rbus_ret);
     }
+psm_exit:
     if(outParams)
         rbusObject_Release(outParams);
     if(ret != CCSP_SUCCESS )
+    {
+        if(val)
+        {
+            for(int j = 0; j <= i; j++)
+            {
+                if(val[j])
+                {
+                    if(val[j]->parameterName)
+                        bus_info->freefunc(val[j]->parameterName);
+                    if(val[j]->parameterValue)
+                        bus_info->freefunc(val[j]->parameterValue);
+                    bus_info->freefunc(val[j]);
+                }
+            }
+            bus_info->freefunc(val);
+        }
+        *val_size = 0;
+        *parameterval = NULL;
         return ret;
+    }
     if(size < 1)
         return CCSP_CR_ERR_INVALID_PARAM;
     return ret;
@@ -614,7 +693,7 @@ int CcspBaseIf_getParameterValues_rbus(
             {
                 size = 1;
                 rbusProperty_Init(&outputVals, parameterNames[0], getVal);
-                rbusValue_Release(getVal);
+                /* Do NOT release getVal here. getVal is owned and allocated by rbus infrastructure and rbusProperty_Init takes a reference to it. */
             }
         }
         else
@@ -628,11 +707,23 @@ int CcspBaseIf_getParameterValues_rbus(
             if(size)
             {
                 val = bus_info->mallocfunc(size*sizeof(parameterValStruct_t *));
+                if(!val)
+                {
+                    CcspTraceError(("failed to allocate parameter value array size=%d\n", size));
+                    ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                    goto gpv_cleanup;
+                }
                 memset(val, 0, size*sizeof(parameterValStruct_t *));
                 rbusProperty_t next = outputVals;
                 for (i = 0; next != NULL && i < size; i++)
                 {
                     val[i] = bus_info->mallocfunc(sizeof(parameterValStruct_t));
+                    if(!val[i])
+                    {
+                        CcspTraceError(("failed to allocate parameter struct at index %d\n", i));
+                        ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                        break;
+                    }
                     memset(val[i], 0, sizeof(parameterValStruct_t));
                     /*Get Name */
                     const char* pname = rbusProperty_GetName(next);
@@ -644,6 +735,12 @@ int CcspBaseIf_getParameterValues_rbus(
                     }
                     len = strlen(pname);
                     val[i]->parameterName = bus_info->mallocfunc(len + 1);
+                    if(!val[i]->parameterName)
+                    {
+                        CcspTraceError(("failed to allocate parameterName at index %d\n", i));
+                        ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                        break;
+                    }
                     memcpy(val[i]->parameterName, rbusProperty_GetName(next), len + 1);
                     rbusValue_t value = rbusProperty_GetValue(next);
                     if(!value)
@@ -662,6 +759,12 @@ int CcspBaseIf_getParameterValues_rbus(
                         char *sValue = rbusValue_GetBoolean(value) ? "true" : "false";
                         len = strlen(sValue);
                         val[i]->parameterValue = bus_info->mallocfunc(len + 1);
+                        if(!val[i]->parameterValue)
+                        {
+                            CcspTraceError(("failed to allocate boolean parameterValue at index %d\n", i));
+                            ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                            break;
+                        }
                         memcpy(val[i]->parameterValue, sValue, len + 1);
                     }
                     else
@@ -671,6 +774,13 @@ int CcspBaseIf_getParameterValues_rbus(
                         {
                             len = strlen(sValue);
                             val[i]->parameterValue = bus_info->mallocfunc(len + 1);
+                            if(!val[i]->parameterValue)
+                            {
+                                bus_info->freefunc(sValue);
+                                CcspTraceError(("failed to allocate string parameterValue at index %d\n", i));
+                                ret = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                                break;
+                            }
                             memcpy(val[i]->parameterValue, sValue, len + 1);
                             bus_info->freefunc(sValue);
                         }
@@ -678,14 +788,18 @@ int CcspBaseIf_getParameterValues_rbus(
                     next = rbusProperty_GetNext(next);
                     RBUS_LOG("Param [%d] Name = %s, Type = %d, Value = %s\n", i,val[i]->parameterName, val[i]->type, val[i]->parameterValue);
                 }
-                if (outputVals)
-                    rbusProperty_Release(outputVals);
             }
         }
         else
         {
             ret = Rbus2_to_CCSP_error_mapper(rbus_ret);
         }
+    }
+gpv_cleanup:
+    if(outputVals)
+    {
+        CcspBaseIf_releasePropertyListIterative(outputVals);
+        outputVals = NULL;
     }
     *parameterval = val;
     /* Upon failure, when the loop exits by break statement, the val[i] is already allocated; so we must free all the entries from 0 to i.
@@ -707,6 +821,9 @@ int CcspBaseIf_getParameterValues_rbus(
             bus_info->freefunc(val);
             val = NULL;
         }
+        /* On failure do not expose stale size or dangling pointer to caller. */
+        *val_size = 0;
+        *parameterval = NULL;
     }
     return ret;
 }
