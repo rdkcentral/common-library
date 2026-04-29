@@ -3124,53 +3124,65 @@ int PSM_Set_Record_Value
 #endif /* CORD_ENABLED */
 }
 #ifdef CORD_ENABLED
-static int8_t b64_table[256];
-
-static void init_b64_table(void) {
-    static int initialized = 0;
-    if (initialized) return;
-    initialized = 1;
-
-    for (int i = 0; i < 256; i++) b64_table[i] = -1;
-    for (int i = 'A'; i <= 'Z'; i++) b64_table[i] = i - 'A';
-    for (int i = 'a'; i <= 'z'; i++) b64_table[i] = i - 'a' + 26;
-    for (int i = '0'; i <= '9'; i++) b64_table[i] = i - '0' + 52;
-    b64_table[(unsigned char)'+'] = 62;
-    b64_table[(unsigned char)'/'] = 63;
-}           
+static const int8_t B64_DEC[256] = {
+    /* 0x00-0x0F */ -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    /* 0x10-0x1F */ -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    /* 0x20-0x2F */ -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,
+    /* 0x30-0x3F */ 52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,
+    /* 0x40-0x4F */ -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,
+    /* 0x50-0x5F */ 15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,
+    /* 0x60-0x6F */ -1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
+    /* 0x70-0x7F */ 41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1,
+    /* 0x80-0xFF */ 
+    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+};
             
 unsigned char *base64_to_binary(const char *in, size_t in_len, size_t *out_len) {
-    init_b64_table();
     if (!in || !out_len) return NULL;
-    if (in_len % 4 != 0) return NULL;
-        
+    if ((in_len % 4) != 0) return NULL;
+
     size_t padding = 0;
     if (in_len >= 1 && in[in_len - 1] == '=') padding++;
     if (in_len >= 2 && in[in_len - 2] == '=') padding++;
-                
+
     size_t decoded_len = (in_len / 4) * 3 - padding;
     unsigned char *out = (unsigned char *)malloc(decoded_len ? decoded_len : 1);
     if (!out) return NULL;
-        
+
     size_t o = 0;
     for (size_t i = 0; i < in_len; i += 4) {
-        int8_t a = b64_table[(unsigned char)in[i]];
-        int8_t b = b64_table[(unsigned char)in[i + 1]];
-        int8_t c = (in[i + 2] == '=') ? 0 : b64_table[(unsigned char)in[i + 2]];
-        int8_t d = (in[i + 3] == '=') ? 0 : b64_table[(unsigned char)in[i + 3]];
-        
-        if (a < 0 || b < 0 || (in[i + 2] != '=' && c < 0) || (in[i + 3] != '=' && d < 0)) {
+        unsigned char c0 = (unsigned char)in[i];
+        unsigned char c1 = (unsigned char)in[i + 1];
+        unsigned char c2 = (unsigned char)in[i + 2];
+        unsigned char c3 = (unsigned char)in[i + 3];
+
+        int8_t a = B64_DEC[c0];
+        int8_t b = B64_DEC[c1];
+        int8_t c = (c2 == '=') ? 0 : B64_DEC[c2];
+        int8_t d = (c3 == '=') ? 0 : B64_DEC[c3];
+
+        if (a < 0 || b < 0 || (c2 != '=' && c < 0) || (c3 != '=' && d < 0)) {
             free(out);
             return NULL;
         }
-    
-        uint32_t triple = ((uint32_t)a << 18) | ((uint32_t)b << 12) | ((uint32_t)c << 6) | (uint32_t)d;
-    
-        if (o < decoded_len) out[o++] = (triple >> 16) & 0xFF;
-        if (o < decoded_len) out[o++] = (triple >> 8) & 0xFF;
-        if (o < decoded_len) out[o++] = triple & 0xFF;
+
+        uint32_t triple = ((uint32_t)a << 18) |
+                          ((uint32_t)b << 12) |
+                          ((uint32_t)c << 6)  |
+                          (uint32_t)d;
+
+        if (o < decoded_len) out[o++] = (unsigned char)((triple >> 16) & 0xFF);
+        if (o < decoded_len) out[o++] = (unsigned char)((triple >> 8) & 0xFF);
+        if (o < decoded_len) out[o++] = (unsigned char)(triple & 0xFF);
     }
-    
+
     *out_len = decoded_len;
     return out;
 }
@@ -3465,7 +3477,7 @@ int PSM_Set_Record_Value2
             tm_val.tm_isdst = -1;
             time_val = mktime(&tm_val);
             if (time_val == (time_t)-1)
-                return CCSP_ERR_INVALID_PARAMETER_VALUE;
+            	return CCSP_ERR_INVALID_PARAMETER_VALUE;
         }
         else
         {
@@ -3482,9 +3494,11 @@ int PSM_Set_Record_Value2
     {
         size_t outbuf_len = 0;;
         unsigned char *outbuf = base64_to_binary(pVal,strlen(pVal),&outbuf_len);
-        //Free the pVal, The above fn allocates the buffer for the conversion.
-        bus_info->freefunc((void*)pVal);
+ 	if (outbuf == NULL)
+        	return CCSP_ERR_INVALID_PARAMETER_VALUE;
         cord_rc = cord_set_blob(pRecordName,outbuf, outbuf_len, CORD_FLAG_PERSIST_ASYNC);
+        //Free the outbuf which is allocated in base64_to_binary fn for the conversion purpose.
+	free(outbuf);
         //cord_rc = cord_set_string(pRecordName, pVal, CORD_FLAG_PERSIST_ASYNC);
         break;
     }
@@ -4086,6 +4100,7 @@ int PsmEnumRecords
             }
         }
         else {
+	    pRecArray[idxRecArray].RecordType = CCSP_BASE_PARAM;
             strncpy(pRecArray[idxRecArray].Instance.Name, pItem->pParameterName, CCSP_BASE_PARAM_LENGTH-1);
 	    pRecArray[idxRecArray].Instance.Name[CCSP_BASE_PARAM_LENGTH-1] = '\0';
         }
