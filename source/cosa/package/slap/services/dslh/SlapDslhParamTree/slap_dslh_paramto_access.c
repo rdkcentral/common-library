@@ -276,7 +276,7 @@ SetParamValueHelper
 
     if(ret != CCSP_SUCCESS )
     {
-	    return  returnStatus;
+	    goto cleanup; /*CID: 66253 fix for Resource leak*/
     }
 	
 	returnStatus =  ANSC_STATUS_SUCCESS;
@@ -3151,7 +3151,7 @@ SlapDslhParamtoIsParameterReadOnly
 	free_parameterInfoStruct_t (MsgBusHandle, size, ppParamInfos);    
 
 	bReadOnly =  TRUE;
-    return  bReadOnly;
+    goto cleanup; /*CID: 66124 fix for Resource leak*/
 
 /*CID: 66124 fix for Resource leak*/
 cleanup:

@@ -5878,6 +5878,9 @@ BspTemplateEngDoObjectAccess
     if (pReturnVal)
     {
         *pReturnVal = SlapReturnVal;
+	/* CID 746277: Resource leaked_storage: Variable SlapReturnVal going out of scope leaks the storage SlapReturnVal.Name  */
+    	/* prevent double ownership / leak */
+	SlapReturnVal.Name = NULL;
     }
 
     return (ANSC_HANDLE)pReturnVal;
