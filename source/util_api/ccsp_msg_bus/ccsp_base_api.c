@@ -3794,7 +3794,6 @@ int PSM_Del_Record
 #endif /* CORD_ENABLED */
     
 }
-
 int PsmGroupGet(void *bus_handle, const char *subsys,
         const char *names[], int nname, parameterValStruct_t ***records, int *nrec)
 {
@@ -3802,13 +3801,147 @@ int PsmGroupGet(void *bus_handle, const char *subsys,
 
     if (!bus_handle || !names || !records || !nrec)
         return CCSP_FAILURE;
+#ifdef CORD_ENABLED
+//cord_rc_t cord_get_multi(const char* pParameterNames[], size_t nParameterNames, size_t depth, cord_parameter_t** ppParameters, size_t *pnParameters);
+   cord_parameter_t* params = NULL;
+   size_t count = 0;
+   parameterValStruct_t **val = 0;
+   *nrec = 0;
+   cord_value_type_t valueType;
+
+   cord_rc_t cord_rc = cord_get_multi((const char **)names, nname, 0, &params,&count);
+   switch (cord_rc) {
+   case CORD_RC_SUCCESS:           break;
+   case CORD_RC_NOT_OPEN:          return CCSP_Message_Bus_ERROR;
+   case CORD_RC_INVALID_NAME:      return CCSP_ERR_NOT_EXIST;
+   case CORD_RC_PERMISSION_DENIED: return CCSP_ERR_REQUEST_REJECTED;
+   case CORD_RC_OUT_OF_MEMORY:     return CCSP_ERR_MEMORY_ALLOC_FAIL;
+   default:                        return CCSP_Message_Bus_ERROR;
+   }
+
+   char buf[64];
+   int ret = CCSP_SUCCESS;
+   int i = 0;
+   size_t len;
+   CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+   if (bus_info == NULL) { cord_free_parameters(params); return CCSP_Message_Bus_ERROR; }
+   if(count)
+   {
+        *nrec = count;
+        val = bus_info->mallocfunc(count*sizeof(parameterValStruct_t *));
+        if (val == NULL) { cord_free_parameters(params); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
+        memset(val, 0, count*sizeof(parameterValStruct_t *));
+        for (i = 0; i < count; i++)
+        {
+                val[i] = bus_info->mallocfunc(sizeof(parameterValStruct_t));
+                if(NULL == val[i]){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                memset(val[i], 0, sizeof(parameterValStruct_t));
+                /*Get Name */
+                const char* pname = params[i].pName;
+                if(NULL == pname){ret = CCSP_Message_Bus_ERROR;break;}
+                len = strlen(pname);
+                val[i]->parameterName = bus_info->mallocfunc(len + 1);
+                if(NULL == val[i]->parameterName){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                memcpy(val[i]->parameterName, params[i].pName, len + 1);
+                 /*Get Type*/
+                valueType = params[i].value.valueType;
+                switch (valueType)
+                {
+                       case CORD_TYPE_I32:
+                            val[i]->type = ccsp_int;
+                            snprintf(buf, sizeof(buf), "%d", (int)params[i].value.i32Value);
+                            val[i]->parameterValue = bus_info->mallocfunc(strlen(buf) + 1);
+                            if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                            memcpy(val[i]->parameterValue, buf,strlen(buf) + 1);
+                            break;
+                       case CORD_TYPE_U32:
+                            val[i]->type = ccsp_unsignedInt;
+                            snprintf(buf, sizeof(buf), "%u", (unsigned int)params[i].value.u32Value);
+                            val[i]->parameterValue = bus_info->mallocfunc(strlen(buf) + 1);
+                            if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                            memcpy(val[i]->parameterValue, buf,strlen(buf) + 1);
+                            break;
+                        case CORD_TYPE_BOOL:
+                             val[i]->type = ccsp_boolean;
+                             const char *bstr = params[i].value.boolValue ? true : false;
+                             val[i]->parameterValue = bus_info->mallocfunc(strlen(bstr) + 1);
+                             if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                             memcpy(val[i]->parameterValue, buf,strlen(buf) + 1);
+                             break;
+
+                        case CORD_TYPE_STRING:
+                             val[i]->type = ccsp_string;
+                             val[i]->parameterValue = bus_info->mallocfunc(strlen(params[i].value.stringValue) + 1);
+                             if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                             memcpy(val[i]->parameterValue, params[i].value.stringValue,strlen(params[i].value.stringValue) + 1);
+                             break;
+                        case CORD_TYPE_I64:
+                             val[i]->type = ccsp_long;
+                             snprintf(buf, sizeof(buf), "%" PRId64, (int64_t)params[i].value.i64Value);
+                             val[i]->parameterValue = bus_info->mallocfunc(strlen(buf) + 1);
+                             if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                             memcpy(val[i]->parameterValue, buf,strlen(buf) + 1);
+                             break;
+                        case CORD_TYPE_U64:
+                             val[i]->type = ccsp_unsignedLong;
+                             snprintf(buf, sizeof(buf), "%" PRIu64, (uint64_t)params[i].value.u64Value);
+                             val[i]->parameterValue = bus_info->mallocfunc(strlen(buf) + 1);
+                             if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                             memcpy(val[i]->parameterValue, buf,strlen(buf) + 1);
+                             break;
+                        case CORD_TYPE_DOUBLE:
+                             val[i]->type = ccsp_double;
+                             snprintf(buf, sizeof(buf), "%.17g", params[i].value.doubleValue);
+                             val[i]->parameterValue = bus_info->mallocfunc(strlen(buf) + 1);
+                             if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                             memcpy(val[i]->parameterValue, buf,strlen(buf) + 1);
+                             break;
+                        case CORD_TYPE_DATETIME:
+                             val[i]->type = ccsp_dateTime;
+                             snprintf(buf, sizeof(buf), "%ld", (long)params[i].value.dateTimeValue);
+                             val[i]->parameterValue = bus_info->mallocfunc(strlen(buf) + 1);
+                             if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
+                             memcpy(val[i]->parameterValue, buf,strlen(buf) + 1);
+                            break;
+                        default:
+                        ret = CCSP_CR_ERR_UNSUPPORTED_DATATYPE;
+                        break;
+                 }
+                 if(ret != CCSP_SUCCESS) break;
+      }
+     *records = val;
+     if(ret != CCSP_SUCCESS)
+      {
+        if(val)
+        {
+            for(int j = 0; j <= i; j++) {
+                if(val[j]) {
+                    if(val[j]->parameterName)
+                       bus_info->freefunc(val[j]->parameterName);
+                    if(val[j]->parameterValue)
+                       bus_info->freefunc(val[j]->parameterValue);
+                    bus_info->freefunc(val[j]);
+                }
+            }
+            bus_info->freefunc(val);
+            val = NULL;
+        }
+    }
+
+   }
+   cord_free_parameters(params);
+   return ret;
+
+#else /* !CORD_ENABLED */
+
 
     snprintf(psmName, sizeof(psmName), "%s%s", (subsys ? subsys : ""), CCSP_DBUS_PSM);
 
     return CcspBaseIf_getParameterValues(bus_handle, psmName, CCSP_DBUS_PATH_PSM,
             (char **)names, nname, nrec, records);
-}
+#endif /* CORD_ENABLED */
 
+}
 void PsmFreeRecords(void *bus_handle, parameterValStruct_t **records, int nrec)
 {
     free_parameterValStruct_t(bus_handle, nrec, records);
