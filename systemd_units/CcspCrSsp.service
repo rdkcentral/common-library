@@ -29,7 +29,7 @@ Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 ExecStartPre=-/bin/sh -c 'mkdir -p /rdklogs/logs/'
 ExecStartPre=/bin/sh -c '(/usr/ccsp/ccspSysConfigEarly.sh)'
-ExecStart=/bin/sh -c '/usr/bin/CcspCrSsp -subsys $Subsys'
+ExecStart=/bin/sh -c 'echo "CcspCr is deprecated." '
 ExecStopPost=/bin/sh -c 'echo 0 >> /tmp/CcspCrSsp_Restarted'
 Restart=always
 
