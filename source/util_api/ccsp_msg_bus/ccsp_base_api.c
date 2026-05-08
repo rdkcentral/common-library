@@ -3807,6 +3807,7 @@ int PsmGroupGet(void *bus_handle, const char *subsys,
    size_t count = 0;
    parameterValStruct_t **val = 0;
    *nrec = 0;
+   *records = NULL;
    cord_value_type_t valueType;
 
    cord_rc_t cord_rc = cord_get_multi((const char **)names, nname, 0, &params,&count);
@@ -3863,10 +3864,10 @@ int PsmGroupGet(void *bus_handle, const char *subsys,
                             break;
                         case CORD_TYPE_BOOL:
                              val[i]->type = ccsp_boolean;
-                             const char *bstr = params[i].value.boolValue ? true : false;
+                             const char *bstr = params[i].value.boolValue ? "true" : "false";
                              val[i]->parameterValue = bus_info->mallocfunc(strlen(bstr) + 1);
                              if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
-                             memcpy(val[i]->parameterValue, buf,strlen(buf) + 1);
+                             memcpy(val[i]->parameterValue, bstr,strlen(bstr) + 1);
                              break;
 
                         case CORD_TYPE_STRING:
@@ -3926,8 +3927,9 @@ int PsmGroupGet(void *bus_handle, const char *subsys,
             bus_info->freefunc(val);
             val = NULL;
         }
+		*records = NULL;
+		*nrec = 0;
     }
-
    }
    cord_free_parameters(params);
    return ret;
