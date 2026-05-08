@@ -34,13 +34,13 @@ Set_Reboot_Reason()
         reboot
 }
 source /etc/device.properties
-if [ -f "/tmp/CcspCrSsp_Restarted" ];then
-	if [ -f /tmp/pam_initialized ] || [ -f /tmp/psm_initialized ]; then
-		Set_Reboot_Reason "CR_crash" "CcspCrSsp"
-	else
-		echo "`date`: Stopping/Restarting CcspCrSsp" >> ${PROCESS_RESTART_LOG}
-		rm -f /tmp/CcspCrSsp_Restarted
-	fi
+# if [ -f "/tmp/CcspCrSsp_Restarted" ];then
+# 	if [ -f /tmp/pam_initialized ] || [ -f /tmp/psm_initialized ]; then
+# 		Set_Reboot_Reason "CR_crash" "CcspCrSsp"
+# 	else
+# 		echo "`date`: Stopping/Restarting CcspCrSsp" >> ${PROCESS_RESTART_LOG}
+# 		rm -f /tmp/CcspCrSsp_Restarted
+# 	fi
 elif [ -f "/tmp/GWPROV_Restarted" ];then
 	Set_Reboot_Reason "GWPROV_crash" "GWPROV"
 fi

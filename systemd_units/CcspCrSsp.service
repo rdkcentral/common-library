@@ -30,7 +30,7 @@ EnvironmentFile=/etc/device.properties
 ExecStartPre=-/bin/sh -c 'mkdir -p /rdklogs/logs/'
 ExecStartPre=/bin/sh -c '(/usr/ccsp/ccspSysConfigEarly.sh)'
 ExecStart=/bin/sh -c 'echo "CcspCr is deprecated." '
-ExecStopPost=/bin/sh -c 'echo 0 >> /tmp/CcspCrSsp_Restarted'
+ExecStopPost=/bin/sh -c 'echo "CcspCr deprecated - no restart tracking."'
 Restart=always
 
 
