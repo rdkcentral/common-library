@@ -829,7 +829,8 @@ StunScoVerifyMsgIntegrity
     PSTUN_HEADER                    pStunHeader             = (PSTUN_HEADER                )buffer;
     PSTUN_ATTRIBUTE                 pStunAttribute          = (PSTUN_ATTRIBUTE             )NULL;
     PSTUN_ATTRIB_MSG_INTEGRITY      pStunAttribMsgIntegrity = (PSTUN_ATTRIB_MSG_INTEGRITY  )NULL;
-    ANSC_CRYPTO_HASH                crypto_hash;
+    /*CID: 734576 Uninitialized scalar variable (UNINIT)*/
+    ANSC_CRYPTO_HASH                crypto_hash             = {0};
     ANSC_CRYPTO_KEY                 crypto_key;
 
     AnscStunGetAttributeByType(pStunHeader, STUN_ATTRIB_TYPE_MSG_INTEGRITY, pStunAttribute);
