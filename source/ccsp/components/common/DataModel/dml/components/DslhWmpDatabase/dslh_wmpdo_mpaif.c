@@ -654,9 +654,12 @@ DslhWmpdoMpaSetParameterValues
     AnscAcquireTsLock(&pMyObject->AccessTsLock);
     pDslhMprIf->IncReqCounter(pDslhMprIf->hOwnerContext);
 
+    CcspTraceInfo(("-----> %s, writeID: %lu, AccessEntity: %s, ParamCount: %lu\n", __FUNCTION__, writeID, pAccessEntity, ulArraySize));
+
     if ( (ulArraySize == 0) || !pParameterValueArray )
     {
         *piStatus    = 0;
+	CcspTraceWarning(("Invalid parameter name (NULL) at index %lu\n", i));
         returnStatus = ANSC_STATUS_SUCCESS;
 
         goto  EXIT0;
@@ -677,6 +680,7 @@ DslhWmpdoMpaSetParameterValues
         if ( !pParameterValueArray[i].Name )
         {
             bFaultEncountered = TRUE;
+	    CcspTraceWarning(("Invalid parameter name (NULL) at index %lu\n", i));
 
 			returnStatus = CCSP_ERR_INVALID_ARGUMENTS;
 
@@ -685,6 +689,7 @@ DslhWmpdoMpaSetParameterValues
         else if ( !pParameterValueArray[i].Value )
         {
             bFaultEncountered = TRUE;
+	    CcspTraceWarning(("Invalid parameter value (NULL) at index %lu\n", i));
             
             *ppInvalidParameterName = AnscCloneString(pParameterValueArray[i].Name);
 
