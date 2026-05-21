@@ -3809,7 +3809,7 @@ int PsmGroupGet(void *bus_handle, const char *subsys,
    *nrec = 0;
    *records = NULL;
    cord_value_type_t valueType;
-
+   if(0 == nname) return CCSP_FAILURE;	
    cord_rc_t cord_rc = cord_get_multi((const char **)names, nname, 0, &params,&count);
    switch (cord_rc) {
    case CORD_RC_SUCCESS:           break;
