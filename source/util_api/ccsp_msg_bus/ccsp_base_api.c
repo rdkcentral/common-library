@@ -553,7 +553,7 @@ int CcspBaseIf_setParameterValues(
         return ret;
     }
 
-    CcspTraceWarning(("%s component calls SET with writeId:%u \n", bus_info->component_id, writeID));
+    CcspTraceDebug(("%s component calls SET with writeId:%u \n", bus_info->component_id, writeID));
     /* Set for psm parameters */
     if(dst_component_id && (strstr(dst_component_id, ".psm")))
     {
