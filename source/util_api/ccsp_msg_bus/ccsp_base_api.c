@@ -2109,12 +2109,18 @@ int CcspBaseIf_isSystemReady_rbus(
     dbus_bool *val
     )
 {
+	UNREFERENCED_PARAMETER(bus_handle);
+    UNREFERENCED_PARAMETER(dst_component_id);
 	int ret = CCSP_SUCCESS;
-    char* parameterNames[1] = {"Device.CR.SystemReady"};
+	*val = 1;
+	return ret;
+	
+   /* char* parameterNames[1] = {"Device.CR.SystemReady"};
     int size;
     parameterValStruct_t** value = 0;
 
     *val = 0;
+
 
     ret = CcspBaseIf_getParameterValues_rbus(
               bus_handle,
@@ -2139,7 +2145,7 @@ int CcspBaseIf_isSystemReady_rbus(
         CcspTraceError(("%s CcspBaseIf_getParameterValues_rbus %s failed ret=%d\n", __FUNCTION__, parameterNames[0], ret));
     }
 
-    return ret;
+    return ret; */
 }
 
 int CcspBaseIf_isSystemReady (
