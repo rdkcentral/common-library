@@ -1290,8 +1290,9 @@ BspTemplateArchiveSaveToFile
                     if(size < 0)
                     {
                         ERR_CHK(size);
+                        break; /*CID: 279849 fix for Out-of-bounds access(OVERRUN) */
                     }
-		    total++;
+                    total++;
                     ulSize = (ULONG)size; /*CID: 559862 fix for Overflowed constant*/
 					/*CID: 340787 fix for Improper use of negative value*/
 					if (ulSize > 0)
