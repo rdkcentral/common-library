@@ -194,7 +194,10 @@ AnscCoVer3Remove
     pMyObject->bShuttingDown = TRUE;
 
     /* wait for all tasks to quit */
-    while ( pMyObject->EngineTaskCount > 0 )
+    AnscAcquireLock(&pMyObject->EtoAccessLock);
+    ULONG    pEngineTaskCount_local = pMyObject->EngineTaskCount;
+    AnscReleaseLock(&pMyObject->EtoAccessLock);
+    while ( pEngineTaskCount_local > 0 )
     {
         AnscSleep(100);
     }
