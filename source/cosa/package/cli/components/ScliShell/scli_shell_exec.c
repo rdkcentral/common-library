@@ -134,8 +134,7 @@ ScliShoAsyncRunCmdTask
                         (ANSC_HANDLE)pMyObject,
                         hSrvSession
                     );
-
-            CmdRequest.CurLineNumber    = nRow - 1;
+	    CmdRequest.CurLineNumber = (nRow > 0) ? (ULONG)(nRow - 1) : 0;
 
             if ( ulInputMode == SCLI_SHELL_INPUT_MODE_linemode && nRow > 0 )
             {
