@@ -32,7 +32,7 @@ ExecStartPre=/bin/sh -c '(/usr/ccsp/ccspSysConfigEarly.sh)'
 ExecStart=/bin/sh -c '/usr/bin/CcspCrSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo 0 >> /tmp/CcspCrSsp_Restarted'
 Restart=always
-
+SyslogIdentifier=CcspCrSsp
 
 [Install]
 WantedBy=multi-user.target
