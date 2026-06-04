@@ -1345,4 +1345,18 @@ void PsmFreeRecords(void *bus_handle,
 
 int Rbus_to_CCSP_error_mapper(int error_code);
 int Rbus2_to_CCSP_error_mapper(int error_code);
+
+void extract_command_output (char *cmd, char *out, int len);
+void stop_self_heal_scripts();
+void start_self_heal_scripts();
+unsigned long get_interval(const char *key, int def_val);
+void update_cron_entry(const char *script, unsigned long interval, bool should_run);
+void manage_self_heal_cron_state(bool SelfhealCronEnable);
 #endif /* CCSP_BASE_API_H */
+
+
+
+
+
+
+
