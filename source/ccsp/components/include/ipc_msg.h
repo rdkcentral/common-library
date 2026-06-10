@@ -131,6 +131,7 @@ typedef struct _ipc_dhcpv4_data_t
     char ip[BUFLEN_32];                /** New IP address, if addressAssigned==TRUE */
     char mask[BUFLEN_32];              /** New netmask, if addressAssigned==TRUE */
     char gateway[BUFLEN_32];           /** New gateway, if addressAssigned==TRUE */
+    char domain[BUFLEN_64];            /** New domain name, if addressAssigned==TRUE */
     char dnsServer[BUFLEN_64];         /** New dns Server, if addressAssigned==TRUE */
     char dnsServer1[BUFLEN_64];        /** New dns Server, if addressAssigned==TRUE */
     char dhcpcInterface[BUFLEN_64];    /** Dhcp interface name */
