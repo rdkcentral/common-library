@@ -19,7 +19,7 @@
 [Unit]
 Description=PsmSsp service
 
-After=CcspCrSsp.service
+After=CcspCrSsp.service cordd.service
 
 [Service]
 Type=forking
