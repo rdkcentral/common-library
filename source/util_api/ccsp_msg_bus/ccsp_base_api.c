@@ -4056,10 +4056,12 @@ int PsmGetNextLevelInstances
     }
     rc = strcat_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
     ERR_CHK(rc);
-    rc = strcat_s(psmName, sizeof(psmName), ".");
-    ERR_CHK(rc);
-    rc = strcat_s(psmName, sizeof(psmName), pParentPath);
-    ERR_CHK(rc);
+    if (pParentPath && pParentPath[0] != '\0') {
+        rc = strcat_s(psmName, sizeof(psmName), ".");
+        ERR_CHK(rc);
+        rc = strcat_s(psmName, sizeof(psmName), pParentPath);
+        ERR_CHK(rc);
+    }
 
     GNLInstanceList list = {0};
     list.bus_handle = bus_handle;
@@ -4174,10 +4176,12 @@ int PsmEnumRecords
     }
     rc = strcat_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
     ERR_CHK(rc);
-    rc = strcat_s(psmName, sizeof(psmName), ".");
-    ERR_CHK(rc);
-    rc = strcat_s(psmName, sizeof(psmName), pParentPath);
-    ERR_CHK(rc);
+    if (pParentPath && pParentPath[0] != '\0') {
+        rc = strcat_s(psmName, sizeof(psmName), ".");
+        ERR_CHK(rc);
+        rc = strcat_s(psmName, sizeof(psmName), pParentPath);
+        ERR_CHK(rc);
+    }
 
     ERList list = {0};
     list.nextLevel = nextLevel;
