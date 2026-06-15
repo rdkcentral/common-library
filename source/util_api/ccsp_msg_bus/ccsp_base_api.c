@@ -4185,16 +4185,12 @@ int PsmEnumRecords
   *ppRecArray = NULL;
     *pulNumRec  = 0;
 
-    if (pSubSystemPrefix && pSubSystemPrefix[0] != 0) {
-        rc = strcpy_s(psmName, sizeof(psmName), pSubSystemPrefix);
-        ERR_CHK(rc);
-    }
-    rc = strcat_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
-    ERR_CHK(rc);
+    /* cord_list() operates on the PSM data namespace (e.g. "dmsb."),
+     * NOT on the rbus component ID ("eRT.com.cisco.spvtg.ccsp.psm").
+     * Pass pParentPath directly: empty string lists everything, a
+     * non-empty path scopes the enumeration to that subtree. */
     if (pParentPath && pParentPath[0] != '\0') {
-        rc = strcat_s(psmName, sizeof(psmName), ".");
-        ERR_CHK(rc);
-        rc = strcat_s(psmName, sizeof(psmName), pParentPath);
+        rc = strcpy_s(psmName, sizeof(psmName), pParentPath);
         ERR_CHK(rc);
     }
 
