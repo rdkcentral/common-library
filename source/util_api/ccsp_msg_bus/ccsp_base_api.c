@@ -2283,6 +2283,21 @@ int CcspBaseIf_getHealth_rbus(
       else
         ret = Rbus2_to_CCSP_error_mapper(ret_val);
       CcspTraceError(("%s: %s error: %d\n", __FUNCTION__, methodName, ret));
+
+#ifdef CORD_ENABLED
+      /* In CORD builds PSM has no rbus bus interface so GetHealth() always
+       * returns CCSP_ERR_ENTRY_NOT_FOUND (204). Use /tmp/psm_initialized
+       * (written by PSM after cord_open + Engage complete) as the readiness
+       * signal. This avoids every caller (PAM, WEBPA, ...) burning their
+       * full retry timeout waiting for a handler that will never exist. */
+      if(strstr(dst_component_id, "psm") && access("/tmp/psm_initialized", F_OK) == 0)
+      {
+          CcspTraceInfo(("%s: %s not reachable via rbus but psm_initialized sentinel found, reporting Green\n",
+                         __FUNCTION__, dst_component_id));
+          *health = 3; /* CCSP_COMMON_COMPONENT_HEALTH_Green */
+          ret = CCSP_SUCCESS;
+      }
+#endif /* CORD_ENABLED */
     }
     if(outParams)
         rbusObject_Release(outParams);
