@@ -602,6 +602,37 @@ int CcspBaseIf_getParameterValues_rbus(
     /*Get call for PSM parameters*/
     if(dst_component_id && strstr(dst_component_id, ".psm"))
     {
+#ifdef CORD_ENABLED
+     /* In CORD builds PSM has no rbus bus interface so GetHealth() always
+       * returns CCSP_ERR_ENTRY_NOT_FOUND (204). Use /tmp/psm_initialized
+       * (written by PSM after cord_open + Engage complete) as the readiness
+       * signal. This avoids every caller (PAM, WEBPA, ...) burning their
+       * full retry timeout waiting for a handler that will never exist. */
+        if (1 == param_size){
+        if(strstr(parameterNames[0], "Health") && access("/tmp/psm_initialized", F_OK) == 0)
+        {   
+          CcspTraceInfo(("%s: %s not reachable via rbus but psm_initialized sentinel found, reporting Green\n",
+                         __FUNCTION__, dst_component_id));
+           size = 1; 
+          *val_size = size;
+           val = bus_info->mallocfunc(size*sizeof(parameterValStruct_t *));
+           memset(val, 0, size*sizeof(parameterValStruct_t *));
+           for (i = 0; i < size; i++)
+           {
+                val[i] = bus_info->mallocfunc(sizeof(parameterValStruct_t));
+                memset(val[i], 0, sizeof(parameterValStruct_t));
+                /*Get Name */
+                val[i]->parameterName = bus_info->mallocfunc(strlen(parameterNames[0])+1);
+                strcpy(val[i]->parameterName,parameterNames[0]);
+                val[i]->type = ccsp_string;
+                val[i]->parameterValue = bus_info->mallocfunc(strlen("Green")+1);
+                strcpy(val[i]->parameterValue, "Green");
+            }
+           ret = CCSP_SUCCESS;
+        }
+      }
+
+#else		
         ret = PSM_Get_Record_Value_rbus(bus_handle, parameterNames, param_size, &size, &val);
         if(ret == CCSP_SUCCESS)
         {
@@ -609,6 +640,8 @@ int CcspBaseIf_getParameterValues_rbus(
             for(i = 0; i < size; i++)
                 RBUS_LOG(" PSM Param [%d] Name = %s, Type = %d, Value = %s\n", i,val[i]->parameterName, val[i]->type, val[i]->parameterValue);
         }
+#endif /* CORD_ENABLED */
+		
     }
     else
     {
