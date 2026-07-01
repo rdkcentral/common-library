@@ -26,6 +26,7 @@ Type=forking
 WorkingDirectory=/usr/ccsp/lm
 Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/device.properties
 ExecStart=/bin/sh -c '/usr/bin/CcspLMLite -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspLMLite" >> ${PROCESS_RESTART_LOG}'
