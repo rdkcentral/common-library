@@ -693,7 +693,10 @@ int CcspBaseIf_getParameterValues_rbus(
             {
                 size = 1;
                 rbusProperty_Init(&outputVals, parameterNames[0], getVal);
-                /* Do NOT release getVal here. getVal is owned and allocated by rbus infrastructure and rbusProperty_Init takes a reference to it. */
+                /* rbus_get transfers ownership of getVal (refCount 1) to us, and
+                 * rbusProperty_Init takes its own additional reference. Release our
+                 * reference now so that releasing the property list frees getVal. */
+                rbusValue_Release(getVal);
             }
         }
         else
