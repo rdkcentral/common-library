@@ -50,6 +50,8 @@
 #include <errno.h>
 #include <time.h>
 #include <inttypes.h>
+#include <fcntl.h>
+#include <unistd.h>
 #ifdef CORD_ENABLED
 #include <cord.h>
 #endif
@@ -84,6 +86,52 @@ int   CcspBaseIf_timeout_seconds        = 60; //seconds
 int   CcspBaseIf_timeout_getval_seconds = 120; //seconds
 #define  CcspBaseIf_timeout_rbus  (CcspBaseIf_timeout_seconds * 1000) // in milliseconds
 #define  CcspBaseIf_timeout_getval_rbus  (CcspBaseIf_timeout_getval_seconds * 1000) // in milliseconds
+
+/* --- PSM API call counter -----------------------------------------------
+ * Activated only when /nvram/psm_cord_trace exists.
+ * Counts calls to both CORD_ENABLED and non-CORD PSM API paths.
+ * Writes the cumulative count to /tmp/psm_cord_<apiname>.
+ * Thread-safe: GCC atomic counter + mutex-protected file write.
+ * ---------------------------------------------------------------------- */
+static pthread_mutex_t g_psm_trace_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void psm_cord_trace_inc(const char *api_name, int *p_count)
+{
+    static int    s_enabled    = -1; /* -1=unknown, 0=disabled, 1=enabled */
+    static time_t s_last_check = 0;
+
+    time_t now = time(NULL);
+    if (s_enabled == -1 || (now - s_last_check) >= 1)
+    {
+        s_enabled    = (access("/nvram/psm_cord_trace", F_OK) == 0) ? 1 : 0;
+        s_last_check = now;
+    }
+
+    if (!s_enabled)
+        return;
+
+    int count = __sync_add_and_fetch(p_count, 1);
+
+    char path[128];
+    snprintf(path, sizeof(path), "/tmp/psm_cord_%s", api_name);
+
+    pthread_mutex_lock(&g_psm_trace_mutex);
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd >= 0)
+    {
+        char buf[32];
+        int  len = snprintf(buf, sizeof(buf), "%d\n", count);
+        write(fd, buf, (size_t)len);
+        close(fd);
+    }
+    pthread_mutex_unlock(&g_psm_trace_mutex);
+}
+
+#define PSM_CORD_COUNT() \
+    do { \
+        static int s_count = 0; \
+        psm_cord_trace_inc(__func__, &s_count); \
+    } while (0)
 
 int CcspBaseIf_freeResources(
     void* bus_handle,
@@ -3036,6 +3084,7 @@ int PSM_Set_Record_Value
     PSLAP_VARIABLE              pValue
 )
 {
+    PSM_CORD_COUNT();
     UNREFERENCED_PARAMETER(ulRecordType);
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
 
@@ -3245,6 +3294,7 @@ int PSM_Get_Record_Value
     PSLAP_VARIABLE              pValue
 )
 {
+    PSM_CORD_COUNT();
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
 
@@ -3430,6 +3480,7 @@ int PSM_Set_Record_Value2
     char const * const          pVal
 )
 {
+    PSM_CORD_COUNT();
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
 
 #ifdef CORD_ENABLED
@@ -3595,6 +3646,7 @@ int PSM_Get_Record_Value2
     char**                      pValue
 )
 {
+    PSM_CORD_COUNT();
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
     *pValue = NULL;
 
@@ -3726,6 +3778,7 @@ int PSM_Del_Record
     char const * const          pRecordName
 )
 {
+    PSM_CORD_COUNT();
 #ifdef CORD_ENABLED 
  char psmName[512] = "";
     errno_t rc = -1;
@@ -3845,6 +3898,7 @@ int PSM_Del_Record
 int PsmGroupGet(void *bus_handle, const char *subsys,
         const char *names[], int nname, parameterValStruct_t ***records, int *nrec)
 {
+    PSM_CORD_COUNT();
     char psmName[256];
 
     if (!bus_handle || !names || !records || !nrec)
@@ -4091,6 +4145,7 @@ int PsmGetNextLevelInstances
    unsigned int**  ppInstanceArray
 )
 {
+   PSM_CORD_COUNT();
    char psmName[512] = "";
    errno_t rc = -1;
 #ifdef CORD_ENABLED
@@ -4212,6 +4267,7 @@ int PsmEnumRecords
     PCCSP_BASE_RECORD*  ppRecArray
 )
 {
+   PSM_CORD_COUNT();
    char psmName[512] = "";
    errno_t rc = -1;
 #ifdef CORD_ENABLED
@@ -4338,6 +4394,7 @@ int PSM_Reset_UserChangeFlag
     char const * const          pathName
 )
 {
+    PSM_CORD_COUNT();
 
 #ifdef CORD_ENABLED
     static const char   kPrefix[] = "UserChanged.";
