@@ -40,6 +40,19 @@ AC_ARG_ENABLE([gtestapp],
              [echo "Gtestapp is disabled"])
 AM_CONDITIONAL([WITH_GTEST_SUPPORT], [test x$GTEST_SUPPORT_ENABLED = xtrue])
 
+AC_ARG_ENABLE([cord],
+             AS_HELP_STRING([--enable-cord],[enable CORD persistent storage support (default is no)]),
+             [
+               case "${enableval}" in
+                yes) CORD_ENABLED=true
+                     CFLAGS="$CFLAGS -DCORD_ENABLED";;
+                no)  CORD_ENABLED=false;;
+                 *) AC_MSG_ERROR([bad value ${enableval} for --enable-cord]);;
+               esac
+             ],
+             [CORD_ENABLED=false])
+AM_CONDITIONAL([WITH_CORD_SUPPORT], [test x$CORD_ENABLED = xtrue])
+
 AC_PREFIX_DEFAULT(`pwd`)
 AC_ENABLE_SHARED
 AC_DISABLE_STATIC

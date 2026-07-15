@@ -680,7 +680,7 @@ BspTemplateBranchLoadBranchData
     if (!bSucc)
         return FALSE;
 
-    pBrData->type   = (BSP_TEMPLATE_BRANCH_TYPE)ucType;
+    pBrData->type   = (BSP_TEMPLATE_OPERATOR)ucType;
 
     switch (pBrData->type)
     {
