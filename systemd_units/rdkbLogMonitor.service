@@ -29,7 +29,7 @@ ExecStart=/bin/sh -c 'val=$(syscfg get RdkbLogCronEnable); if [ "$val" = "true" 
 ExecStop=/bin/sh -c 'echo "==> sync logs to nvram before reboot" >>/rdklogs/logs/Consolelog.txt.0'
 ExecStop=/bin/sh -c 'source /rdklogger/logfiles.sh;syncLogs_nvram2 "reboot"'
 RemainAfterExit=yes
-
+SyslogIdentifier=rdkbLogMonitor
 
 [Install]
 WantedBy=multi-user.target
