@@ -29,6 +29,7 @@ Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 ExecStart=/bin/sh -c '/usr/bin/CcspEthAgent -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspEthAgent" >> ${PROCESS_RESTART_LOG}'
+SyslogIdentifier=CcspEthAgent
 Restart=always
 
 
