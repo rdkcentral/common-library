@@ -828,6 +828,10 @@ DslhDmagntRegisterDataModelObject
 
     if( pObjDesp->Type == DSLH_CWMP_OBJECT_TYPE_table)
     {
+        AnscTraceWarning(("DBG-TBL-FLOW: table object detected name=%s writable=%d\n",
+        pObjDesp->Name ? pObjDesp->Name : "NULL",
+        pObjDesp->bWritable)); 
+        
         /* if it's a table, we need to register both the table and entry objects */
         pCpeController->RegisterObject(pCpeController, pObjDesp, NULL);
 

@@ -1173,6 +1173,10 @@ int CcspBaseIf_AddTblRow_rbus(
     int *instanceNumber
     )
 {
+    RBUS_LOG("DBG-TBL-FLOW: AddTblRow request dst=%s obj=%s session=%d\n",
+    dst_component_id ? dst_component_id : "NULL",
+    objectName ? objectName : "NULL",
+    sessionId);
     UNREFERENCED_PARAMETER(dbus_path);
     UNREFERENCED_PARAMETER(sessionId);
     UNREFERENCED_PARAMETER(dst_component_id);
@@ -1212,6 +1216,11 @@ int CcspBaseIf_DeleteTblRow_rbus(
     char * objectName
     )
 {
+    RBUS_LOG("DBG-TBL-FLOW: DeleteTblRow request dst=%s obj=%s session=%d\n",
+    dst_component_id ? dst_component_id : "NULL",
+    objectName ? objectName : "NULL",
+    sessionId);
+    
     UNREFERENCED_PARAMETER(dbus_path);
     UNREFERENCED_PARAMETER(sessionId);
     UNREFERENCED_PARAMETER(dst_component_id);
@@ -1628,17 +1637,23 @@ int CcspBaseIf_registerCapabilities_rbus(
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
 
     isSubCacheLoaded = Ccsp_RbusSubscriptions_create(component_name);
+
+    RBUS_LOG("DBG-TBL-FLOW: registerCapabilities_rbus comp=%s size=%d\n",component_name ? component_name : "NULL", size); 
+
     for(i = 0; i < size; i++)
     {
         rbusDataElement_t dataElements[1] = {
             {name_space[i].name_space, RBUS_ELEMENT_TYPE_PROPERTY, {NULL, NULL, NULL, NULL, NULL, NULL}}
         };
+        RBUS_LOG("DBG-TBL-FLOW: rbus_regDataElements begin idx=%d ns=%s\n",i, name_space[i].name_space ? name_space[i].name_space : "NULL");
+
         if ((err = rbus_regDataElements(bus_info->rbus_handle, 1, dataElements)) != RBUS_ERROR_SUCCESS)
         {
             RBUS_LOG_ERR("addElement: %s failed with Err: %d\n", name_space[i].name_space, err);
             failedIndex = i + 1;
             break;
         }
+        RBUS_LOG("DBG-TBL-FLOW: rbus_regDataElements ok idx=%d ns=%s\n",i, name_space[i].name_space ? name_space[i].name_space : "NULL");
     }
     if (isSubCacheLoaded && (err == RBUS_ERROR_SUCCESS))
     {
