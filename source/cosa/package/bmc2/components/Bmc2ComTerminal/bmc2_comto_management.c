@@ -110,8 +110,10 @@ Bmc2ComtoGetDomainCount
     )
 {
     PBMC2_COM_TERMINAL_OBJECT       pMyObject    = (PBMC2_COM_TERMINAL_OBJECT  )hThisObject;
-
-    return  AnscSListQueryDepth(&pMyObject->ComdoSList);
+    AnscAcquireLock(&pMyObject->ComdoSListLock);
+    ULONG domainCount =  AnscSListQueryDepth(&pMyObject->ComdoSList);
+    AnscReleaseLock(&pMyObject->ComdoSListLock);
+    return  domainCount;
 }
 
 
