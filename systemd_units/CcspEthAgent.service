@@ -30,6 +30,7 @@ Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.s
 EnvironmentFile=/etc/device.properties
 ExecStart=/bin/sh -c '/usr/bin/CcspEthAgent -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspEthAgent" >> ${PROCESS_RESTART_LOG}'
+SyslogIdentifier=CcspEthAgent
 Restart=always
 
 

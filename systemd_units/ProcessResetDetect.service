@@ -22,4 +22,4 @@ Description=Process Restart Service
 [Service]
 Type=simple
 ExecStart=/bin/sh -c '(/usr/ccsp/ProcessResetCheck.sh)'
-
+SyslogIdentifier=ProcessResetDetect
