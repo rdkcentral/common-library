@@ -27,7 +27,7 @@ Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/cm
-ExecStart=/bin/sh -c '/usr/bin/CcspCMAgentSsp -subsys $Subsys'
+ExecStart=/bin/sh -c '/usr/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=/tmp/cm_valgrind.txt /usr/bin/CcspCMAgentSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspCMAgentSsp" >> ${PROCESS_RESTART_LOG}'
 Restart=always
 
