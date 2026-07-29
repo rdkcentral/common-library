@@ -808,11 +808,17 @@ DslhDmagntRegisterDataModelObject
 
     if( pObjDesp == NULL)
     {
+        AnscTraceWarning(("DBG-TBL-FLOW: ERROR object descriptor allocation failed\n"));
         return ANSC_STATUS_RESOURCES;
     }
      
     returnStatus = 
         DslhDmagntParseObjectInfo(hThisObject, hObjectNode, pParentObjName, pPluginInfo, pObjDesp);
+
+    AnscTraceWarning(("DBG-TBL-FLOW: DslhDmagntRegisterDataModelObject parsed obj=%s parent=%s type=%s\n",
+    pObjDesp->Name ? pObjDesp->Name : "NULL",
+    pParentObjName ? pParentObjName : "ROOT",
+    (pObjDesp->Type == DSLH_CWMP_OBJECT_TYPE_table) ? "table" : "regular"));
 
     /* check whether the object is supported or not */
     if( pPluginInfo->SupportProc != NULL)
@@ -828,7 +834,14 @@ DslhDmagntRegisterDataModelObject
 
     if( pObjDesp->Type == DSLH_CWMP_OBJECT_TYPE_table)
     {
+        AnscTraceWarning(("DBG-TBL-FLOW: table object detected name=%s writable=%d\n",
+        pObjDesp->Name ? pObjDesp->Name : "NULL",
+        pObjDesp->bWritable)); 
+        
         /* if it's a table, we need to register both the table and entry objects */
+        AnscTraceWarning(("DBG-TBL-FLOW: registering table object name=%s\n",
+        pObjDesp->Name ? pObjDesp->Name : "NULL"));
+
         pCpeController->RegisterObject(pCpeController, pObjDesp, NULL);
 
         /* create another ObjDesp for the entry; */
@@ -849,6 +862,10 @@ DslhDmagntRegisterDataModelObject
            ERR_CHK(rc);
         }
 
+        AnscTraceWarning(("DBG-TBL-FLOW: created entry object with {i} placeholder original=%s entry=%s\n",
+        pTableDesp->Name ? pTableDesp->Name : "NULL",
+        buffer));
+
         pObjDesp->Name                      = AnscCloneString(buffer);
         pObjDesp->Type                      = DSLH_CWMP_OBJECT_TYPE_regular;
         pObjDesp->pfnObjcoConstructor       = DslhCreateObjController;
@@ -866,6 +883,11 @@ DslhDmagntRegisterDataModelObject
     }
 
     /* register the object */
+    AnscTraceWarning(("DBG-TBL-FLOW: registering object name=%s type=%s paramArray=%p\n",
+    pObjDesp->Name ? pObjDesp->Name : "NULL",
+    (pObjDesp->Type == DSLH_CWMP_OBJECT_TYPE_table) ? "table" : "regular",
+    pObjDesp->hParamArray));
+
     pCpeController->RegisterObject(pCpeController, pObjDesp, pObjDesp->hParamArray);
     pPluginInfo->uRegObjCount ++;
 

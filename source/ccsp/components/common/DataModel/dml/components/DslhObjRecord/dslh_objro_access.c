@@ -1311,6 +1311,12 @@ DslhObjroAddChildObject
     *pulInstanceNumber  = 0;
 
     ulObjInsNumber      = pMyObject->NextInstanceNumber++;
+    AnscTraceWarning(("DBG-INST: allocated instance=%lu table=%s nextNum=%lu queue_depth_before=%lu\n",
+    ulObjInsNumber,
+    pObjController->GetName(pObjController),
+    pMyObject->NextInstanceNumber,
+    AnscQueueQueryDepth(&pMyObject->ObjroQueue)));
+    
     pChildObjController = (PDSLH_OBJ_CONTROLLER_OBJECT)pObjcoTable->NewEntryObject((ANSC_HANDLE)pObjcoTable);
 
     if ( !pChildObjController )
@@ -1336,11 +1342,17 @@ DslhObjroAddChildObject
         if ( returnStatus != ANSC_STATUS_SUCCESS )
         {
             pMyObject->NextInstanceNumber --;
-
+            AnscTraceWarning(("DBG-INST: ERROR AddEntryObject failed instance=%lu table=%s status=%d\n",
+            ulObjInsNumber,
+            pObjController->GetName(pObjController),
+            returnStatus));
             goto EXIT1;
         }
 
         pChildObjController->Engage((ANSC_HANDLE)pChildObjController);
+        AnscTraceWarning(("DBG-INST: entry engaged instance=%lu queue_depth_after=%lu\n",
+        ulObjInsNumber,
+        AnscQueueQueryDepth(&pMyObject->ObjroQueue)));
     }
 
     AnscZeroMemory(child_name, 16);
@@ -1435,6 +1447,12 @@ DslhObjroAddChildObject
     }
 
     *pulInstanceNumber = ulObjInsNumber;
+    AnscTraceWarning(("DBG-INST: finalized instance=%lu table=%s fullName=%s queue_depth=%lu nextNum=%lu\n",
+    ulObjInsNumber,
+    pObjController->GetName(pObjController),
+    pChildFullName ? pChildFullName : "NULL",
+    AnscQueueQueryDepth(&pMyObject->ObjroQueue),
+    pMyObject->NextInstanceNumber));
 #ifdef USE_NOTIFY_COMPONENT
 	Notify_Table_Entry(pMyObject, old_value);
 #endif
