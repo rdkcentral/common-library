@@ -520,6 +520,12 @@ DslhCpecoRegisterObject
                 _ansc_sprintf( &pParameterHolder[pMyObject->uParameterIndex], "%s%s", pObjectDescr->Name, pParamDescr->Name );
                 pParameterArray[pMyObject->uParameterArrayIndex].name_space   = &pParameterHolder[pMyObject->uParameterIndex];
 
+                AnscTraceWarning(("DBG-TBL-FLOW: ns-add idx=%lu ns=%s obj=%s param=%s\n",
+                pMyObject->uParameterArrayIndex,
+                pParameterArray[pMyObject->uParameterArrayIndex].name_space ? pParameterArray[pMyObject->uParameterArrayIndex].name_space : "NULL",
+                pObjectDescr->Name ? pObjectDescr->Name : "NULL",
+                pParamDescr->Name ? pParamDescr->Name : "NULL"));
+
                 if ( !_ansc_strncmp( pParamDescr->DataType, DSLH_CWMP_DATA_NAME_string, _ansc_strlen(DSLH_CWMP_DATA_NAME_string) ) )
                     pParameterArray[pMyObject->uParameterArrayIndex++].dataType   = ccsp_string;
                 else if ( !_ansc_strncmp( pParamDescr->DataType, DSLH_CWMP_DATA_NAME_int, _ansc_strlen(DSLH_CWMP_DATA_NAME_int) ))
@@ -1050,6 +1056,11 @@ dslhCpeEnumObjEntities
 			/* If there's no child param or object, register a dummy param */
             _ansc_sprintf( &pParameterHolder[pMyObject->uParameterIndex], "%s%s", pObjEntity->ObjDescr->Name, CCSP_DUMMY_PARAM_NAME );
             pParameterArray[pMyObject->uParameterArrayIndex].name_space   = &pParameterHolder[pMyObject->uParameterIndex];
+            AnscTraceWarning(("DBG-TBL-FLOW: ns-add-dummy idx=%lu ns=%s obj=%s\n",
+            pMyObject->uParameterArrayIndex,
+            pParameterArray[pMyObject->uParameterArrayIndex].name_space ? pParameterArray[pMyObject->uParameterArrayIndex].name_space : "NULL",
+            pObjEntity->ObjDescr && pObjEntity->ObjDescr->Name ? pObjEntity->ObjDescr->Name : "NULL"));
+
             pParameterArray[pMyObject->uParameterArrayIndex++].dataType   = ccsp_int;
             pMyObject->uParameterIndex += _ansc_strlen( &pParameterHolder[pMyObject->uParameterIndex] ) + 1;
 
@@ -1325,9 +1336,32 @@ DslhCpecoRegisterDataModelInternal
 
         // register everything in one scoop, or the last DMs in the PandM array will not be sync'ed with TR069PA in time.  RTian 2013/11/27
         // this has higher memory usage than previous implementation, but hardware has improved so memory is no longer a concern.
+        {
+            ULONG _k;
+            for (_k = 0; _k < uCount; _k++)
+            {
+                AnscTraceWarning(("REG-TABLE idx=%lu ns=%s\n",
+                _k,
+                pParameterArray[_k].name_space ? pParameterArray[_k].name_space : "NULL"));
+            }
+        }
         ULONG uWait = 10; /* 10 seconds */
         do
         {
+            if (uCount > 0)
+                {
+                AnscTraceWarning(("DBG-TBL-FLOW: about to registerCapabilities comp=%s cr=%s count=%lu first=%s last=%s\n",
+                pTmpCompName,
+                pTmpCRName,
+                uCount,
+                pParameterArray[0].name_space ? pParameterArray[0].name_space : "NULL",
+                pParameterArray[uCount - 1].name_space ? pParameterArray[uCount - 1].name_space : "NULL"));
+                }
+            else
+                {
+                AnscTraceWarning(("DBG-TBL-FLOW: about to registerCapabilities comp=%s cr=%s count=0\n",
+                pTmpCompName, pTmpCRName));
+                }
             returnStatus = 
                 CcspBaseIf_registerCapabilities
                 (

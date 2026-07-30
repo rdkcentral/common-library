@@ -814,6 +814,11 @@ DslhDmagntRegisterDataModelObject
     returnStatus = 
         DslhDmagntParseObjectInfo(hThisObject, hObjectNode, pParentObjName, pPluginInfo, pObjDesp);
 
+    AnscTraceWarning(("DBG-TBL-FLOW: XML-parse obj name=%s type=%lu parent=%s\n",
+    pObjDesp->Name ? pObjDesp->Name : "NULL",
+    (unsigned long)pObjDesp->Type,
+    pParentObjName ? pParentObjName : "NULL"));
+
     /* check whether the object is supported or not */
     if( pPluginInfo->SupportProc != NULL)
     {
@@ -828,6 +833,10 @@ DslhDmagntRegisterDataModelObject
 
     if( pObjDesp->Type == DSLH_CWMP_OBJECT_TYPE_table)
     {
+        AnscTraceWarning(("DBG-TBL-FLOW: table object detected name=%s writable=%d\n",
+        pObjDesp->Name ? pObjDesp->Name : "NULL",
+        pObjDesp->bWritable)); 
+        
         /* if it's a table, we need to register both the table and entry objects */
         pCpeController->RegisterObject(pCpeController, pObjDesp, NULL);
 
@@ -850,6 +859,9 @@ DslhDmagntRegisterDataModelObject
         }
 
         pObjDesp->Name                      = AnscCloneString(buffer);
+        AnscTraceWarning(("DBG-TBL-FLOW: table-entry-create {i} name=%s from table=%s\n",
+        pObjDesp->Name ? pObjDesp->Name : "NULL",
+        pTableDesp->Name ? pTableDesp->Name : "NULL"));
         pObjDesp->Type                      = DSLH_CWMP_OBJECT_TYPE_regular;
         pObjDesp->pfnObjcoConstructor       = DslhCreateObjController;
 

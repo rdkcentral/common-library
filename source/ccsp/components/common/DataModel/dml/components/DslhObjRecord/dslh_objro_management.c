@@ -360,6 +360,12 @@ DslhObjroAddObjRecord
 
     AnscQueuePushEntry(&pMyObject->ObjroQueue, &pChildObjRecord->Linkage);
 
+    AnscTraceWarning(("DBG-TBL-FLOW: ObjroQueue-add parent=%s childFullName=%s childLastName=%s queueDepth=%lu\n",
+    pMyObject->FullName ? pMyObject->FullName : "NULL",
+    pChildObjRecord->FullName ? pChildObjRecord->FullName : "NULL",
+    pChildObjRecord->LastName ? pChildObjRecord->LastName : "NULL",
+    AnscQueueQueryDepth(&pMyObject->ObjroQueue)));
+
     if ( pObjEntity->ObjDescr && (pObjEntity->ObjDescr->Type == DSLH_CWMP_OBJECT_TYPE_table) )
     {
         pMyObject->NextInstanceNumber = (ULONG)_ansc_atoi(pChildObjRecord->LastName);

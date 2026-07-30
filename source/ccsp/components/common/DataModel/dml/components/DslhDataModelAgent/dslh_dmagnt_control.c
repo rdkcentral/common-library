@@ -383,6 +383,8 @@ DslhDmagntLoadDataModelXMLInternal
     {
         pChildNode = pListNode->GetHeadChild(pListNode);
 
+        AnscTraceWarning(("DBG-TBL-FLOW: XML-parse start iterating objects rootName=%s\n", pRootName ? pRootName : "NULL"));
+
         while( pChildNode != NULL)
         {
             returnStatus = 

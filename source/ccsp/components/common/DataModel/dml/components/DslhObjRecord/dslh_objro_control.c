@@ -191,6 +191,10 @@ DslhObjroPopulateObjRecords
             AnscZeroMemory(child_name, 16);
             _ansc_itoa(ulObjInsNumber, child_name, 10);
 
+            AnscTraceWarning(("DBG-TBL-FLOW: populate-instance table=%s idx=%lu insNum=%lu name=%s\n",
+            pMyObject->FullName ? pMyObject->FullName : "NULL",
+            i, ulObjInsNumber, child_name));
+
             pChildObjRecord =
                 (PDSLH_OBJ_RECORD_OBJECT)DslhCreateObjRecord
                     (
@@ -292,6 +296,10 @@ DslhObjroPopulateObjRecords
 
             if( pChildObjController->CheckInstance(pChildObjController))
             {
+                AnscTraceWarning(("DBG-TBL-FLOW: instance-accepted fullName=%s insNum=%lu\n",
+                pChildObjRecord->FullName ? pChildObjRecord->FullName : "NULL",
+                ulObjInsNumber));
+
                 returnStatus =
                     pMyObject->AddObjRecord
                         (
