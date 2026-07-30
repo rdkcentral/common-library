@@ -87,50 +87,96 @@ int   CcspBaseIf_timeout_getval_seconds = 120; //seconds
 #define  CcspBaseIf_timeout_rbus  (CcspBaseIf_timeout_seconds * 1000) // in milliseconds
 #define  CcspBaseIf_timeout_getval_rbus  (CcspBaseIf_timeout_getval_seconds * 1000) // in milliseconds
 
-/* --- PSM API call counter -----------------------------------------------
+/* --- PSM API call counter + timing --------------------------------------
  * Activated only when /nvram/psm_cord_trace exists.
- * Counts calls to both CORD_ENABLED and non-CORD PSM API paths.
- * Writes the cumulative count to /tmp/psm_cord_<apiname>.
- * Thread-safe: GCC atomic counter + mutex-protected file write.
+ * Counts calls and records ns-resolution timing for both CORD and non-CORD
+ * PSM API paths.  Writes to /tmp/psm_cord_<apiname>.
+ * Thread-safe: GCC atomic counters + mutex-protected file write.
  * ---------------------------------------------------------------------- */
 static pthread_mutex_t g_psm_trace_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static void psm_cord_trace_inc(const char *api_name, int *p_count)
-{
-    static int    s_enabled    = -1; /* -1=unknown, 0=disabled, 1=enabled */
-    static time_t s_last_check = 0;
+typedef struct {
+    const char *api_name;
+    int        *p_count;
+    long long  *p_total_ns;
+    long long  *p_min_ns;
+    long long  *p_max_ns;
+    struct timespec t_start;
+    int         enabled;
+} psm_trace_ctx_t;
 
+static int psm_cord_trace_is_enabled(void)
+{
+    static int    s_enabled    = -1;
+    static time_t s_last_check = 0;
     time_t now = time(NULL);
     if (s_enabled == -1 || (now - s_last_check) >= 1)
     {
         s_enabled    = (access("/nvram/psm_cord_trace", F_OK) == 0) ? 1 : 0;
         s_last_check = now;
     }
+    return s_enabled;
+}
 
-    if (!s_enabled)
+/* cleanup handler: fires on any return path via __attribute__((cleanup)) */
+static void psm_cord_trace_end(psm_trace_ctx_t *ctx)
+{
+    if (!ctx->enabled)
         return;
 
-    int count = __sync_add_and_fetch(p_count, 1);
+    struct timespec t_end;
+    clock_gettime(CLOCK_MONOTONIC, &t_end);
 
-    char path[128];
-    snprintf(path, sizeof(path), "/tmp/psm_cord_%s", api_name);
+    long long elapsed_ns = ((long long)(t_end.tv_sec  - ctx->t_start.tv_sec)  * 1000000000LL)
+                         + ((long long)(t_end.tv_nsec - ctx->t_start.tv_nsec));
+
+    int count = __sync_add_and_fetch(ctx->p_count, 1);
 
     pthread_mutex_lock(&g_psm_trace_mutex);
+
+    long long total = *ctx->p_total_ns + elapsed_ns;
+    *ctx->p_total_ns = total;
+
+    if (*ctx->p_min_ns == 0 || elapsed_ns < *ctx->p_min_ns)
+        *ctx->p_min_ns = elapsed_ns;
+    if (elapsed_ns > *ctx->p_max_ns)
+        *ctx->p_max_ns = elapsed_ns;
+
+    long long avg_ns = total / count;
+
+    char path[128];
+    snprintf(path, sizeof(path), "/tmp/psm_cord_%s", ctx->api_name);
     int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd >= 0)
     {
-        char buf[32];
-        int  len = snprintf(buf, sizeof(buf), "%d\n", count);
+        char buf[128];
+        int  len = snprintf(buf, sizeof(buf),
+                            "count=%d last_ns=%lld total_ns=%lld avg_ns=%lld min_ns=%lld max_ns=%lld\n",
+                            count, elapsed_ns, total, avg_ns,
+                            *ctx->p_min_ns, *ctx->p_max_ns);
         write(fd, buf, (size_t)len);
         close(fd);
     }
+
     pthread_mutex_unlock(&g_psm_trace_mutex);
 }
 
 #define PSM_CORD_COUNT() \
     do { \
-        static int s_count = 0; \
-        psm_cord_trace_inc(__func__, &s_count); \
+        static int       s_count    = 0; \
+        static long long s_total_ns = 0; \
+        static long long s_min_ns   = 0; \
+        static long long s_max_ns   = 0; \
+        psm_trace_ctx_t _trace_ctx __attribute__((cleanup(psm_cord_trace_end))) = { \
+            .api_name  = __func__, \
+            .p_count   = &s_count, \
+            .p_total_ns= &s_total_ns, \
+            .p_min_ns  = &s_min_ns, \
+            .p_max_ns  = &s_max_ns, \
+            .enabled   = psm_cord_trace_is_enabled(), \
+        }; \
+        if (_trace_ctx.enabled) \
+            clock_gettime(CLOCK_MONOTONIC, &_trace_ctx.t_start); \
     } while (0)
 
 int CcspBaseIf_freeResources(
