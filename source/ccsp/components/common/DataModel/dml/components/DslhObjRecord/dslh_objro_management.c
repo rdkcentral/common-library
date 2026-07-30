@@ -360,7 +360,7 @@ DslhObjroAddObjRecord
 
     AnscQueuePushEntry(&pMyObject->ObjroQueue, &pChildObjRecord->Linkage);
 
-    AnscTraceWarning(("DBG-TBL-FLOW: ObjroQueue-add parent=%s childFullName=%s childLastName=%s queueDepth=%lu\n",
+    AnscTraceWarning(("DBG-TBL-FLOW: ObjroQueue-add parent=%s childFullName=%s childLastName=%s queueDepth=%d\n",
     pMyObject->FullName ? pMyObject->FullName : "NULL",
     pChildObjRecord->FullName ? pChildObjRecord->FullName : "NULL",
     pChildObjRecord->LastName ? pChildObjRecord->LastName : "NULL",
