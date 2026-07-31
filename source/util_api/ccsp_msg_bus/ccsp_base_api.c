@@ -144,8 +144,8 @@ static void psm_cord_trace_end(psm_trace_ctx_t *ctx)
 
     long long avg_ns = total / count;
 
-    char path[128];
-    snprintf(path, sizeof(path), "/tmp/psm_cord_%s", ctx->api_name);
+    char path[160];
+    snprintf(path, sizeof(path), "/tmp/psm_cord_%s_%d", ctx->api_name, (int)getpid());
     int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd >= 0)
     {
