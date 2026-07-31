@@ -162,22 +162,20 @@ static void psm_cord_trace_end(psm_trace_ctx_t *ctx)
 }
 
 #define PSM_CORD_COUNT() \
-    do { \
-        static int       s_count    = 0; \
-        static long long s_total_ns = 0; \
-        static long long s_min_ns   = 0; \
-        static long long s_max_ns   = 0; \
-        psm_trace_ctx_t _trace_ctx __attribute__((cleanup(psm_cord_trace_end))) = { \
-            .api_name  = __func__, \
-            .p_count   = &s_count, \
-            .p_total_ns= &s_total_ns, \
-            .p_min_ns  = &s_min_ns, \
-            .p_max_ns  = &s_max_ns, \
-            .enabled   = psm_cord_trace_is_enabled(), \
-        }; \
-        if (_trace_ctx.enabled) \
-            clock_gettime(CLOCK_MONOTONIC, &_trace_ctx.t_start); \
-    } while (0)
+    static int       s_count    = 0; \
+    static long long s_total_ns = 0; \
+    static long long s_min_ns   = 0; \
+    static long long s_max_ns   = 0; \
+    psm_trace_ctx_t _psm_trace_ctx __attribute__((cleanup(psm_cord_trace_end))) = { \
+        .api_name  = __func__, \
+        .p_count   = &s_count, \
+        .p_total_ns= &s_total_ns, \
+        .p_min_ns  = &s_min_ns, \
+        .p_max_ns  = &s_max_ns, \
+        .enabled   = psm_cord_trace_is_enabled(), \
+    }; \
+    if (_psm_trace_ctx.enabled) \
+        clock_gettime(CLOCK_MONOTONIC, &_psm_trace_ctx.t_start)
 
 int CcspBaseIf_freeResources(
     void* bus_handle,
