@@ -3211,7 +3211,7 @@ int PSM_Get_Record_Value
  * ---------------------------------------------------------------------------*/
 
 #ifndef PSM_DB_PATH
-#define PSM_DB_PATH "/nvram/psm.db"
+#define PSM_DB_PATH "/tmp/psm.db"
 #endif
 
 static sqlite3 *s_psm_db  = NULL;
