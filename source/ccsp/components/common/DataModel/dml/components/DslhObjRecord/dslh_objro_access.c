@@ -1311,9 +1311,9 @@ DslhObjroAddChildObject
     *pulInstanceNumber  = 0;
 
     ulObjInsNumber      = pMyObject->NextInstanceNumber++;
-    AnscTraceWarning(("DBG-INST: allocated instance=%lu table=%s nextNum=%lu queue_depth_before=%lu\n",
+    AnscTraceWarning(("DBG-INST: allocated instance=%lu table=%s nextNum=%lu queue_depth_before=%u\n",
     ulObjInsNumber,
-    pObjController->GetName(pObjController),
+    pMyObject->FullName ? pMyObject->FullName : "NULL",
     pMyObject->NextInstanceNumber,
     AnscQueueQueryDepth(&pMyObject->ObjroQueue)));
     
@@ -1342,15 +1342,15 @@ DslhObjroAddChildObject
         if ( returnStatus != ANSC_STATUS_SUCCESS )
         {
             pMyObject->NextInstanceNumber --;
-            AnscTraceWarning(("DBG-INST: ERROR AddEntryObject failed instance=%lu table=%s status=%d\n",
+            AnscTraceWarning(("DBG-INST: ERROR AddEntryObject failed instance=%lu table=%s status=%lu\n",
             ulObjInsNumber,
-            pObjController->GetName(pObjController),
+            pMyObject->FullName ? pMyObject->FullName : "NULL",
             returnStatus));
             goto EXIT1;
         }
 
         pChildObjController->Engage((ANSC_HANDLE)pChildObjController);
-        AnscTraceWarning(("DBG-INST: entry engaged instance=%lu queue_depth_after=%lu\n",
+        AnscTraceWarning(("DBG-INST: entry engaged instance=%lu queue_depth_after=%u\n",
         ulObjInsNumber,
         AnscQueueQueryDepth(&pMyObject->ObjroQueue)));
     }
@@ -1447,9 +1447,9 @@ DslhObjroAddChildObject
     }
 
     *pulInstanceNumber = ulObjInsNumber;
-    AnscTraceWarning(("DBG-INST: finalized instance=%lu table=%s fullName=%s queue_depth=%lu nextNum=%lu\n",
+    AnscTraceWarning(("DBG-INST: finalized instance=%lu table=%s fullName=%s queue_depth=%u nextNum=%lu\n",
     ulObjInsNumber,
-    pObjController->GetName(pObjController),
+    pMyObject->FullName ? pMyObject->FullName : "NULL",
     pChildFullName ? pChildFullName : "NULL",
     AnscQueueQueryDepth(&pMyObject->ObjroQueue),
     pMyObject->NextInstanceNumber));

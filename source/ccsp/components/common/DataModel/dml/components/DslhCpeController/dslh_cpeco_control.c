@@ -1178,8 +1178,9 @@ DslhCpecoRegisterDataModelInternal
     {
         AnscTraceWarning(("DBG-TBL-FLOW: allocated pArray=%p pHolder=%p max_count=%d array_size=%lu holder_size=%lu\n",
         pParameterArray, pParameterHolder, CCSP_PARAMETER_MAX_COUNT,
-        CCSP_PARAMETER_MAX_COUNT * sizeof(name_spaceType_t),
-        CCSP_PARAMETER_MAX_COUNT * 90 * sizeof(char)));
+        (unsigned long)(CCSP_PARAMETER_MAX_COUNT * sizeof(name_spaceType_t)),
+        (unsigned long)(CCSP_PARAMETER_MAX_COUNT * 90 * sizeof(char))));
+
     }
 
     /* Set return paramter into Cpe to collect full name of all parameters . */
@@ -1190,7 +1191,7 @@ DslhCpecoRegisterDataModelInternal
     returnStatus = 
         pDslhDataModelAgent->RegBaseDataModel(pDslhDataModelAgent, pCompName);
 
-    AnscTraceWarning(("DBG-COMP-REG: RegBaseDataModel comp=%s cr=%s status=%d\n",
+    AnscTraceWarning(("DBG-COMP-REG: RegBaseDataModel comp=%s cr=%s status=%lu\n",
     pCompName ? pCompName : "NULL",
     pCR_id ? pCR_id : "NULL",
     returnStatus));
