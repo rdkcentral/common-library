@@ -303,7 +303,7 @@ DslhObjcoValidate
                 }
 
                 g_currentBsUpdate = pChildVarEntity->bsUpdate;
-                AnscTraceWarning(("DslhObjcoValidate: %s, bsUpdate = %lu\n\n", pCallingName, pChildVarEntity->bsUpdate));
+                AnscTraceVerbose(("DslhObjcoValidate: %s, bsUpdate = %lu\n\n", pCallingName, pChildVarEntity->bsUpdate));
 
                 snprintf(g_currentParamFullName, sizeof(g_currentParamFullName),"%s%s",pDslhObjRecord->FullName, pParamDescr->Name);
 

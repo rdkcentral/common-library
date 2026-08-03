@@ -30,7 +30,7 @@ WorkingDirectory=/usr/ccsp/xdns
 ExecStart=/bin/sh -c '/usr/bin/CcspXdnsSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspXdnsSsp" >> ${PROCESS_RESTART_LOG}'
 Restart=always
-
+SyslogIdentifier=CcspXdnsSsp
 
 [Install]
 WantedBy=multi-user.target

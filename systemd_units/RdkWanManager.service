@@ -33,7 +33,7 @@ ExecStartPre=/bin/sh -c '(/usr/ccsp/utopiaInitCheck.sh)'
 ExecStart=/usr/rdk/wanmanager/wanmanager -subsys $Subsys
 ExecStop=/bin/sh -c 'echo "`date`: Stopping/Restarting RdkWanManager" >> ${PROCESS_RESTART_LOG}'
 Restart=always
-
+SyslogIdentifier=RdkWanManager
 
 [Install]
 WantedBy=multi-user.target

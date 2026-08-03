@@ -31,6 +31,7 @@ WorkingDirectory=/usr/ccsp/tr069pa
 ExecStartPre=/bin/sh -c 'val=`syscfg get EnableTR69Binary`; if [ "$val" == "false" ]; then `systemctl stop CcspTr069PaSsp`; fi'
 ExecStart=/bin/sh -c '/usr/bin/CcspTr069PaSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspTr069PaSsp" >> ${PROCESS_RESTART_LOG}'
+SyslogIdentifier=CcspTr069PaSsp
 Restart=always
 SuccessExitStatus=SIGTERM
 
