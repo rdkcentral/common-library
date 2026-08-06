@@ -653,6 +653,28 @@ int CcspBaseIf_registerCapabilities(
     int size
 );
 
+int CcspBaseIf_registerCapabilities_rbus(
+    void* bus_handle,
+    const char* dst_component_id,
+    const char *component_name,
+    int component_version,
+    const char *dbus_path,
+    const char *subsystem_prefix,
+    name_spaceType_t * name_space,
+    int size
+);
+
+int CcspBaseIf_registerCapabilities_rbus_pandm_lazy(
+    void* bus_handle,
+    const char* dst_component_id,
+    const char *component_name,
+    int component_version,
+    const char *dbus_path,
+    const char *subsystem_prefix,
+    name_spaceType_t * name_space,
+    int size
+);
+
 /*
 This APIs allows CCSP components to unregister the Data Model namespace it owns, or commands they support, with the Component Registrar. This API can only be called if a component had been previously registered. Otherwise an error code (CCSP_CR_ERR_UNKNOWN_COMPONENT) is returned.
 */

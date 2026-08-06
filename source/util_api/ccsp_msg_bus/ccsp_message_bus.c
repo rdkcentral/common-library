@@ -128,6 +128,75 @@ static dbus_bool_t       ccsp_connection_setup(DBusLoop*, CCSP_MESSAGE_BUS_CONNE
 static void              ccsp_msg_check_resp_sync(DBusPendingCall*, void*);
 static void*             CCSP_Message_Bus_Connect_Thread(void * ccsp_msg_bus_connection_ptr);
 static void              append_event_info(char*, const char*, const char*, const char*, const char*);
+
+static int ccsp_is_pandm_component(char const* component_id)
+{
+    if(!component_id)
+        return 0;
+
+    if(strstr(component_id, "CcspPandMSsp") || strstr(component_id, "ccsp.pam") || strstr(component_id, "PandM"))
+        return 1;
+
+    return 0;
+}
+
+static void ccsp_log_memory_usage(char const* stage, char const* component_id, char const* detail)
+{
+    FILE* fp;
+    char line[256];
+    char vmRss[64] = "unknown";
+    char vmSize[64] = "unknown";
+    char vmData[64] = "unknown";
+    char* value;
+
+    fp = fopen("/proc/self/status", "r");
+    if(!fp)
+    {
+        CcspTraceWarning(("%s: MEM[%s] component=%s detail=%s unable to read /proc/self/status\n",
+            __FUNCTION__, stage ? stage : "unknown", component_id ? component_id : "unknown", detail ? detail : ""));
+        return;
+    }
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        if(strncmp(line, "VmRSS:", 6) == 0)
+        {
+            value = line + 6;
+            while(*value == ' ' || *value == '\t')
+                value++;
+            strncpy(vmRss, value, sizeof(vmRss) - 1);
+            vmRss[sizeof(vmRss) - 1] = 0;
+            vmRss[strcspn(vmRss, "\r\n")] = 0;
+        }
+        else if(strncmp(line, "VmSize:", 7) == 0)
+        {
+            value = line + 7;
+            while(*value == ' ' || *value == '\t')
+                value++;
+            strncpy(vmSize, value, sizeof(vmSize) - 1);
+            vmSize[sizeof(vmSize) - 1] = 0;
+            vmSize[strcspn(vmSize, "\r\n")] = 0;
+        }
+        else if(strncmp(line, "VmData:", 7) == 0)
+        {
+            value = line + 7;
+            while(*value == ' ' || *value == '\t')
+                value++;
+            strncpy(vmData, value, sizeof(vmData) - 1);
+            vmData[sizeof(vmData) - 1] = 0;
+            vmData[strcspn(vmData, "\r\n")] = 0;
+        }
+    }
+    fclose(fp);
+
+    CcspTraceInfo(("MEM[%s] component=%s detail=%s VmRSS=%s VmSize=%s VmData=%s\n",
+        stage ? stage : "unknown",
+        component_id ? component_id : "unknown",
+        detail ? detail : "",
+        vmRss,
+        vmSize,
+        vmData));
+}
 static int               CCSP_Message_Bus_Register_Event_Priv(DBusConnection*, const char*, const char*, const char*, const char*, int);
 static int               CCSP_Message_Save_Register_Event(void*, const char*, const char*, const char*, const char*);
 static int               CCSP_Message_Bus_Register_Path_Priv(void*, const char*, DBusObjectPathMessageFunction, void*);
@@ -1031,6 +1100,7 @@ CCSP_Message_Bus_Init
         /* Register with rbusLog to use CCSPTRACE_LOGS */
         rbus_registerLogHandler(ccsp_rbus_logHandler);
         int rc;
+        rbusError_t (*regDataElementsFn)(rbusHandle_t, int, rbusDataElement_t*) = rbus_regDataElements;
         rbusHandle_t handle;
         rc = rbus_open(&handle, component_id);
         if(rc != RBUS_ERROR_SUCCESS)
@@ -1057,6 +1127,12 @@ CCSP_Message_Bus_Init
             else
             {
                 bus_info->rbus_handle = handle;
+                if(ccsp_is_pandm_component(component_id))
+                {
+                    regDataElementsFn = rbus_regDataElementsLazy;
+                    CcspTraceInfo(("%s(%s): routing to PandM lazy registration APIs\n", __FUNCTION__, component_id));
+                    ccsp_log_memory_usage("pandm_register_before", component_id, "CCSP_Message_Bus_Init");
+                }
                 /* Configure timeout values*/
                 rbusTimeoutValues_t timeoutValues = {0};
                 timeoutValues.setTimeout = CcspBaseIf_timeout_rbus;
@@ -1077,7 +1153,7 @@ CCSP_Message_Bus_Init
                             {"eRT.com.cisco.spvtg.ccsp.tr069pa.parameterValueChangeSignal()", RBUS_ELEMENT_TYPE_METHOD, {NULL, NULL, NULL, NULL, NULL, NULL}}
                         };
                         CcspTraceInfo(("%s(%s): registering %d RBUS elements (lazy mode; materialized on first access)\n", __FUNCTION__, component_id, 2));
-                        rc = rbus_regDataElements(handle, 2, dataElements);
+                        rc = regDataElementsFn(handle, 2, dataElements);
                         if(rc != RBUS_ERROR_SUCCESS)
                         {
                             CcspTraceWarning(("%s: rbus_regDataElements failed: %d\n", component_id,rc));
@@ -1093,7 +1169,7 @@ CCSP_Message_Bus_Init
                             {CCSP_SYSTEM_REBOOT_SIGNAL, RBUS_ELEMENT_TYPE_EVENT, {NULL, NULL, NULL, NULL, NULL, NULL}}
                         };
                         CcspTraceInfo(("%s(%s): registering %d RBUS elements (lazy mode; materialized on first access)\n", __FUNCTION__, component_id, 1));
-                        rc = rbus_regDataElements(bus_info->rbus_handle, 1, dataElements);
+                        rc = regDataElementsFn(bus_info->rbus_handle, 1, dataElements);
                         if(rc != RBUS_ERROR_SUCCESS)
                             RBUS_LOG_ERR("%s : rbus_regDataElements returns Err: %d for systemRebootSignal", __FUNCTION__, rc);
                         else
@@ -1114,7 +1190,7 @@ CCSP_Message_Bus_Init
                             {get_health_method_name, RBUS_ELEMENT_TYPE_METHOD, {NULL, NULL, NULL, NULL, NULL, NULL}}                   
                         };
                         CcspTraceInfo(("%s(%s): registering %d RBUS methods for CCSP compatibility (lazy mode)\n", __FUNCTION__, component_id, 3));
-                        rc = rbus_regDataElements(handle, 3, dataElements);
+                        rc = regDataElementsFn(handle, 3, dataElements);
                         if(rc != RBUS_ERROR_SUCCESS)
                         {
                            CcspTraceWarning(("%s: rbus_regDataElements failed: %d for getAttributes\n", component_id,rc));
@@ -1124,6 +1200,11 @@ CCSP_Message_Bus_Init
                            CcspTraceInfo(("%s(%s): RBUS lazy registration completed for attributes/health methods\n", __FUNCTION__, component_id));
                         }
                     }
+                }
+
+                if(ccsp_is_pandm_component(component_id))
+                {
+                    ccsp_log_memory_usage("pandm_register_after", component_id, "CCSP_Message_Bus_Init");
                 }
             }
         }
@@ -2472,8 +2553,17 @@ static int thread_path_message_func_rbus(const char * destination, const char * 
                     }
                     else
                     {
-                        err = ccsp_rbus_event_subscribe_override_handler(NULL, eventName, sender, added,
+                        if(ccsp_is_pandm_component(bus_info->component_id))
+                        {
+                            CcspTraceInfo(("%s(%s): using PandM lazy subscribe override for event [%s]\n", __FUNCTION__, bus_info->component_id, eventName));
+                            err = ccsp_rbus_event_subscribe_override_handler_pandm_lazy(NULL, eventName, sender, added,
                                 componentId, interval, duration, filter, user_data);
+                        }
+                        else
+                        {
+                            err = ccsp_rbus_event_subscribe_override_handler(NULL, eventName, sender, added,
+                                componentId, interval, duration, filter, user_data);
+                        }
                         rbusMessage_SetInt32(*response, err);
 
                         /* Handling Intial value */

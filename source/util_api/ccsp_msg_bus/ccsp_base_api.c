@@ -79,6 +79,66 @@ int   CcspBaseIf_timeout_getval_seconds = 120; //seconds
 #define  CcspBaseIf_timeout_rbus  (CcspBaseIf_timeout_seconds * 1000) // in milliseconds
 #define  CcspBaseIf_timeout_getval_rbus  (CcspBaseIf_timeout_getval_seconds * 1000) // in milliseconds
 
+static int CcspBaseIf_isPandMComponent(const char* component_name);
+
+static void CcspBaseIf_logMemoryUsage(const char* stage, const char* component_name, const char* detail)
+{
+    FILE* fp;
+    char line[256];
+    char vmRss[64] = "unknown";
+    char vmSize[64] = "unknown";
+    char vmData[64] = "unknown";
+    char* value;
+
+    fp = fopen("/proc/self/status", "r");
+    if(!fp)
+    {
+        CcspTraceWarning(("%s: MEM[%s] component=%s detail=%s unable to read /proc/self/status\n",
+            __FUNCTION__, stage ? stage : "unknown", component_name ? component_name : "unknown", detail ? detail : ""));
+        return;
+    }
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        if(strncmp(line, "VmRSS:", 6) == 0)
+        {
+            value = line + 6;
+            while(*value == ' ' || *value == '\t')
+                value++;
+            strncpy(vmRss, value, sizeof(vmRss) - 1);
+            vmRss[sizeof(vmRss) - 1] = 0;
+            vmRss[strcspn(vmRss, "\r\n")] = 0;
+        }
+        else if(strncmp(line, "VmSize:", 7) == 0)
+        {
+            value = line + 7;
+            while(*value == ' ' || *value == '\t')
+                value++;
+            strncpy(vmSize, value, sizeof(vmSize) - 1);
+            vmSize[sizeof(vmSize) - 1] = 0;
+            vmSize[strcspn(vmSize, "\r\n")] = 0;
+        }
+        else if(strncmp(line, "VmData:", 7) == 0)
+        {
+            value = line + 7;
+            while(*value == ' ' || *value == '\t')
+                value++;
+            strncpy(vmData, value, sizeof(vmData) - 1);
+            vmData[sizeof(vmData) - 1] = 0;
+            vmData[strcspn(vmData, "\r\n")] = 0;
+        }
+    }
+    fclose(fp);
+
+    CcspTraceInfo(("MEM[%s] component=%s detail=%s VmRSS=%s VmSize=%s VmData=%s\n",
+        stage ? stage : "unknown",
+        component_name ? component_name : "unknown",
+        detail ? detail : "",
+        vmRss,
+        vmSize,
+        vmData));
+}
+
 static void CcspBaseIf_releasePropertyListIterative(rbusProperty_t props)
 {
     while(props)
@@ -1605,7 +1665,18 @@ static int registerComponentWithCr_rbus(rbusHandle_t rbus_handle, const char *co
     return err;
 }
 
-int CcspBaseIf_registerCapabilities_rbus(
+static int CcspBaseIf_isPandMComponent(const char* component_name)
+{
+    if(!component_name)
+        return 0;
+
+    if(strstr(component_name, "CcspPandMSsp") || strstr(component_name, "ccsp.pam") || strstr(component_name, "PandM"))
+        return 1;
+
+    return 0;
+}
+
+static int CcspBaseIf_registerCapabilities_rbus_internal(
         void* bus_handle,
         const char* dst_component_id,
         const char *component_name,
@@ -1613,7 +1684,8 @@ int CcspBaseIf_registerCapabilities_rbus(
         const char *dbus_path,
         const char *subsystem_prefix,
         name_spaceType_t * name_space,
-        int size
+        int size,
+        int useLazyRegistration
         )
 {
     UNREFERENCED_PARAMETER(component_version);
@@ -1623,11 +1695,19 @@ int CcspBaseIf_registerCapabilities_rbus(
     int i = 0;
     int failedIndex = 0;
     int ret = CCSP_SUCCESS;
-    int err;
+    int err = RBUS_ERROR_SUCCESS;
     int isSubCacheLoaded = 0;
+    rbusError_t (*regFn)(rbusHandle_t, int, rbusDataElement_t*) = useLazyRegistration ? rbus_regDataElementsLazy : rbus_regDataElements;
+    rbusError_t (*unregFn)(rbusHandle_t, int, rbusDataElement_t*) = useLazyRegistration ? rbus_unregDataElementsLazy : rbus_unregDataElements;
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
 
-    CcspTraceInfo(("%s: registering %d namespaces for component [%s] using RBUS lazy mode\n", __FUNCTION__, size, component_name));
+    CcspTraceInfo(("%s: registering %d namespaces for component [%s] using RBUS %s mode\n",
+        __FUNCTION__, size, component_name, useLazyRegistration ? "lazy" : "normal"));
+
+    if(useLazyRegistration && CcspBaseIf_isPandMComponent(component_name))
+    {
+        CcspBaseIf_logMemoryUsage("pandm_register_before", component_name, "CcspBaseIf_registerCapabilities_rbus_internal");
+    }
 
     isSubCacheLoaded = Ccsp_RbusSubscriptions_create(component_name);
     for(i = 0; i < size; i++)
@@ -1635,13 +1715,14 @@ int CcspBaseIf_registerCapabilities_rbus(
         rbusDataElement_t dataElements[1] = {
             {name_space[i].name_space, RBUS_ELEMENT_TYPE_PROPERTY, {NULL, NULL, NULL, NULL, NULL, NULL}}
         };
-        if ((err = rbus_regDataElements(bus_info->rbus_handle, 1, dataElements)) != RBUS_ERROR_SUCCESS)
+        if ((err = regFn(bus_info->rbus_handle, 1, dataElements)) != RBUS_ERROR_SUCCESS)
         {
             RBUS_LOG_ERR("addElement: %s failed with Err: %d\n", name_space[i].name_space, err);
             failedIndex = i + 1;
             break;
         }
-        CcspTraceInfo(("%s: lazy-registered namespace [%s]\n", __FUNCTION__, name_space[i].name_space));
+
+        CcspTraceInfo(("%s: %s-registered namespace [%s]\n", __FUNCTION__, useLazyRegistration ? "lazy" : "normal", name_space[i].name_space));
     }
     if (isSubCacheLoaded && (err == RBUS_ERROR_SUCCESS))
     {
@@ -1660,25 +1741,69 @@ int CcspBaseIf_registerCapabilities_rbus(
         }
         else
         {
-            CcspTraceInfo(("%s: component [%s] registered with CR after lazy namespace registration\n", __FUNCTION__, component_name));
+            CcspTraceInfo(("%s: component [%s] registered with CR after %s namespace registration\n",
+                __FUNCTION__, component_name, useLazyRegistration ? "lazy" : "normal"));
         }
     }
     if (RBUS_ERROR_SUCCESS != err)
     {
-        RBUS_LOG_ERR("unregister all the params are we failed to register a param\n");
+        RBUS_LOG_ERR("unregister all the params as we failed to register a param\n");
         for(i = 0; i < failedIndex; i++)
         {
             rbusDataElement_t dataElements[1] = {
                 {name_space[i].name_space, RBUS_ELEMENT_TYPE_PROPERTY, {NULL, NULL, NULL, NULL, NULL, NULL}}
             };
-            if ((err = rbus_unregDataElements(bus_info->rbus_handle, 1, dataElements)) !=  RBUS_ERROR_SUCCESS)
+            if ((err = unregFn(bus_info->rbus_handle, 1, dataElements)) !=  RBUS_ERROR_SUCCESS)
             {
                 RBUS_LOG_ERR("rbus_unregDataElements: %s failed with Err: %d\n", name_space[i].name_space, err);
             }
         }
         ret = CCSP_FAILURE;
     }
+
+    if(useLazyRegistration && CcspBaseIf_isPandMComponent(component_name) && ret == CCSP_SUCCESS)
+    {
+        CcspBaseIf_logMemoryUsage("pandm_register_after", component_name, "CcspBaseIf_registerCapabilities_rbus_internal");
+    }
+
     return ret;
+}
+
+int CcspBaseIf_registerCapabilities_rbus_pandm_lazy(
+        void* bus_handle,
+        const char* dst_component_id,
+        const char *component_name,
+        int component_version,
+        const char *dbus_path,
+        const char *subsystem_prefix,
+        name_spaceType_t * name_space,
+        int size
+        )
+{
+    return CcspBaseIf_registerCapabilities_rbus_internal(bus_handle, dst_component_id, component_name, component_version,
+        dbus_path, subsystem_prefix, name_space, size, 1);
+}
+
+int CcspBaseIf_registerCapabilities_rbus(
+        void* bus_handle,
+        const char* dst_component_id,
+        const char *component_name,
+        int component_version,
+        const char *dbus_path,
+        const char *subsystem_prefix,
+        name_spaceType_t * name_space,
+        int size
+        )
+{
+    if(CcspBaseIf_isPandMComponent(component_name))
+    {
+        CcspTraceInfo(("%s: routing component [%s] to PandM lazy registration API\n", __FUNCTION__, component_name));
+        return CcspBaseIf_registerCapabilities_rbus_pandm_lazy(bus_handle, dst_component_id, component_name,
+            component_version, dbus_path, subsystem_prefix, name_space, size);
+    }
+
+    return CcspBaseIf_registerCapabilities_rbus_internal(bus_handle, dst_component_id, component_name, component_version,
+        dbus_path, subsystem_prefix, name_space, size, 0);
 }
 
 int CcspBaseIf_registerCapabilities(
@@ -1702,14 +1827,21 @@ int CcspBaseIf_unregisterNamespace_rbus (
     const char *name_space)
 {
     UNREFERENCED_PARAMETER(dst_component_id);
-    UNREFERENCED_PARAMETER(component_name);
     int err = -1;
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+    rbusError_t (*unregFn)(rbusHandle_t, int, rbusDataElement_t*) = rbus_unregDataElements;
+
+    if(CcspBaseIf_isPandMComponent(component_name))
+    {
+        unregFn = rbus_unregDataElementsLazy;
+        CcspTraceInfo(("%s: routing component [%s] to PandM lazy unregistration API\n", __FUNCTION__, component_name));
+    }
+
     RBUS_LOG("%s calling rbus_unregDataElements for %s \n", __FUNCTION__, name_space);
     rbusDataElement_t dataElements[1] = {
         {(char*)name_space, RBUS_ELEMENT_TYPE_PROPERTY, {NULL, NULL, NULL, NULL, NULL, NULL}}
     };
-    if ((err = rbus_unregDataElements(bus_info->rbus_handle, 1, dataElements)) !=  RBUS_ERROR_SUCCESS)
+    if ((err = unregFn(bus_info->rbus_handle, 1, dataElements)) !=  RBUS_ERROR_SUCCESS)
     {
         RBUS_LOG_ERR("removeElement: %s failed with Err: %d\n", name_space, err);
         return CCSP_FAILURE;

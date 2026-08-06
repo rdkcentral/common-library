@@ -555,6 +555,23 @@ int ccsp_rbus_event_subscribe_override_handler
     return err;
 }
 
+int ccsp_rbus_event_subscribe_override_handler_pandm_lazy
+(
+    char const* object,
+    char const* eventName,
+    char const* listener,
+    int added,
+    int componentId,
+    int interval,
+    int duration,
+    rbusFilter_t filter,
+    void* bus_handle
+)
+{
+    CcspTraceInfo(("%s: PandM lazy subscription route for event [%s], added=%d\n", __FUNCTION__, eventName ? eventName : "<null>", added));
+    return ccsp_rbus_event_subscribe_override_handler(object, eventName, listener, added, componentId, interval, duration, filter, bus_handle);
+}
+
 void Ccsp_RbusSubscriptions_resubscribeElementCache(void* bus_handle)
 {
     SUB_LOCK()

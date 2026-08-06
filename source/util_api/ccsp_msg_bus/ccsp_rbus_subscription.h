@@ -45,6 +45,7 @@ void Ccsp_RbusSubscriptions_destory(const char* componentName);
 void Ccsp_RbusSubscriptionCacheList_destory();
 
 int ccsp_rbus_event_subscribe_override_handler(char const* object,  char const* eventName, char const* listener, int added, int componentId, int interval, int duration, rbusFilter_t filter, void* userData);
+int ccsp_rbus_event_subscribe_override_handler_pandm_lazy(char const* object,  char const* eventName, char const* listener, int added, int componentId, int interval, int duration, rbusFilter_t filter, void* userData);
 ccspRbusSubscription_t* Ccsp_RbusSubscriptions_getSubscription(const char* listener, char const* eventName, int32_t componentId, rbusFilter_t filter, int32_t interval, int32_t duration);
 ccspRbusSubscription_t* Ccsp_RbusSubscriptions_addSubscription(const char* listener, const char* eventName, int32_t componentId, int32_t interval, int32_t duration, rbusFilter_t filter);
 void Ccsp_RbusSubscriptions_removeSubscription(ccspRbusSubscription_t *sub);
