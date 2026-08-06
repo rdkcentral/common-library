@@ -1627,6 +1627,8 @@ int CcspBaseIf_registerCapabilities_rbus(
     int isSubCacheLoaded = 0;
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
 
+    CcspTraceInfo(("%s: registering %d namespaces for component [%s] using RBUS lazy mode\n", __FUNCTION__, size, component_name));
+
     isSubCacheLoaded = Ccsp_RbusSubscriptions_create(component_name);
     for(i = 0; i < size; i++)
     {
@@ -1639,6 +1641,7 @@ int CcspBaseIf_registerCapabilities_rbus(
             failedIndex = i + 1;
             break;
         }
+        CcspTraceInfo(("%s: lazy-registered namespace [%s]\n", __FUNCTION__, name_space[i].name_space));
     }
     if (isSubCacheLoaded && (err == RBUS_ERROR_SUCCESS))
     {
@@ -1654,6 +1657,10 @@ int CcspBaseIf_registerCapabilities_rbus(
         {
             /* Remove all elements when registration with CR has failed */
             failedIndex = size;
+        }
+        else
+        {
+            CcspTraceInfo(("%s: component [%s] registered with CR after lazy namespace registration\n", __FUNCTION__, component_name));
         }
     }
     if (RBUS_ERROR_SUCCESS != err)

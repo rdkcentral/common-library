@@ -1076,10 +1076,15 @@ CCSP_Message_Bus_Init
                             {CCSP_DIAG_COMPLETE_SIGNAL, RBUS_ELEMENT_TYPE_EVENT, {NULL, NULL, NULL, NULL, NULL, NULL}},
                             {"eRT.com.cisco.spvtg.ccsp.tr069pa.parameterValueChangeSignal()", RBUS_ELEMENT_TYPE_METHOD, {NULL, NULL, NULL, NULL, NULL, NULL}}
                         };
+                        CcspTraceInfo(("%s(%s): registering %d RBUS elements (lazy mode; materialized on first access)\n", __FUNCTION__, component_id, 2));
                         rc = rbus_regDataElements(handle, 2, dataElements);
                         if(rc != RBUS_ERROR_SUCCESS)
                         {
                             CcspTraceWarning(("%s: rbus_regDataElements failed: %d\n", component_id,rc));
+                        }
+                        else
+                        {
+                            CcspTraceInfo(("%s(%s): RBUS lazy registration completed for TR069PA helper elements\n", __FUNCTION__, component_id));
                         }
                     }
                     else if(component_id && (strcmp(component_id,"eRT.com.cisco.spvtg.ccsp.rm") == 0))
@@ -1087,9 +1092,12 @@ CCSP_Message_Bus_Init
                         rbusDataElement_t dataElements[1] = {
                             {CCSP_SYSTEM_REBOOT_SIGNAL, RBUS_ELEMENT_TYPE_EVENT, {NULL, NULL, NULL, NULL, NULL, NULL}}
                         };
+                        CcspTraceInfo(("%s(%s): registering %d RBUS elements (lazy mode; materialized on first access)\n", __FUNCTION__, component_id, 1));
                         rc = rbus_regDataElements(bus_info->rbus_handle, 1, dataElements);
                         if(rc != RBUS_ERROR_SUCCESS)
                             RBUS_LOG_ERR("%s : rbus_regDataElements returns Err: %d for systemRebootSignal", __FUNCTION__, rc);
+                        else
+                            CcspTraceInfo(("%s(%s): RBUS lazy registration completed for system reboot signal\n", __FUNCTION__, component_id));
                     }
 
                     if (component_id && (strcmp(component_id, "ccsp.busclient") != 0) && (strcmp(component_id, "ccsp.phpextension") != 0))
@@ -1105,10 +1113,15 @@ CCSP_Message_Bus_Init
                             {set_attributes_method_name, RBUS_ELEMENT_TYPE_METHOD, {NULL, NULL, NULL, NULL, NULL, NULL}},
                             {get_health_method_name, RBUS_ELEMENT_TYPE_METHOD, {NULL, NULL, NULL, NULL, NULL, NULL}}                   
                         };
+                        CcspTraceInfo(("%s(%s): registering %d RBUS methods for CCSP compatibility (lazy mode)\n", __FUNCTION__, component_id, 3));
                         rc = rbus_regDataElements(handle, 3, dataElements);
                         if(rc != RBUS_ERROR_SUCCESS)
                         {
                            CcspTraceWarning(("%s: rbus_regDataElements failed: %d for getAttributes\n", component_id,rc));
+                        }
+                        else
+                        {
+                           CcspTraceInfo(("%s(%s): RBUS lazy registration completed for attributes/health methods\n", __FUNCTION__, component_id));
                         }
                     }
                 }
