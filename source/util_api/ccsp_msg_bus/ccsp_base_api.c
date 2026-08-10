@@ -92,13 +92,14 @@ int   CcspBaseIf_timeout_getval_seconds = 120; //seconds
 /* --- PSM API call counter + timing --------------------------------------
  * Activated only when /nvram/psm_cord_trace exists.
  * Counts calls and records ns-resolution timing for both CORD and non-CORD
- * PSM API paths.  Writes to /tmp/psm_cord_<apiname>.
+ * PSM API paths.  Writes to /tmp/psm_cord_<apiname>_<pid>.
  * Thread-safe: GCC atomic counters + mutex-protected file write.
  * ---------------------------------------------------------------------- */
 static pthread_mutex_t g_psm_trace_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct {
     const char *api_name;
+    char        record_name[256];
     int        *p_count;
     long long  *p_total_ns;
     long long  *p_min_ns;
@@ -150,38 +151,97 @@ static void psm_cord_trace_end(psm_trace_ctx_t *ctx)
     snprintf(path, sizeof(path), "/tmp/psm_cord_%s_%d", ctx->api_name, (int)getpid());
     char process_name[16] = {0}; // Limited to 16 bytes by Linux kernel
     if (prctl(PR_GET_NAME, process_name, 0, 0, 0) == 0) {
-        printf("Process Name: %s\n", process_name);
     }
-    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    char *existing_records = NULL;
+    size_t existing_records_len = 0;
+
+    int fd = open(path, O_RDONLY);
     if (fd >= 0)
     {
-        char buf[128];
-        int  len = snprintf(buf, sizeof(buf),
-                            "process=%s count=%d last_ns=%lld total_ns=%lld avg_ns=%lld min_ns=%lld max_ns=%lld\n",
-                            process_name, count, elapsed_ns, total, avg_ns,
-                            *ctx->p_min_ns, *ctx->p_max_ns);
-        write(fd, buf, (size_t)len);
+        off_t old_size = lseek(fd, 0, SEEK_END);
+        if (old_size > 0 && lseek(fd, 0, SEEK_SET) != (off_t)-1)
+        {
+            char *oldbuf = (char *)malloc((size_t)old_size + 1);
+            if (oldbuf)
+            {
+                ssize_t total_read = 0;
+                while (total_read < old_size)
+                {
+                    ssize_t r = read(fd, oldbuf + total_read, (size_t)(old_size - total_read));
+                    if (r <= 0)
+                        break;
+                    total_read += r;
+                }
+
+                if (total_read > 0)
+                {
+                    oldbuf[total_read] = '\0';
+                    char *first_nl = strchr(oldbuf, '\n');
+                    if (first_nl && *(first_nl + 1) != '\0')
+                    {
+                        existing_records_len = strlen(first_nl + 1);
+                        existing_records = (char *)malloc(existing_records_len + 1);
+                        if (existing_records)
+                            memcpy(existing_records, first_nl + 1, existing_records_len + 1);
+                        else
+                            existing_records_len = 0;
+                    }
+                }
+                free(oldbuf);
+            }
+        }
         close(fd);
     }
+
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd >= 0)
+    {
+        char buf[512];
+        int  len = snprintf(buf, sizeof(buf),
+                            "process=%s count=%d last_ns=%lld total_ns=%lld avg_ns=%lld min_ns=%lld max_ns=%lld\n",
+                            process_name,
+                    count, elapsed_ns, total, avg_ns,
+                            *ctx->p_min_ns, *ctx->p_max_ns);
+        write(fd, buf, (size_t)len);
+
+        if (existing_records && existing_records_len > 0)
+            write(fd, existing_records, existing_records_len);
+
+        if (ctx->record_name[0] != '\0')
+        {
+            int rn_len = snprintf(buf, sizeof(buf), "%s\n", ctx->record_name);
+            write(fd, buf, (size_t)rn_len);
+        }
+
+        close(fd);
+    }
+
+    if (existing_records)
+        free(existing_records);
 
     pthread_mutex_unlock(&g_psm_trace_mutex);
 }
 
-#define PSM_CORD_COUNT() \
+#define PSM_CORD_COUNT(record_expr) \
     static int       s_count    = 0; \
     static long long s_total_ns = 0; \
     static long long s_min_ns   = 0; \
     static long long s_max_ns   = 0; \
     psm_trace_ctx_t _psm_trace_ctx __attribute__((cleanup(psm_cord_trace_end))) = { \
         .api_name  = __func__, \
+        .record_name = {0}, \
         .p_count   = &s_count, \
         .p_total_ns= &s_total_ns, \
         .p_min_ns  = &s_min_ns, \
         .p_max_ns  = &s_max_ns, \
         .enabled   = psm_cord_trace_is_enabled(), \
     }; \
-    if (_psm_trace_ctx.enabled) \
-        clock_gettime(CLOCK_MONOTONIC, &_psm_trace_ctx.t_start)
+    if (_psm_trace_ctx.enabled) { \
+        const char *_psm_trace_record = (record_expr); \
+        if (_psm_trace_record != NULL) \
+            snprintf(_psm_trace_ctx.record_name, sizeof(_psm_trace_ctx.record_name), "%s", _psm_trace_record); \
+        clock_gettime(CLOCK_MONOTONIC, &_psm_trace_ctx.t_start); \
+    }
 
 int CcspBaseIf_freeResources(
     void* bus_handle,
@@ -3134,7 +3194,7 @@ int PSM_Set_Record_Value
     PSLAP_VARIABLE              pValue
 )
 {
-    PSM_CORD_COUNT();
+    PSM_CORD_COUNT(pRecordName);
     UNREFERENCED_PARAMETER(ulRecordType);
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
 
@@ -3344,7 +3404,7 @@ int PSM_Get_Record_Value
     PSLAP_VARIABLE              pValue
 )
 {
-    PSM_CORD_COUNT();
+    PSM_CORD_COUNT(pRecordName);
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
 
@@ -3530,7 +3590,7 @@ int PSM_Set_Record_Value2
     char const * const          pVal
 )
 {
-    PSM_CORD_COUNT();
+    PSM_CORD_COUNT(pRecordName);
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
 
 #ifdef CORD_ENABLED
@@ -3696,7 +3756,7 @@ int PSM_Get_Record_Value2
     char**                      pValue
 )
 {
-    PSM_CORD_COUNT();
+    PSM_CORD_COUNT(pRecordName);
     UNREFERENCED_PARAMETER(pSubSystemPrefix);
     *pValue = NULL;
 
@@ -3828,7 +3888,7 @@ int PSM_Del_Record
     char const * const          pRecordName
 )
 {
-    PSM_CORD_COUNT();
+    PSM_CORD_COUNT(pRecordName);
 #ifdef CORD_ENABLED 
  char psmName[512] = "";
     errno_t rc = -1;
@@ -3948,7 +4008,7 @@ int PSM_Del_Record
 int PsmGroupGet(void *bus_handle, const char *subsys,
         const char *names[], int nname, parameterValStruct_t ***records, int *nrec)
 {
-    PSM_CORD_COUNT();
+    PSM_CORD_COUNT((names && nname > 0) ? names[0] : NULL);
     char psmName[256];
 
     if (!bus_handle || !names || !records || !nrec)
@@ -4195,7 +4255,7 @@ int PsmGetNextLevelInstances
    unsigned int**  ppInstanceArray
 )
 {
-   PSM_CORD_COUNT();
+    PSM_CORD_COUNT(pParentPath);
    char psmName[512] = "";
    errno_t rc = -1;
 #ifdef CORD_ENABLED
@@ -4317,7 +4377,7 @@ int PsmEnumRecords
     PCCSP_BASE_RECORD*  ppRecArray
 )
 {
-   PSM_CORD_COUNT();
+    PSM_CORD_COUNT(pParentPath);
    char psmName[512] = "";
    errno_t rc = -1;
 #ifdef CORD_ENABLED
@@ -4444,7 +4504,7 @@ int PSM_Reset_UserChangeFlag
     char const * const          pathName
 )
 {
-    PSM_CORD_COUNT();
+    PSM_CORD_COUNT(pathName);
 
 #ifdef CORD_ENABLED
     static const char   kPrefix[] = "UserChanged.";
