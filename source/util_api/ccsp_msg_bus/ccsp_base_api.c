@@ -56,6 +56,8 @@
 #include <cord.h>
 #endif
 
+#include <sys/prctl.h>
+
 /* For AnscEqualString */
 #include "ansc_platform.h"
 
@@ -146,13 +148,17 @@ static void psm_cord_trace_end(psm_trace_ctx_t *ctx)
 
     char path[160];
     snprintf(path, sizeof(path), "/tmp/psm_cord_%s_%d", ctx->api_name, (int)getpid());
+    char process_name[16] = {0}; // Limited to 16 bytes by Linux kernel
+    if (prctl(PR_GET_NAME, process_name, 0, 0, 0) == 0) {
+        printf("Process Name: %s\n", process_name);
+    }
     int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd >= 0)
     {
         char buf[128];
         int  len = snprintf(buf, sizeof(buf),
-                            "count=%d last_ns=%lld total_ns=%lld avg_ns=%lld min_ns=%lld max_ns=%lld\n",
-                            count, elapsed_ns, total, avg_ns,
+                            "process=%s count=%d last_ns=%lld total_ns=%lld avg_ns=%lld min_ns=%lld max_ns=%lld\n",
+                            process_name, count, elapsed_ns, total, avg_ns,
                             *ctx->p_min_ns, *ctx->p_max_ns);
         write(fd, buf, (size_t)len);
         close(fd);
