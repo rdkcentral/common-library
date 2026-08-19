@@ -24,6 +24,7 @@ After=CcspPandMSsp.service
 [Service]
 Type=simple
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/include.properties
 EnvironmentFile=/etc/device.properties
 ExecStartPre=/bin/sh -c 'count=0; while true; do var=`sysevent get ntpd-status`; if [ "$var" == "started" ]; then break; fi; sleep 5; count=`expr $count + 1`; if [ "$count" == 17 ]; then echo "Max wait 85s"; break; fi; done'

@@ -24,6 +24,7 @@ After=RdkWanManager.service
 Type=forking
 Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 WorkingDirectory=/usr/rdk/pppmanager
 ExecStart=/usr/bin/pppmanager -subsys $Subsys
 ExecStop=/bin/sh -c 'echo "`date`: Stopping/Restarting RdkPPPManager" >> ${PROCESS_RESTART_LOG}'

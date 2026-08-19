@@ -26,6 +26,7 @@ PIDFile=/var/tmp/CcspWifiAgent.pid
 WorkingDirectory=/usr/ccsp/wifi
 Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/device.properties
 ExecStart=/bin/sh -c '/usr/bin/CcspWifiSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspWifiSsp" >> ${PROCESS_RESTART_LOG}'

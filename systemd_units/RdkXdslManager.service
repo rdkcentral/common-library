@@ -25,6 +25,7 @@ After=CcspCrSsp.service
 Type=forking
 Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/rdk/xdslmanager
 ExecStart=/usr/bin/xdslmanager -subsys $Subsys

@@ -26,6 +26,7 @@ ConditionPathExists=!/tmp/disableTr069
 Type=forking
 Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
+Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/tr069pa
 ExecStartPre=/bin/sh -c 'val=`syscfg get EnableTR69Binary`; if [ "$val" == "false" ]; then `systemctl stop CcspTr069PaSsp`; fi'

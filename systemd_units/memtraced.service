@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2019 RDK Management
+# Copyright 2026 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,21 +17,19 @@
 # limitations under the License.
 ##########################################################################
 [Unit]
-Description=CcspDSLAgent service
+Description=memtraced service
 
-After=CcspCrSsp.service
+After=CcspCrSsp.service rbus.service dbus.service
 
 [Service]
 Type=forking
-Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
-Environment="LD_PRELOAD=/usr/lib/libmtrace_watcher.so.0:/lib/libc_malloc_debug.so.0"
 EnvironmentFile=/etc/device.properties
-WorkingDirectory=/usr/ccsp/dslagent
-ExecStart=/usr/bin/dslagent -subsys $Subsys
-ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspDSLAgent" >> ${PROCESS_RESTART_LOG}'
+ExecStartPre=/bin/sh -c 'val=`syscfg get MemTrace_Enable`; if [ "x$val" == "x0" ]; then `systemctl stop memtraced`; fi'
+ExecStart=/usr/bin/memtraced
+ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting memtraced" >> ${PROCESS_RESTART_LOG}'
 Restart=always
-
+Nice=19
 
 [Install]
 WantedBy=multi-user.target
