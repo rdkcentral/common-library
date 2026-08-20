@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <pthread.h>
 #include <ccsp_message_bus.h>
 #include <ccsp_base_api.h>
@@ -3366,21 +3367,26 @@ static void psm_sqlite_export_to_bak_xml(sqlite3 *db)
     FILE         *fp   = NULL;
     char          tmp_path[sizeof(PSM_BAK_XML_PATH) + 4];
     int           count = 0;
+    int           prepare_rc;
+
+    fprintf(stderr, "[PSM export] called, db=%p\n", (void *)db);
 
     snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", PSM_BAK_XML_PATH);
 
     fp = fopen(tmp_path, "w");
     if (fp == NULL)
     {
+        fprintf(stderr, "[PSM export] fopen(%s) failed: %s\n", tmp_path, strerror(errno));
         CcspTraceError(("PSM SQLite export: cannot open %s\n", tmp_path));
         return;
     }
 
     fprintf(fp, "<?xml version=\"1.0\"  encoding=\"UTF-8\" ?>\n<Provision>\n");
 
-    if (sqlite3_prepare_v2(db,
+    prepare_rc = sqlite3_prepare_v2(db,
             "SELECT name, type, value FROM psm_records ORDER BY name;",
-            -1, &stmt, NULL) == SQLITE_OK)
+            -1, &stmt, NULL);
+    if (prepare_rc == SQLITE_OK)
     {
         while (sqlite3_step(stmt) == SQLITE_ROW)
         {
@@ -3406,16 +3412,25 @@ static void psm_sqlite_export_to_bak_xml(sqlite3 *db)
         }
         sqlite3_finalize(stmt);
     }
+    else
+    {
+        fprintf(stderr, "[PSM export] sqlite3_prepare_v2 failed: %s\n", sqlite3_errmsg(db));
+    }
 
     fprintf(fp, "</Provision>\n");
     fclose(fp);
 
+    fprintf(stderr, "[PSM export] wrote %d records, renaming %s -> %s\n",
+            count, tmp_path, PSM_BAK_XML_PATH);
+
     if (rename(tmp_path, PSM_BAK_XML_PATH) != 0)
     {
+        fprintf(stderr, "[PSM export] rename failed: %s\n", strerror(errno));
         CcspTraceError(("PSM SQLite export: rename to %s failed\n", PSM_BAK_XML_PATH));
     }
     else
     {
+        fprintf(stderr, "[PSM export] done, %d records synced to %s\n", count, PSM_BAK_XML_PATH);
         CcspTraceInfo(("PSM SQLite export: %d records synced to %s\n", count, PSM_BAK_XML_PATH));
     }
 }
