@@ -70,6 +70,14 @@
 #define CCSP_CR_ETHWAN_DEVICE_PROFILE_XML_FILE "/usr/ccsp/cr-ethwan-deviceprofile.xml"
 #endif
 
+#ifndef PSM_DB_PATH
+#define PSM_DB_PATH "/tmp/psm.db"
+#endif
+
+#ifndef PSM_BAK_XML_PATH
+#define PSM_BAK_XML_PATH "/nvram/bbhm_bak_cfg.xml"
+#endif
+
 typedef struct _component_info {
     char **list;
     int size;
@@ -3330,9 +3338,79 @@ int PSM_Get_Record_Value
  * open/close latency while keeping the implementation simple.
  * ---------------------------------------------------------------------------*/
 
-#ifndef PSM_DB_PATH
-#define PSM_DB_PATH "/tmp/psm.db"
-#endif
+
+
+/* Map CCSP integer type to XML contentType string (reverse of psm_xml_ccsp_type). */
+static const char *psm_ccsp_type_to_ctype(int type)
+{
+    switch (type)
+    {
+        case 1:  return "int";
+        case 2:  return "uint";
+        case 3:  return "bool";
+        case 4:  return "datetime";
+        case 5:  return "base64";
+        case 6:  return "long";
+        case 7:  return "ulong";
+        case 8:  return "float";
+        case 9:  return "double";
+        case 10: return "byte";
+        default: return NULL; /* ccsp_string — no contentType */
+    }
+}
+
+/* Dump all psm_records to PSM_BAK_XML_PATH atomically (write tmp then rename). */
+static void psm_sqlite_export_to_bak_xml(sqlite3 *db)
+{
+    sqlite3_stmt *stmt = NULL;
+    FILE         *fp   = NULL;
+    char          tmp_path[sizeof(PSM_BAK_XML_PATH) + 4];
+    int           count = 0;
+
+    snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", PSM_BAK_XML_PATH);
+
+    fp = fopen(tmp_path, "w");
+    if (fp == NULL)
+    {
+        CcspTraceError(("PSM SQLite export: cannot open %s\n", tmp_path));
+        return;
+    }
+
+    fprintf(fp, "<?xml version=\"1.0\"  encoding=\"UTF-8\" ?>\n<Provision>\n");
+
+    if (sqlite3_prepare_v2(db,
+            "SELECT name, type, value FROM psm_records ORDER BY name;",
+            -1, &stmt, NULL) == SQLITE_OK)
+    {
+        while (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            const char *name  = (const char *)sqlite3_column_text(stmt, 0);
+            int         type  = sqlite3_column_int(stmt, 1);
+            const char *value = (const char *)sqlite3_column_text(stmt, 2);
+            const char *ctype;
+
+            if (!name || !value) continue;
+
+            ctype = psm_ccsp_type_to_ctype(type);
+            if (ctype)
+                fprintf(fp, "  <Record name=\"%s\" type=\"astr\" contentType=\"%s\">%s</Record>\n",
+                        name, ctype, value);
+            else
+                fprintf(fp, "  <Record name=\"%s\" type=\"astr\">%s</Record>\n",
+                        name, value);
+            count++;
+        }
+        sqlite3_finalize(stmt);
+    }
+
+    fprintf(fp, "</Provision>\n");
+    fclose(fp);
+
+    if (rename(tmp_path, PSM_BAK_XML_PATH) != 0)
+        CcspTraceError(("PSM SQLite export: rename to %s failed\n", PSM_BAK_XML_PATH));
+    else
+        CcspTraceInfo(("PSM SQLite export: %d records synced to %s\n", count, PSM_BAK_XML_PATH));
+}
 
 static sqlite3 *s_psm_db  = NULL;
 static pthread_mutex_t s_psm_db_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -3541,6 +3619,11 @@ static int PSM_Set_Record_Value_sqlite(
     }
 
     sqlite3_finalize(stmt);
+
+    /* Keep the XML backup in sync so downgrade finds current values. */
+    if (ret == CCSP_SUCCESS)
+        psm_sqlite_export_to_bak_xml(db);
+
     return ret;
 }
 
