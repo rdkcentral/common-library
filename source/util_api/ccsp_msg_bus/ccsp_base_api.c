@@ -3393,11 +3393,15 @@ static void psm_sqlite_export_to_bak_xml(sqlite3 *db)
 
             ctype = psm_ccsp_type_to_ctype(type);
             if (ctype)
+            {
                 fprintf(fp, "  <Record name=\"%s\" type=\"astr\" contentType=\"%s\">%s</Record>\n",
                         name, ctype, value);
+            }
             else
+            {
                 fprintf(fp, "  <Record name=\"%s\" type=\"astr\">%s</Record>\n",
                         name, value);
+            }
             count++;
         }
         sqlite3_finalize(stmt);
@@ -3407,9 +3411,13 @@ static void psm_sqlite_export_to_bak_xml(sqlite3 *db)
     fclose(fp);
 
     if (rename(tmp_path, PSM_BAK_XML_PATH) != 0)
+    {
         CcspTraceError(("PSM SQLite export: rename to %s failed\n", PSM_BAK_XML_PATH));
+    }
     else
+    {
         CcspTraceInfo(("PSM SQLite export: %d records synced to %s\n", count, PSM_BAK_XML_PATH));
+    }
 }
 
 static sqlite3 *s_psm_db  = NULL;
