@@ -1579,7 +1579,7 @@ CcspBaseIf_GetNextLevelInstances
  * are registered, Cr will set its property Device.CR.SystemReady to true, which will
  * send a value-change event to all listeners.
  */
-static int registerComponentWithCr_rbus(rbusHandle_t rbus_handle, const char *component_name)
+static rbusCoreError_t registerComponentWithCr_rbus(rbusHandle_t rbus_handle, const char *component_name)
 {
     int err = RBUS_ERROR_SUCCESS;
     rbusObject_t inParams = NULL, outParams = NULL;
@@ -1605,6 +1605,7 @@ static int registerComponentWithCr_rbus(rbusHandle_t rbus_handle, const char *co
     return err;
 }
 
+#if 0
 int CcspBaseIf_registerCapabilities_rbus(
         void* bus_handle,
         const char* dst_component_id,
@@ -1673,6 +1674,62 @@ int CcspBaseIf_registerCapabilities_rbus(
     }
     return ret;
 }
+#else
+int CcspBaseIf_registerCapabilities_rbus(
+        void* bus_handle,
+        const char* dst_component_id,
+        const char *component_name,
+        int component_version,
+        const char *dbus_path,
+        const char *subsystem_prefix,
+        name_spaceType_t * name_space,
+        int size
+        )
+{
+    UNREFERENCED_PARAMETER(component_version);
+    UNREFERENCED_PARAMETER(dst_component_id);
+    UNREFERENCED_PARAMETER(dbus_path);
+    UNREFERENCED_PARAMETER(subsystem_prefix);
+    int i = 0;
+    int failedIndex = 0;
+    int ret = CCSP_SUCCESS;
+    rbusCoreError_t err = RBUSCORE_SUCCESS;
+
+    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+    for(i = 0; i < size; i++)
+    {
+        if((err = rbus_addElement(component_name, name_space[i].name_space)) != RBUSCORE_SUCCESS)
+        {
+            RBUS_LOG_ERR("addElement: %s failed with Err: %d\n", name_space[i].name_space, err);
+            failedIndex = i + 1;
+            break;
+        }
+    }
+
+    if (RBUSCORE_SUCCESS == err)
+    {
+        if((err = registerComponentWithCr_rbus(bus_info->rbus_handle, component_name)) != RBUSCORE_SUCCESS)
+        {
+            /* Remove all elements when registration with CR has failed */
+            failedIndex = size;
+        }
+    }
+
+    if (RBUSCORE_SUCCESS != err)
+    {
+        RBUS_LOG_ERR("unregister all the params are we failed to register a param\n");
+        for(i = 0; i < failedIndex; i++)
+        {
+            if((err = rbus_removeElement(component_name, name_space[i].name_space)) != RBUSCORE_SUCCESS)
+            {
+                RBUS_LOG_ERR("removeElement: %s failed with Err: %d\n", name_space[i].name_space, err);
+            }
+        }
+        ret = CCSP_FAILURE;
+    }
+    return ret;
+}
+#endif
 
 int CcspBaseIf_registerCapabilities(
     void* bus_handle,
@@ -1688,6 +1745,7 @@ int CcspBaseIf_registerCapabilities(
     return CcspBaseIf_registerCapabilities_rbus(bus_handle, dst_component_id, component_name, component_version, dbus_path, subsystem_prefix, name_space, size);
 }
 
+#if 0
 int CcspBaseIf_unregisterNamespace_rbus (
     void* bus_handle,
     const char* dst_component_id,
@@ -1710,6 +1768,27 @@ int CcspBaseIf_unregisterNamespace_rbus (
     RBUS_LOG("%s rbus_removeElement succeeds\n", __FUNCTION__);
     return CCSP_SUCCESS;
 }
+#else
+int CcspBaseIf_unregisterNamespace_rbus (
+    void* bus_handle,
+    const char* dst_component_id,
+    const char *component_name,
+    const char *name_space)
+{
+    UNREFERENCED_PARAMETER(bus_handle);
+    UNREFERENCED_PARAMETER(dst_component_id);
+    RBUS_LOG("%s calling rbus_removeElement for %s with component %s\n", __FUNCTION__, name_space, component_name);
+
+    if(RBUSCORE_SUCCESS != rbus_removeElement(component_name, name_space))
+    {
+        RBUS_LOG("%s rbus_removeElement fails\n", __FUNCTION__);
+        return CCSP_FAILURE;
+    }
+
+    RBUS_LOG("%s rbus_removeElement succeeds\n", __FUNCTION__);
+    return CCSP_SUCCESS;
+}
+#endif
 
 int CcspBaseIf_unregisterNamespace (
     void* bus_handle,
