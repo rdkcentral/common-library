@@ -308,6 +308,8 @@ DslhWmpdoMprRegParameter
 
     // Assign appropriate ContentType for 'dateTime', or the object type will default to 'string'.  RTian 2013/11/11
     if(pVarEntity->DataType == DSLH_CWMP_DATA_TYPE_dateTime) pVarEntity->ContentType = SLAP_CONTENT_TYPE_CALENDAR_TIME;
+    /* TR-181 unsignedLong uses slap uint32 storage; tag ContentType so getv reports ulong */
+    if(pVarEntity->DataType == DSLH_CWMP_DATA_TYPE_unsignedLong) pVarEntity->ContentType = SLAP_CONTENT_TYPE_UNSIGNED_LONG;
 
     if ( pParamEnumTokens )
     {

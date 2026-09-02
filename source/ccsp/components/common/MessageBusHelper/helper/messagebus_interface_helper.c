@@ -121,8 +121,7 @@ static int CcspCcMbi_ValidateINT
     int len = strlen(intStr);
 	char* pNext;
 	char c;
-	char buf[12];
-	int num;
+	char buf[32] = {0};
 
     if(len <= 0) return -1;
 
@@ -146,14 +145,19 @@ static int CcspCcMbi_ValidateINT
 		pNext++;
 	}
 
-	num = _ansc_atoi(intStr);
-
 	if ( signedInt )
-		snprintf(buf, sizeof(buf), "%d", num);
+	{
+		int num = _ansc_atoi(intStr);
+		_ansc_itoa(num, buf, 10);
+	}
 	else
-		snprintf(buf, sizeof(buf), "%u", (unsigned int) num);
+	{
+		/* ULONG parse/format so values > 2^32-1 validate on LP64 */
+		ULONG unum = (ULONG)_ansc_atol(intStr);
+		_ansc_ultoa(unum, buf, 10);
+	}
 
-	if ( !strcmp(buf, (char*)intStr) == 0 ) return -1;
+	if ( strcmp(buf, (char*)intStr) != 0 ) return -1;
 
     return 0;
 }
@@ -324,6 +328,11 @@ CcspCcMbi_GetParameterValues
                 {
                     ppReturnVal[i]->parameterValue = SlapVcoIp4AddrToString(NULL, pParamValueArray[i].Value->Variant.varUint32);
                     ppReturnVal[i]->type = ccsp_string;
+                }
+                else if ( pParamValueArray[i].Value->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG )
+                {
+                    ppReturnVal[i]->parameterValue = SlapVcoUint32ToString(NULL, pParamValueArray[i].Value->Variant.varUint32);
+                    ppReturnVal[i]->type           = ccsp_unsignedLong;
                 }
                 else
                 {
@@ -511,7 +520,7 @@ CcspCcMbi_SetParameterValues
             pSlapVariable->Syntax         = SLAP_VAR_SYNTAX_int;
             pSlapVariable->Variant.varInt = SlapVcoStringToInt(NULL, val[i].parameterValue);
         }
-        else if ( (val[i].type == ccsp_unsignedInt) || (val[i].type == ccsp_long) )
+        else if ( (val[i].type == ccsp_unsignedInt) || (val[i].type == ccsp_unsignedLong) || (val[i].type == ccsp_long) )
         {
 			if ( CcspCcMbi_ValidateINT(val[i].parameterValue, 0) != 0 )
 			{
@@ -521,6 +530,10 @@ CcspCcMbi_SetParameterValues
 			}
 
             pSlapVariable->Syntax            = SLAP_VAR_SYNTAX_uint32;
+            if ( val[i].type == ccsp_unsignedLong )
+            {
+                pSlapVariable->ContentType = SLAP_CONTENT_TYPE_UNSIGNED_LONG;
+            }
             pSlapVariable->Variant.varUint32 = SlapVcoStringToUint32(NULL, val[i].parameterValue);
         }
         else if ( val[i].type == ccsp_boolean )

@@ -338,6 +338,8 @@ int CcspBaseIf_freeResources(
     int priority
 );
 
+void Notify_change(char *event_name, void *new_value);
+
 //Data model parameters "set" APIs,caller free invalidParameterName
 int CcspBaseIf_setParameterValues(
     void* bus_handle,

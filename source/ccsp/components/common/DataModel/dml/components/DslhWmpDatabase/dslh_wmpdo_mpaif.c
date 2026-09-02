@@ -759,7 +759,8 @@ DslhWmpdoMpaSetParameterValues
 					break;
 				}
 			}
-			else if( dataType == DSLH_CWMP_DATA_TYPE_unsignedInt)
+			else if( dataType == DSLH_CWMP_DATA_TYPE_unsignedInt ||
+			         dataType == DSLH_CWMP_DATA_TYPE_unsignedLong)
 			{
 				if( pParameterValueArray[i].Value->Syntax != SLAP_VAR_SYNTAX_uint32)
 				{
