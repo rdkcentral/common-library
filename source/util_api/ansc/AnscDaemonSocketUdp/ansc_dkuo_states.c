@@ -513,8 +513,12 @@ AnscDkuoGetPacket
     )
 {
     PANSC_DAEMON_SOCKET_UDP_OBJECT  pMyObject    = (PANSC_DAEMON_SOCKET_UDP_OBJECT)hThisObject;
+    ANSC_HANDLE                     hPacket;
 
-    return  pMyObject->hPacket;
+    AnscAcquireLock(&pMyObject->OpLock);
+    hPacket = pMyObject->hPacket;
+    AnscReleaseLock(&pMyObject->OpLock);
+    return  hPacket;
 }
 
 
@@ -649,14 +653,14 @@ AnscDkuoReset
     /* CID: 137150 Data race condition */
     AnscAcquireLock(&pMyObject->OpLock);
     pMyObject->hPacket        = (ANSC_HANDLE)NULL;
+    pMyObject->bSendEnabled   = TRUE;
+    pMyObject->bRecvEnabled   = TRUE;
     AnscReleaseLock(&pMyObject->OpLock);
     pMyObject->RecvBytesCount = 0;
     pMyObject->SendBytesCount = 0;
     pMyObject->LastRecvAt     = 0;
     pMyObject->LastSendAt     = 0;
     pMyObject->bClosed        = TRUE;
-    pMyObject->bRecvEnabled   = TRUE;
-    pMyObject->bSendEnabled   = TRUE;
 
     return  ANSC_STATUS_SUCCESS;
 }

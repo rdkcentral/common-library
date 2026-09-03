@@ -463,7 +463,9 @@ HttpPsoAddNewBmoReq
     {
         pBmoReq->SetHfpIf        ((ANSC_HANDLE)pBmoReq, (ANSC_HANDLE)pHfpIf                         );
         pBmoReq->SetTmhIf        ((ANSC_HANDLE)pBmoReq, (ANSC_HANDLE)pTmhClientIf                   );
+	AnscAcquireLock(&pMyObject->BmoReqSListLock);
         pBmoReq->SetTransactionId((ANSC_HANDLE)pBmoReq, AnscSListQueryDepth(&pMyObject->BmoReqSList));
+	AnscReleaseLock(&pMyObject->BmoReqSListLock);
     }
 
     AnscAcquireLock   (&pMyObject->BmoReqSListLock);
@@ -522,7 +524,9 @@ HttpPsoAddNewBmoRep
     {
         pBmoRep->SetHfpIf        ((ANSC_HANDLE)pBmoRep, (ANSC_HANDLE)pHfpIf                         );
         pBmoRep->SetTmhIf        ((ANSC_HANDLE)pBmoRep, (ANSC_HANDLE)pTmhServerIf                   );
+	AnscAcquireLock(&pMyObject->BmoRepSListLock);
         pBmoRep->SetTransactionId((ANSC_HANDLE)pBmoRep, AnscSListQueryDepth(&pMyObject->BmoRepSList));
+	AnscReleaseLock(&pMyObject->BmoRepSListLock);
     }
 
     AnscAcquireLock   (&pMyObject->BmoRepSListLock);
