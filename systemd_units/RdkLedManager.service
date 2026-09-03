@@ -18,7 +18,8 @@
 ##########################################################################
 [Unit]
 Description=Rdk Led Manager service
-After=CcspCrSsp.service
+After=utopia.service CcspCrSsp.service
+Required=utopia.service
 
 [Service]
 Type=forking
