@@ -268,12 +268,14 @@ DslhObjroGetAllParamValues
         ppNameArray     = (char**)AnscAllocateMemory(sizeof(char*) * uChildCount);
         if( !ppNameArray ) /*RDKB-5791 , CID-33396, NULL check after mem allocation*/
         {
+	    *pulArraySize = 0;
             return ANSC_STATUS_FAILURE;
         }
         ppValueArray    = (PSLAP_VARIABLE*)AnscAllocateMemory(sizeof(PSLAP_VARIABLE) * uChildCount);
         if( !ppValueArray )
         {
             AnscFreeMemory(ppNameArray);/*RDKB-5791 , CID-33236, NULL check after mem allocation*/
+	    *pulArraySize = 0;
             return ANSC_STATUS_FAILURE;
         }
 
@@ -303,8 +305,11 @@ DslhObjroGetAllParamValues
 
                 if( ppValueArray[ulParamCount] == NULL)
                 {
-                    break;
+		    returnStatus = ANSC_STATUS_RESOURCES;
+                    goto EXIT;
                 }
+
+                SlapInitVariable(ppValueArray[ulParamCount]);
 
                 ppValueArray[ulParamCount]->Name        = pChildVarRecord->GetFullName((ANSC_HANDLE)pChildVarRecord);
                 ppValueArray[ulParamCount]->ContentType = pChildVarEntity->ContentType;
@@ -341,6 +346,12 @@ DslhObjroGetAllParamValues
             }
         }
         /* Check parameter value and change it to be 2  Ending*/
+
+        if ( (ulTotalParamCount + ulParamCount) > ulMaxParamCount )
+        {
+            returnStatus = ANSC_STATUS_BAD_PARAMETER;
+            goto EXIT;
+        }
 
         /* copy value back */
         for( i = 0; i < ulParamCount; i ++)
