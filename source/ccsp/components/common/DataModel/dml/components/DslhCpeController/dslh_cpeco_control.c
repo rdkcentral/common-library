@@ -100,7 +100,7 @@
 #define  DM_REG_MEM_FILE                                "/tmp/rbus_mem_registration"
 
 /* Dumps every memory region the kernel reports for this process plus glibc heap counters. */
-static void DslhCpecoLogDmRegMem(const char *stage, const char *component)
+static void DslhCpecoLogDmRegMem(const char *stage, const char *component, long deCount)
 {
     static const char * const memFields[] = {
         "VmPeak", "VmSize", "VmLck", "VmPin", "VmHWM", "VmRSS",
@@ -171,8 +171,8 @@ static void DslhCpecoLogDmRegMem(const char *stage, const char *component)
         if (localtime_r(&now, &tmNow))
             strftime(ts, sizeof(ts), "%Y-%m-%d %H:%M:%S", &tmNow);
 
-        fprintf(fp, "%s pid=%d component=%s stage=%s%s\n",
-                ts, (int)getpid(), component ? component : "unknown", stage, summary);
+        fprintf(fp, "%s pid=%d component=%s stage=%s de_count=%ld%s\n",
+                ts, (int)getpid(), component ? component : "unknown", stage, deCount, summary);
         fclose(fp);
     }
 }
@@ -1411,7 +1411,7 @@ DslhCpecoRegisterDataModelInternal
         // this has higher memory usage than previous implementation, but hardware has improved so memory is no longer a concern.
         ULONG uWait = 10; /* 10 seconds */
 
-        DslhCpecoLogDmRegMem("before_registerCapabilities", pCompName);
+        DslhCpecoLogDmRegMem("before_registerCapabilities", pCompName, (long)uCount);
 
         do
         {
@@ -1442,7 +1442,7 @@ DslhCpecoRegisterDataModelInternal
             }
         } while ( TRUE );
 
-        DslhCpecoLogDmRegMem("after_registerCapabilities", pCompName);
+        DslhCpecoLogDmRegMem("after_registerCapabilities", pCompName, (long)uCount);
 
 
     /* unset the return paramter */
