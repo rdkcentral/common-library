@@ -1748,8 +1748,10 @@ ScliShoRunBicAutoCompletion
                 ScliShoInitArgMatchResult(&pOptArgM[i]);
             }
         }
-
-        /* trying to auto complete argument name or value */
+	if ( !pReqArgM || !pOptArgM ) {
+	    goto EXIT;
+	}
+	/* trying to auto complete argument name or value */
         bMatched = 
             ScliShoMatchCommand
                 (
@@ -2397,6 +2399,10 @@ ScliShoRunBicHelp
                 }
             }
 
+	    if ( !pReqArgM || !pOptArgM )
+	    {
+		goto EXIT;
+	    }
             bMatched = 
                 ScliShoMatchCommand
                     (
