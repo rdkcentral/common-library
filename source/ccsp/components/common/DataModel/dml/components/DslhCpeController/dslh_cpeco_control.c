@@ -88,10 +88,94 @@
 #include "dslh_cpeco_global.h"
 #include "ccsp_base_api.h"
 #include "safec_lib_common.h"
+#include <stdio.h>
+#include <string.h>
+#include <malloc.h>
+#include <time.h>
+#include <unistd.h>
 
 #define  CCSP_PARAMETER_MAX_COUNT                       2000
 #define  CCSP_DUMMY_PARAM_NAME							"CcspDummy"
 #define  CCSP_MAX_PARAMETER_PER_REGISTRATION            50
+#define  DM_REG_MEM_FILE                                "/tmp/rbus_mem_registration"
+
+/* Dumps every memory region the kernel reports for this process plus glibc heap counters. */
+static void DslhCpecoLogDmRegMem(const char *stage, const char *component)
+{
+    static const char * const memFields[] = {
+        "VmPeak", "VmSize", "VmLck", "VmPin", "VmHWM", "VmRSS",
+        "RssAnon", "RssFile", "RssShmem", "VmData", "VmStk", "VmExe",
+        "VmLib", "VmPTE", "VmSwap", "HugetlbPages", "Threads"
+    };
+    char    summary[1024] = {0};
+    char    line[256];
+    size_t  used = 0;
+    size_t  i;
+    FILE*   fp;
+
+    fp = fopen("/proc/self/status", "r");
+    if (fp)
+    {
+        while (fgets(line, sizeof(line), fp))
+        {
+            char* colon = strchr(line, ':');
+
+            if (!colon)
+                continue;
+
+            *colon = '\0';
+
+            for (i = 0; i < sizeof(memFields) / sizeof(memFields[0]); i++)
+            {
+                char* value;
+                int   n;
+
+                if (strcmp(line, memFields[i]) != 0)
+                    continue;
+
+                value = colon + 1;
+                while (*value == ' ' || *value == '\t')
+                    value++;
+                value[strcspn(value, "\r\n")] = '\0';
+
+                n = snprintf(summary + used, sizeof(summary) - used, " %s=%s", memFields[i], value);
+                if (n > 0 && (size_t)n < sizeof(summary) - used)
+                    used += (size_t)n;
+                break;
+            }
+        }
+        fclose(fp);
+    }
+
+    {
+#if defined(__GLIBC__) && ((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 33)))
+        struct mallinfo2 mi = mallinfo2();
+#else
+        struct mallinfo  mi = mallinfo();
+#endif
+        snprintf(summary + used, sizeof(summary) - used,
+                 " HeapArena=%lu HeapMmap=%lu HeapInUse=%lu HeapFree=%lu HeapTop=%lu",
+                 (unsigned long)mi.arena, (unsigned long)mi.hblkhd,
+                 (unsigned long)mi.uordblks, (unsigned long)mi.fordblks,
+                 (unsigned long)mi.keepcost);
+    }
+
+    /* Shared across agents, so append and flush on every sample. */
+    fp = fopen(DM_REG_MEM_FILE, "a");
+    if (fp)
+    {
+        time_t     now = time(NULL);
+        struct tm  tmNow;
+        char       ts[32] = "unknown";
+
+        if (localtime_r(&now, &tmNow))
+            strftime(ts, sizeof(ts), "%Y-%m-%d %H:%M:%S", &tmNow);
+
+        fprintf(fp, "%s pid=%d component=%s stage=%s%s\n",
+                ts, (int)getpid(), component ? component : "unknown", stage, summary);
+        fclose(fp);
+    }
+}
 /**********************************************************************
 
     caller:     owner of this object
@@ -1326,6 +1410,9 @@ DslhCpecoRegisterDataModelInternal
         // register everything in one scoop, or the last DMs in the PandM array will not be sync'ed with TR069PA in time.  RTian 2013/11/27
         // this has higher memory usage than previous implementation, but hardware has improved so memory is no longer a concern.
         ULONG uWait = 10; /* 10 seconds */
+
+        DslhCpecoLogDmRegMem("before_registerCapabilities", pCompName);
+
         do
         {
             returnStatus = 
@@ -1354,6 +1441,8 @@ DslhCpecoRegisterDataModelInternal
                 break;
             }
         } while ( TRUE );
+
+        DslhCpecoLogDmRegMem("after_registerCapabilities", pCompName);
 
 
     /* unset the return paramter */
