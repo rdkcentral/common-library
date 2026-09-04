@@ -1730,6 +1730,13 @@ int CcspBaseIf_registerCapabilities_rbus(
 
     RBUS_LOG("CCSP_DM_REG: component=%s registered %d of %d data elements via %s ret=%d\n",
              component_name, (ret == CCSP_SUCCESS) ? size : 0, size, __FUNCTION__, ret);
+    FILE *fp = fopen("/tmp/rbus_mem_registration", "a");
+    if(fp)
+    {
+        fprintf(fp, "CCSP_DM_REG: component=%s registered %d of %d data elements via %s ret=%d\n",
+                component_name, (ret == CCSP_SUCCESS) ? size : 0, size, __FUNCTION__, ret);
+        fclose(fp);
+    }
 
     return ret;
 }
