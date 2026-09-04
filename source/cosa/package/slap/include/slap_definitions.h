@@ -141,6 +141,7 @@
 #define  SLAP_CONTENT_TYPE_IP6_ADDR                 16      /* applies to ucharArray, rendered as a IPv6 address string            */
 #define  SLAP_CONTENT_TYPE_IP6_ADDR_LIST            17      /* applies to ucharArray, rendered as an array of IPv6 addresses       */
 #define  SLAP_CONTENT_TYPE_IP4_ADDR_RANGE_LIST      18      /* applies to ucharArray, rendered as an array of IPv4 addresses       */
+#define  SLAP_CONTENT_TYPE_UNSIGNED_LONG            19      /* applies to uint32/ULONG, TR-181 unsignedLong / StatsCounter64     */
 
 
 #define  SLAP_CONTENT_TYPE_TABLE_2D                 10001

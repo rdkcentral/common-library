@@ -178,6 +178,11 @@ mbiIf_SendParameterValueChangeSignal
                 pParamSignal->oldValue = SlapVcoIp4AddrToString(NULL, pOldValue->Variant.varUint32);
                 pParamSignal->type = ccsp_string;
             }
+            else if ( pOldValue->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG )
+            {
+                pParamSignal->oldValue = SlapVcoUint32ToString(NULL, pOldValue->Variant.varUint32);
+                pParamSignal->type     = ccsp_unsignedLong;
+            }
             else
             {
                 pParamSignal->oldValue = SlapVcoUint32ToString(NULL, pOldValue->Variant.varUint32);
@@ -218,7 +223,14 @@ mbiIf_SendParameterValueChangeSignal
         if ( pNewValue->Syntax == SLAP_VAR_SYNTAX_uint32 )
         {
             pParamSignal->newValue = SlapVcoUint32ToString(NULL, pNewValue->Variant.varUint32);
-            pParamSignal->type     = ccsp_unsignedInt;
+            if ( pNewValue->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG )
+            {
+                pParamSignal->type = ccsp_unsignedLong;
+            }
+            else
+            {
+                pParamSignal->type = ccsp_unsignedInt;
+            }
         }
         else if ( pNewValue->Syntax == SLAP_VAR_SYNTAX_string )
         {

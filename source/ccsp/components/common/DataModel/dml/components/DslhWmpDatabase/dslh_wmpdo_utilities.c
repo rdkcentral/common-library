@@ -413,6 +413,17 @@ DslhWmpdoParseParamDataType
             AnscTcFree((ANSC_HANDLE)pFormatValueChain);
         }
     }
+    else if ( strcmp(pDataTypeToken->Name,DSLH_CWMP_DATA_NAME_unsignedLong) == 0 )
+    {
+        /*
+         * TR-181 unsignedLong / StatsCounter64: same access path as unsignedInt
+         * (SLAP_UINT32 is ULONG). Use full ULONG range so values above 2^32-1
+         * are accepted on LP64 platforms.
+         */
+        *pulDataType     = DSLH_CWMP_DATA_TYPE_unsignedLong;
+        *pulFormatValue1 = (ULONG)0;
+        *pulFormatValue2 = ~(ULONG)0;
+    }
     else if ( strcmp(pDataTypeToken->Name,DSLH_CWMP_DATA_NAME_boolean) == 0 )
     {
         *pulDataType = DSLH_CWMP_DATA_TYPE_boolean;

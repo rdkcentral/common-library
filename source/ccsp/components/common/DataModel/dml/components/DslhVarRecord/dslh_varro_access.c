@@ -651,6 +651,7 @@ DslhVarroTstValue
                 break;
 
         case    DSLH_CWMP_DATA_TYPE_unsignedInt :
+        case    DSLH_CWMP_DATA_TYPE_unsignedLong :
 
                 if ( pNewValue->Syntax != SLAP_VAR_SYNTAX_uint32 )
                 {
@@ -712,7 +713,13 @@ DslhVarroTstValue
      *        (digits 0-9, letters A-F or a-f) displayed as six pairs of digits separated
      *        by colons.
      */
-    if ( pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSPECIFIED )
+    /*
+     * UNSIGNED_LONG is a getv/setv type tag on uint32 slap storage (TR-181
+     * unsignedLong). It must NOT take the string ContentType conversion path
+     * below — that path's default returns FALSE → CCSP_ERR_INVALID_PARAMETER_VALUE.
+     */
+    if ( (pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSPECIFIED) ||
+         (pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG) )
     {
         switch ( pVarEntity->Syntax )
         {
@@ -1314,7 +1321,8 @@ DslhVarroSetValue
      */
 
 
-    if ( pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSPECIFIED )
+    if ( (pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSPECIFIED) ||
+         (pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG) )
     {
         switch ( pVarEntity->Syntax )
         {
