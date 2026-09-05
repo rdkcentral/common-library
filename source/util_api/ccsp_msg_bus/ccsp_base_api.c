@@ -4282,7 +4282,7 @@ int PsmGetNextLevelInstances
 #ifdef CORD_ENABLED
   *ppInstanceArray = NULL;
     *pulNumInstance = 0;
-
+    
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;    
     if (pSubSystemPrefix && pSubSystemPrefix[0] != 0) {
         rc = strcpy_s(psmName, sizeof(psmName), pSubSystemPrefix);
@@ -4299,7 +4299,8 @@ int PsmGetNextLevelInstances
 
     GNLInstanceList list = {0};
     list.bus_handle = bus_handle;
-    cord_rc_t crc = cord_list(psmName, 1, cord_list_callback_GetNextLevelInstances, (void*)&list);
+    printf("PsmGetNextLevelInstances: calling cord_list with psmName='%s', pParentPath='%s'\n", psmName, pParentPath);
+    cord_rc_t crc = cord_list(pParentPath, 1, cord_list_callback_GetNextLevelInstances, (void*)&list);
     if (crc != CORD_RC_SUCCESS) {
         return CCSP_Message_Bus_ERROR;
     }
