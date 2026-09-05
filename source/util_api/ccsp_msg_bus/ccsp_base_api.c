@@ -4183,9 +4183,9 @@ static inline int safe_atou(const char *pParameterName, unsigned int *out)
         return -1;
     }
 
-    /* Find end of last segment, skipping any trailing dot */
+    /* Move to the end of the numeric segment, skipping any trailing dot(s). */
     const char *end = pParameterName + len;
-    if (*(end - 1) == '.')
+    while (end > pParameterName && end[-1] == '.')
         end--;
 
     if (end == pParameterName)
@@ -4194,29 +4194,27 @@ static inline int safe_atou(const char *pParameterName, unsigned int *out)
         return -1;
     }
 
-    /* Find start of last segment */
+    /* Find start of the last segment; for "dmsb.l2net.3." this leaves start at '3'. */
     const char *start = end;
-    while (start > pParameterName && *(start - 1) != '.')
+    while (start > pParameterName && start[-1] != '.')
         start--;
 
-    /* Copy segment into a local buffer for strtoul */
-    size_t segLen = (size_t)(end - start);
+    const size_t segLen = (size_t)(end - start);
     if (segLen == 0 || segLen >= 32)
-        {
-            printf("safe_atou: segment length invalid\n");
-            return -1;
-        }
+    {
+        printf("safe_atou: segment length invalid\n");
+        return -1;
+    }
 
-    char *endptr;
-    unsigned long val;
+    char *endptr = NULL;
+    unsigned long val = 0;
     errno = 0;
     val = strtoul(start, &endptr, 10);
-    if (errno != 0 || endptr == start || *endptr != '\0' || val > UINT_MAX)
+    if (errno != 0 || endptr == start || endptr != end || val > UINT_MAX)
     {
         printf("safe_atou: conversion failed\n");
         return -1;
     }
-        
 
     printf("safe_atou: conversion succeeded, extracted value=%lu\n", val);
     *out = (unsigned int)val;
