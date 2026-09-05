@@ -4169,12 +4169,19 @@ void PsmFreeRecords(void *bus_handle, parameterValStruct_t **records, int nrec)
  */
 static inline int safe_atou(const char *pParameterName, unsigned int *out)
 {
+    printf("safe_atou: pParameterName=%s\n", pParameterName);
     if (!pParameterName || !out)
+    {
+        printf("safe_atou: checking input validity\n"); 
         return -1;
+    }
 
     const size_t len = strlen(pParameterName);
     if (len == 0)
+    {
+        printf("safe_atou: empty parameter name\n");
         return -1;
+    }
 
     /* Find end of last segment, skipping any trailing dot */
     const char *end = pParameterName + len;
@@ -4182,7 +4189,10 @@ static inline int safe_atou(const char *pParameterName, unsigned int *out)
         end--;
 
     if (end == pParameterName)
+    {
+        printf("safe_atou: last segment is empty\n");
         return -1;
+    }
 
     /* Find start of last segment */
     const char *start = end;
@@ -4192,16 +4202,23 @@ static inline int safe_atou(const char *pParameterName, unsigned int *out)
     /* Copy segment into a local buffer for strtoul */
     size_t segLen = (size_t)(end - start);
     if (segLen == 0 || segLen >= 32)
-        return -1;
+        {
+            printf("safe_atou: segment length invalid\n");
+            return -1;
+        }
 
     char *endptr;
     unsigned long val;
     errno = 0;
     val = strtoul(start, &endptr, 10);
     if (errno != 0 || endptr == start || *endptr != '\0' || val > UINT_MAX)
+    {
+        printf("safe_atou: conversion failed\n");
         return -1;
+    }
         
 
+    printf("safe_atou: conversion succeeded, extracted value=%lu\n", val);
     *out = (unsigned int)val;
     return 0;
 }
@@ -4215,7 +4232,7 @@ typedef struct cord_list_GetNextLevelInstances_List {
 static void cord_list_callback_GetNextLevelInstances(const char* pParameterName, cord_value_type_t valueType, void* pUserData) {
     static const size_t kDefaultArraySize = 32;
     GNLInstanceList *pList = (GNLInstanceList*)pUserData;
-    
+    printf("cord_list_callback_GetNextLevelInstances: pParameterName=%s, valueType=%d,pList=%p\n", pParameterName, valueType, pList);
     if (!pList) return;
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)pList->bus_handle;    
     const size_t len = strlen(pParameterName);
@@ -4227,19 +4244,23 @@ static void cord_list_callback_GetNextLevelInstances(const char* pParameterName,
     // Do we need to alloc or grow the array?
     if (pList->nCount == pList->nCapacity) {
         const size_t nNewCapacity = pList->nCapacity ? pList->nCapacity * 2 : kDefaultArraySize;
+        printf("Growing instance array from %zu to %zu\n", pList->nCapacity, nNewCapacity);
         unsigned int* pNewInstanceArray = bus_info->mallocfunc(sizeof(*pList->pInstanceArray) * nNewCapacity);
 
         if (!pNewInstanceArray) {
             pList->callbackError = true;
+            printf("Failed to allocate memory for instance array\n");   
             return;
        }
         pList->pInstanceArray = pNewInstanceArray;
         pList->nCapacity = nNewCapacity;
      }
     //pListItem->pInstanceArray[pList->nCount] = safe_atou(<last node name, e.g. "123">);
-    if(0 == safe_atou(pParameterName, &pList->pInstanceArray[pList->nCount]))
+    if(0 == safe_atou(pParameterName, &pList->pInstanceArray[pList->nCount])){
     	pList->nCount++;
-    else {
+        printf("Added instance %u to the list, total count now %zu\n", pList->pInstanceArray[pList->nCount - 1], pList->nCount);
+    } else {
+        printf("Failed to add instance from parameter name %s\n", pParameterName);
     	pList->callbackError = true;
 	return;
     }
