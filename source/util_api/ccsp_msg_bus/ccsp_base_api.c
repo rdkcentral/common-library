@@ -4211,35 +4211,49 @@ typedef struct cord_list_GetNextLevelInstances_List {
     void* bus_handle;    
 }GNLInstanceList;
 static void cord_list_callback_GetNextLevelInstances(const char* pParameterName, cord_value_type_t valueType, void* pUserData) {
-    static const size_t kDefaultArraySize = 32;
     GNLInstanceList *pList = (GNLInstanceList*)pUserData;
     if (!pList) return;
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)pList->bus_handle;    
-    const size_t len = strlen(pParameterName);
-    if (valueType != CORD_TYPE_OBJECT_PATH || pParameterName[len - 1] != '.') {
+    if (!bus_info || !bus_info->mallocfunc || !bus_info->freefunc) {
         pList->callbackError = true;
         return;
     }
+    if (!pParameterName)
+        return;
 
-    // Do we need to alloc or grow the array?
+    const size_t len = strlen(pParameterName);
+    if (len == 0)
+        return;
+
+    if (valueType != CORD_TYPE_OBJECT_PATH || pParameterName[len - 1] != '.') {
+        return;
+    }
+
+    unsigned int instance = 0;
+    if (safe_atou(pParameterName, &instance) != 0)
+        return;
+
+    /* Grow one-by-one and preserve existing entries. */
     if (pList->nCount == pList->nCapacity) {
-        const size_t nNewCapacity = pList->nCapacity ? pList->nCapacity * 2 : kDefaultArraySize;
+        const size_t nNewCapacity = pList->nCapacity + 1;
         unsigned int* pNewInstanceArray = bus_info->mallocfunc(sizeof(*pList->pInstanceArray) * nNewCapacity);
 
         if (!pNewInstanceArray) {
             pList->callbackError = true;
             return;
-       }
+        }
+
+        if (pList->pInstanceArray && pList->nCount > 0) {
+            memcpy(pNewInstanceArray, pList->pInstanceArray, sizeof(*pList->pInstanceArray) * pList->nCount);
+            bus_info->freefunc(pList->pInstanceArray);
+        }
+
         pList->pInstanceArray = pNewInstanceArray;
         pList->nCapacity = nNewCapacity;
-     }
-    //pListItem->pInstanceArray[pList->nCount] = safe_atou(<last node name, e.g. "123">);
-    if(0 == safe_atou(pParameterName, &pList->pInstanceArray[pList->nCount])){
-    	pList->nCount++;
-    } else {
-    	pList->callbackError = true;
-	return;
     }
+
+    pList->pInstanceArray[pList->nCount] = instance;
+    pList->nCount++;
 };
 #endif /* CORD_ENABLED */
 
