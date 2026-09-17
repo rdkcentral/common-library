@@ -4347,10 +4347,8 @@ typedef struct cord_list_PsmEnumRecords_List {
 
 static void cord_list_callback_PsmEnumRecords(const char* pParameterName, cord_value_type_t valueType, void* pUserData) {
     ERList *pList = (ERList*)pUserData;
-    printf("cord_list_callback_PsmEnumRecords called with pParameterName: %s, valueType: %d\n", pParameterName, valueType);
     if (!pList) return;
     if (pList->nextLevel == false && valueType == CORD_TYPE_OBJECT_PATH) return; // PSM behaviour - only object/instance returned if nextLevel==true
-    printf("Appending new list item for pParameterName: %s\n", pParameterName);
     const size_t lenNameWithNull = strlen(pParameterName) + 1;
 
     // Append new list item
@@ -4365,7 +4363,6 @@ static void cord_list_callback_PsmEnumRecords(const char* pParameterName, cord_v
     pListItem->pNext = pList->pHead;
     pList->pHead = pListItem;
     pList->nCount++;
-    printf("New list count: %zu\n", pList->nCount);
 }
 
 static void FreeList(ERList* pList)
@@ -4409,8 +4406,6 @@ int PsmEnumRecords
     list.nextLevel = nextLevel;
     const size_t depth = nextLevel ? 1 : 0;
     cord_rc_t crc = cord_list(psmName, depth, cord_list_callback_PsmEnumRecords, (void*)&list);
-    printf("cord_list returned: %d\n", crc);
-    printf("list.nCount: %zu list.callbackError: %d\n", list.nCount, list.callbackError);
     if (crc != CORD_RC_SUCCESS) {
         return CCSP_Message_Bus_ERROR;
     }
@@ -4419,7 +4414,6 @@ int PsmEnumRecords
         FreeList(&list);
         return CCSP_Message_Bus_OOM;
     }
-    printf("Finished listing PSM records, preparing to allocate output array\n");
     // Alloc output array
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     PCCSP_BASE_RECORD pRecArray = NULL;
@@ -4433,11 +4427,9 @@ int PsmEnumRecords
         pRecArray = (PCCSP_BASE_RECORD)calloc(list.nCount, sizeof(CCSP_BASE_RECORD));
     }
 
-    printf("Allocated output array of size: %zu\n", recArraySize);
     if (!pRecArray) {
         //free linked list
         FreeList(&list);
-        printf("Failed to allocate output array\n");
         return CCSP_Message_Bus_OOM;
     }
     size_t idxRecArray = 0;
@@ -4449,30 +4441,24 @@ int PsmEnumRecords
 
         if (pItem->valueType == CORD_TYPE_OBJECT_PATH) {
                 //last node name is all integer digits
-                printf("Processing object path: %s\n", pItem->pParameterName);
             len = strlen(pItem->pParameterName);
             if (pItem->pParameterName[len-1] != '.') {
                 pRecArray[idxRecArray].RecordType = CCSP_BASE_INSTANCE;
                 //pRecArray[idxRecArray].InstanceNumber = safe_atou(<last node name, e.g. "123">);
                 if(0 != safe_atou(pItem->pParameterName, &(pRecArray[idxRecArray].Instance.InstanceNumber))) {
-                    printf("Failed to convert object path to instance number: %s\n", pItem->pParameterName);
 			        CcspTraceError(("%s error while collecting the items\n", __FUNCTION__));
                 }
-                printf("Successfully converted object path to instance number: %s -> %u\n", pItem->pParameterName, pRecArray[idxRecArray].Instance.InstanceNumber);
-
             }
             else {
                 pRecArray[idxRecArray].RecordType = CCSP_BASE_OBJECT;
                 strncpy(pRecArray[idxRecArray].Instance.Name, pItem->pParameterName, CCSP_BASE_PARAM_LENGTH-1);
 		        pRecArray[idxRecArray].Instance.Name[CCSP_BASE_PARAM_LENGTH-1] = '\0';
-                printf("Processed object path as object: %s\n", pItem->pParameterName);
             }
         }
         else {
 	        pRecArray[idxRecArray].RecordType = CCSP_BASE_PARAM;
             strncpy(pRecArray[idxRecArray].Instance.Name, pItem->pParameterName, CCSP_BASE_PARAM_LENGTH-1);
 	        pRecArray[idxRecArray].Instance.Name[CCSP_BASE_PARAM_LENGTH-1] = '\0';
-            printf("Processed parameter: %s\n", pItem->pParameterName);
         }
 
         list.pHead = pItem->pNext;   // Unlink this list item from list
@@ -4483,7 +4469,6 @@ int PsmEnumRecords
 
     *ppRecArray = pRecArray;
     *pulNumRec  = list.nCount;
-    printf("Total records processed: %zu pulNumRec: %zu\n", idxRecArray, *pulNumRec);
 
     return CCSP_SUCCESS;
 
