@@ -30,7 +30,7 @@ EnvironmentFile=/etc/device.properties
 ExecStart=/bin/sh -c '/usr/bin/notify_comp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting notify_comp" >> ${PROCESS_RESTART_LOG}'
 Restart=always
-
+SyslogIdentifier=notifyComp
 
 [Install]
 WantedBy=multi-user.target

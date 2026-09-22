@@ -30,7 +30,7 @@ WorkingDirectory=/usr/ccsp/tad
 ExecStart=/bin/sh -c '/usr/bin/CcspTandDSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspTandDSsp" >> ${PROCESS_RESTART_LOG}'
 Restart=always
-
+SyslogIdentifier=CcspTandDSsp
 
 [Install]
 WantedBy=multi-user.target

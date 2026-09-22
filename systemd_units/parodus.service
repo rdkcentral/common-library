@@ -30,7 +30,7 @@ ExecStartPre=/usr/bin/parodusStart
 ExecStart=/bin/sh -c 'source /tmp/parodusCmd.cmd'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting parodus" >> ${PROCESS_RESTART_LOG}'
 Restart=always
-
+SyslogIdentifier=parodus
 
 [Install]
 WantedBy=wan-initialized.target

@@ -318,6 +318,13 @@ static void* rbusValueChange_pollingThreadFunc(void *userData)
 
             if(val)
             {
+                if((!rec->value) || (!val[0]->parameterValue))
+                {
+                    CcspTraceError (("%s: previous value or current value is NULL\n", __FUNCTION__));
+                    free_parameterValStruct_t(rec->handle, 1, val);
+                    continue;
+                }
+
                 if(strcmp(rec->value, val[0]->parameterValue) != 0)
                 {
                     int filterResult = -1;
@@ -422,7 +429,10 @@ int Ccsp_RbusValueChange_Subscribe(
         val = rbusValueChange_GetParameterValue(rec);
         if(val)
         {
-            rec->value = strdup(val[0]->parameterValue);
+            if(val[0]->parameterValue)
+            {
+                rec->value = strdup(val[0]->parameterValue);
+            }
             free_parameterValStruct_t(rec->handle, 1, val);
         }
 
