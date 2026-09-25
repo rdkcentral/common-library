@@ -498,9 +498,29 @@ BOOL is_ValidIpAddressv6_port(PUCHAR pString)
         return FALSE;
     char *hostcpy = strdup((const char*)pString);
     char *hostdup = strdup((const char*)pString);
+    if ((!hostcpy) || (!hostdup))
+    {
+        free(hostcpy);
+        free(hostdup);
+        return FALSE;
+    }
     char* ipv6 = strtok(hostcpy,"]");
     ipv6 = strtok(ipv6,"[");
+    /* ipv6 can be NULL if hostcpy did not contain a valid "[...]" token */
+    if (!ipv6)
+    {
+        free(hostcpy);
+        free(hostdup);
+        return FALSE;
+    }
     char *port_ptr = strchr(hostdup,']');
+    /* port_ptr can be NULL if hostdup does not contain ']' */
+    if (!port_ptr)
+    {
+        free(hostcpy);
+        free(hostdup);
+        return FALSE;
+    }
     if(port_ptr[1])
     {
         if((port_ptr[1]==':') && (isdigit(port_ptr[2])))
@@ -509,16 +529,16 @@ BOOL is_ValidIpAddressv6_port(PUCHAR pString)
             port_ptr = strtok(NULL,":");
         }
         else
-	{
-	    /* CID 252351, 252353 fix */
-	    free(hostcpy);
-	    free(hostdup);
+	    {
+	        /* CID 252351, 252353 fix */
+	        free(hostcpy);
+	        free(hostdup);
             return FALSE;
-	}
+	    }
     }
     if(is_Ipv6_address((PUCHAR)ipv6))
     {
-        if(port_ptr[1])
+        if(port_ptr && port_ptr[1])
         {
             if(is_ValidPort((PUCHAR)port_ptr))
                 ret = TRUE;
