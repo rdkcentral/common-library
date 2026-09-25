@@ -219,7 +219,21 @@ UserGetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
     struct tm       *ptm        = NULL;
     struct timespec elapseTime  = {0};
 
-    UserGetNtpTime(&timeNow);
+    /*
+     * Use one clock sample for both calendar seconds and sub-second fields so a
+     * second boundary cannot leave Second from one sample and Milli/Micro from another.
+     * Fall back to UserGetNtpTime (time()) if clock_gettime fails.
+     */
+    if ( clock_gettime(CLOCK_REALTIME, &elapseTime) == 0 )
+    {
+        timeNow = (time_t)elapseTime.tv_sec;
+    }
+    else
+    {
+        UserGetNtpTime(&timeNow);
+        elapseTime.tv_sec  = timeNow;
+        elapseTime.tv_nsec = 0;
+    }
 
     ptm = gmtime_r(&timeNow,&Tm);
 
@@ -231,11 +245,6 @@ UserGetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
     pSystemTime->Minute         = ptm->tm_min;
     pSystemTime->Second         = ptm->tm_sec;
     pSystemTime->bDayLightSaving= ptm->tm_isdst;
-    /*
-     *  get the milli-second and micro-second part
-     */
-    clock_gettime(CLOCK_REALTIME, &elapseTime);
-
     pSystemTime->MilliSecond    = elapseTime.tv_nsec / (1000000L);
     pSystemTime->MicroSecond    = elapseTime.tv_nsec / (1000L);
 }
@@ -263,6 +272,7 @@ UserGetLocalTime(USER_SYSTEM_TIME*  pSystemTime)
     pSystemTime->Minute         = ptm->tm_min;
     pSystemTime->Second         = ptm->tm_sec;
     pSystemTime->MilliSecond    = 0;
+    pSystemTime->MicroSecond    = 0;
     pSystemTime->bDayLightSaving= ptm->tm_isdst;
 
 /*    printf("Linux - GetLocalTime: H: %d M: %d S: %d isdst: %d \n", pSystemTime->Hour, pSystemTime->Minute, pSystemTime->Second, pSystemTime->bDayLightSaving ); */

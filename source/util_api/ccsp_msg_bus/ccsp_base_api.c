@@ -1055,6 +1055,7 @@ void Notify_change(char *event_name, void *new_value)
         return;
     }
 
+    /* Keep rc < EOK: matches this file and SAFEC_DUMMY parseFormat (returns len on success). */
     rc = sprintf_s(str, sizeof(str), "%s,%s", event_name, (char *)new_value);
     if (rc < EOK)
     {
@@ -1084,6 +1085,12 @@ void Notify_change(char *event_name, void *new_value)
         CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
         bus_info->freefunc(faultParam);
     }
+}
+#else
+void Notify_change(char *event_name, void *new_value)
+{
+    UNREFERENCED_PARAMETER(event_name);
+    UNREFERENCED_PARAMETER(new_value);
 }
 #endif
 
