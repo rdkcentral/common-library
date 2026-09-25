@@ -397,6 +397,10 @@ class Preprocessor():
             xml_str = xml_str.replace(group_ifdef_cond, "<?if " + str(result) + "?>")
         return xml_str
 
+    #Credit:
+    #Copyright (c) 2017-2019 Tony Su
+    #Copyright (c) 2023 Red Hat, Inc.
+    #Licensed under the MIT License
     def parse_if_else_if(self, xml_str):
         if_elif_else_regex = r"(<\?if\s(True|False)\?>\n((.(?!<\?))*)\n<\?elseif\s(True|False)\?>\n((.(?!<\?))*)\n<\?else\?>\n((.(?!<\?))*)\n<\?endif\?>\n)"
         if_else_regex = r"(<\?if\s(True|False)\?>\n((.(?!<\?))*)\n<\?else\?>\n((.(?!<\?))*)\n<\?endif\?>\n)"
