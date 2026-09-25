@@ -71,6 +71,8 @@
 #ifndef  _DSLH_DEFINITIONS_TR143_H_
 #define  _DSLH_DEFINITIONS_TR143_H_
 
+#include <stdint.h>
+
 /*
  * Each status of diagnostic supported by the DSLH model must be uniquely identified */
 #define DSLH_TR143_DIAGNOSTIC_None                              0
@@ -85,6 +87,8 @@
 #define DSLH_TR143_DIAGNOSTIC_Error_NoPASV                      9
 #define DSLH_TR143_DIAGNOSTIC_Error_IncorrectSize               10
 #define DSLH_TR143_DIAGNOSTIC_Error_Timeout                     11
+#define DSLH_TR143_DIAGNOSTIC_Canceled                          12
+#define DSLH_TR143_DIAGNOSTIC_Error_Internal                    13
 
 #define DSLH_TR143_MAX_STRING_LENGTH                            256
 /***********************************************************
@@ -99,6 +103,8 @@ _DSLH_TR143_DOWNLOAD_DIAG_INFO
     char                            DownloadURL[DSLH_TR143_MAX_STRING_LENGTH];            
     ULONG                           DSCP;                   
     ULONG                           EthernetPriority;  
+    ULONG                           TimeBasedTestDuration;
+    ULONG                           TimeBasedTestMeasurementOffset;
     ULONG                           DiagnosticsState;
 }
 DSLH_TR143_DOWNLOAD_DIAG_INFO, *PDSLH_TR143_DOWNLOAD_DIAG_INFO;
@@ -109,6 +115,8 @@ DSLH_TR143_DOWNLOAD_DIAG_INFO, *PDSLH_TR143_DOWNLOAD_DIAG_INFO;
                 AnscZeroMemory(d_info->DownloadURL, DSLH_TR143_MAX_STRING_LENGTH); \
                 d_info->DSCP                = 0;                                 \
                 d_info->EthernetPriority    = 0;                                 \
+                d_info->TimeBasedTestDuration = 10;                              \
+                d_info->TimeBasedTestMeasurementOffset = 2;                      \
                 d_info->DiagnosticsState    = 0;                                 \
         }                                                                        \
     
@@ -129,7 +137,9 @@ _DSLH_TR143_UPLOAD_DIAG_INFO
     char                            UploadURL[DSLH_TR143_MAX_STRING_LENGTH];            
     ULONG                           DSCP;                   
     ULONG                           EthernetPriority;  
-    ULONG                           TestFileLength;
+    uint64_t                        TestFileLength;
+    ULONG                           TimeBasedTestDuration;
+    ULONG                           TimeBasedTestMeasurementOffset;
     ULONG                           DiagnosticsState;
 }
 DSLH_TR143_UPLOAD_DIAG_INFO, *PDSLH_TR143_UPLOAD_DIAG_INFO;
@@ -141,6 +151,8 @@ DSLH_TR143_UPLOAD_DIAG_INFO, *PDSLH_TR143_UPLOAD_DIAG_INFO;
                 u_info->DSCP                = 0;                                 \
                 u_info->EthernetPriority    = 0;                                 \
                 u_info->TestFileLength      = 1000000;                           \
+                u_info->TimeBasedTestDuration = 10;                              \
+                u_info->TimeBasedTestMeasurementOffset = 2;                      \
                 u_info->DiagnosticsState    = 0;                                 \
         }                                                                        \
     

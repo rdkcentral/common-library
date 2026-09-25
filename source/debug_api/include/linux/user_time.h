@@ -96,6 +96,7 @@ _USER_SYSTEM_TIME
     USHORT                          Minute;
     USHORT                          Second;
     USHORT                          MilliSecond;
+    ULONG                           MicroSecond;
 }
 USER_SYSTEM_TIME,  *PUSER_SYSTEM_TIME;
 

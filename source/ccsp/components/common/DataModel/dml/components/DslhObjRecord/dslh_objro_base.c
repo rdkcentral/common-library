@@ -214,6 +214,7 @@ DslhObjroCreate
 			pDslhRvqIf->GetParamValueString      = DslhObjroRvqGetParamValueString;
 			pDslhRvqIf->GetParamValueInt         = DslhObjroRvqGetParamValueInt;
 			pDslhRvqIf->GetParamValueUint32      = DslhObjroRvqGetParamValueUint32;
+			pDslhRvqIf->GetParamValueUint64      = DslhObjroRvqGetParamValueUint64;
 			pDslhRvqIf->GetParamValueBool        = DslhObjroRvqGetParamValueBool;
 			pDslhRvqIf->GetParamValueUint32Array = DslhObjroRvqGetParamValueUint32Array;
 			pDslhRvqIf->GetParamValueUcharArray  = DslhObjroRvqGetParamValueUcharArray;

@@ -142,6 +142,8 @@
 #define  COSA_XML_NODE_func_SetParamBoolValue     "func_SetParamBoolValue"
 #define  COSA_XML_NODE_func_SetParamIntValue      "func_SetParamIntValue"
 #define  COSA_XML_NODE_func_SetParamUlongValue    "func_SetParamUlongValue"
+#define  COSA_XML_NODE_func_SetParamUint64Value   "func_SetParamUint64Value"
+#define  COSA_XML_NODE_func_GetParamUint64Value   "func_GetParamUint64Value"
 #define  COSA_XML_NODE_func_SetParamStringValue   "func_SetParamStringValue"
 #define  COSA_XML_NODE_func_SetParamBulkValues    "func_SetBulkParamValues"
 #define  COSA_XML_NODE_func_Validate              "func_Validate"

@@ -75,6 +75,7 @@
 #define  _SLAP_DEFINITIONS_
 
 #include "user_base.h"
+#include <stdint.h>
 #include "ansc_wrapper_base.h"
 #include "ansc_common_structures.h"
 #include "slap_vho_exported_api.h"
@@ -141,6 +142,7 @@
 #define  SLAP_CONTENT_TYPE_IP6_ADDR                 16      /* applies to ucharArray, rendered as a IPv6 address string            */
 #define  SLAP_CONTENT_TYPE_IP6_ADDR_LIST            17      /* applies to ucharArray, rendered as an array of IPv6 addresses       */
 #define  SLAP_CONTENT_TYPE_IP4_ADDR_RANGE_LIST      18      /* applies to ucharArray, rendered as an array of IPv4 addresses       */
+#define  SLAP_CONTENT_TYPE_UNSIGNED_LONG            19      /* applies to uint32/ULONG, TR-181 unsignedLong / StatsCounter64     */
 
 
 #define  SLAP_CONTENT_TYPE_TABLE_2D                 10001
@@ -186,6 +188,7 @@
 #define  SLAP_VAR_SYNTAX_stringArray                SLAP_VAR_SYNTAX_TYPE_stringArray
 #define  SLAP_VAR_SYNTAX_ucharArray                 SLAP_VAR_SYNTAX_TYPE_ucharArray
 #define  SLAP_VAR_SYNTAX_uint32                     SLAP_VAR_SYNTAX_TYPE_uint32
+#define  SLAP_VAR_SYNTAX_uint64                     SLAP_VAR_SYNTAX_TYPE_uint64
 #define  SLAP_VAR_SYNTAX_uint32Array                SLAP_VAR_SYNTAX_TYPE_uint32Array
 #define  SLAP_VAR_SYNTAX_ptr                        SLAP_VAR_SYNTAX_TYPE_ptr
 #define  SLAP_VAR_SYNTAX_ptrArray                   SLAP_VAR_SYNTAX_TYPE_ptrArray
@@ -207,6 +210,7 @@
 #define  SLAP_VAR_SYNTAX_TYPE_ucharArray            8
 #define  SLAP_VAR_SYNTAX_TYPE_uint32                9
 #define  SLAP_VAR_SYNTAX_TYPE_uint32Array           10
+#define  SLAP_VAR_SYNTAX_TYPE_uint64                17
 #define  SLAP_VAR_SYNTAX_TYPE_ptr                   11
 #define  SLAP_VAR_SYNTAX_TYPE_ptrArray              12
 #define  SLAP_VAR_SYNTAX_TYPE_handle                13
@@ -226,6 +230,7 @@
 #define  SLAP_VAR_SYNTAX_NAME_stringArray           "stringArray"
 #define  SLAP_VAR_SYNTAX_NAME_ucharArray            "ucharArray"
 #define  SLAP_VAR_SYNTAX_NAME_uint32                "uint32"
+#define  SLAP_VAR_SYNTAX_NAME_uint64                "uint64"
 #define  SLAP_VAR_SYNTAX_NAME_uint32Array           "uint32Array"
 #define  SLAP_VAR_SYNTAX_NAME_ptr                   "ptr"
 #define  SLAP_VAR_SYNTAX_NAME_ptrArray              "ptrArray"
@@ -253,6 +258,7 @@ typedef  char*          SLAP_STRING,    *PSLAP_STRING;
 typedef  int            SLAP_INT,       *PSLAP_INT;
 typedef  UCHAR          SLAP_UCHAR,     *PSLAP_UCHAR;
 typedef  ULONG          SLAP_UINT32,    *PSLAP_UINT32;
+typedef  ULONG64        SLAP_UINT64,    *PSLAP_UINT64;
 typedef  void*          SLAP_PTR,       *PSLAP_PTR;
 typedef  ANSC_HANDLE    SLAP_HANDLE,    *PSLAP_HANDLE;
 typedef  ANSC_HANDLE    SLAP_OBJECT,    *PSLAP_OBJECT;
@@ -549,6 +555,7 @@ _SLAP_VARIABLE
         SLAP_STRING_ARRAY*          varStringArray;
         SLAP_UCHAR_ARRAY*           varUcharArray;
         SLAP_UINT32                 varUint32;
+        SLAP_UINT64                 varUint64;
         SLAP_UINT32_ARRAY*          varUint32Array;
         SLAP_PTR                    varPtr;
         SLAP_PTR_ARRAY*             varPtrArray;
