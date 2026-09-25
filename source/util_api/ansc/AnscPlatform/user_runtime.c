@@ -136,6 +136,12 @@ _ansc_ultoa
         return NULL;
     }
 
+    /* Callers in this tree use decimal only; reject unsupported radices. */
+    if ( radix != 10 )
+    {
+        return NULL;
+    }
+
     while ( result )
     {
         result = result / radix;
