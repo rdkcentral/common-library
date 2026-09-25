@@ -226,6 +226,13 @@ SlapVhoEqualVariables
 
                     break;
 
+            case    SLAP_VAR_SYNTAX_uint64 :
+
+                    b_equal_var =
+                        (var1->Variant.varUint64 == var2->Variant.varUint64);
+
+                    break;
+
             case    SLAP_VAR_SYNTAX_uint32Array :
 
                     SlapEqualVarArrays
@@ -479,6 +486,12 @@ SlapVhoCloneVariable
 
                 break;
 
+        case    SLAP_VAR_SYNTAX_uint64 :
+
+            dst_var->Variant.varUint64 = src_var->Variant.varUint64;
+
+            break;
+
         case    SLAP_VAR_SYNTAX_uint32Array :
 
                 if ( src_var->Variant.varUint32Array )
@@ -686,6 +699,10 @@ SlapVhoCleanVariable
         case    SLAP_VAR_SYNTAX_uint32 :
 
                 break;
+
+        case    SLAP_VAR_SYNTAX_uint64 :
+
+            break;
 
         case    SLAP_VAR_SYNTAX_uint32Array :
 

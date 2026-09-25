@@ -524,6 +524,8 @@ DslhCpecoRegisterObject
                     pParameterArray[pMyObject->uParameterArrayIndex++].dataType   = ccsp_string;
                 else if ( !_ansc_strncmp( pParamDescr->DataType, DSLH_CWMP_DATA_NAME_int, _ansc_strlen(DSLH_CWMP_DATA_NAME_int) ))
                     pParameterArray[pMyObject->uParameterArrayIndex++].dataType   = ccsp_int;
+                else if ( !_ansc_strncmp( pParamDescr->DataType, DSLH_CWMP_DATA_NAME_unsignedLong, _ansc_strlen(DSLH_CWMP_DATA_NAME_unsignedLong) ))
+                    pParameterArray[pMyObject->uParameterArrayIndex++].dataType   = ccsp_unsignedLong;
                 else if ( !_ansc_strncmp( pParamDescr->DataType, DSLH_CWMP_DATA_NAME_unsignedInt, _ansc_strlen(DSLH_CWMP_DATA_NAME_unsignedInt) ))
                     pParameterArray[pMyObject->uParameterArrayIndex++].dataType   = ccsp_unsignedInt;
                 else if ( !_ansc_strncmp( pParamDescr->DataType, DSLH_CWMP_DATA_NAME_boolean, _ansc_strlen(DSLH_CWMP_DATA_NAME_boolean) ))
