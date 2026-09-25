@@ -74,6 +74,7 @@
 #include "user_base.h"
 #include "user_time.h"
 #include "safec_lib_common.h"
+#include <time.h>
 
 
 #define ZONE_NUM 38
@@ -214,12 +215,13 @@ void
 UserGetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
 {
     time_t          timeNow;
-	struct tm       Tm = {0};
-    struct tm       *ptm = NULL;
+    struct tm       Tm          = {0};
+    struct tm       *ptm        = NULL;
+    struct timespec elapseTime  = {0};
 
-	UserGetNtpTime(&timeNow);
+    UserGetNtpTime(&timeNow);
 
-	ptm = gmtime_r(&timeNow,&Tm);
+    ptm = gmtime_r(&timeNow,&Tm);
 
     pSystemTime->Year           = ptm->tm_year + 1900;
     pSystemTime->Month          = ptm->tm_mon + 1;
@@ -228,8 +230,14 @@ UserGetSystemTime(USER_SYSTEM_TIME*  pSystemTime)
     pSystemTime->Hour           = ptm->tm_hour;
     pSystemTime->Minute         = ptm->tm_min;
     pSystemTime->Second         = ptm->tm_sec;
-    pSystemTime->MilliSecond    = 0;
     pSystemTime->bDayLightSaving= ptm->tm_isdst;
+    /*
+     *  get the milli-second and micro-second part
+     */
+    clock_gettime(CLOCK_REALTIME, &elapseTime);
+
+    pSystemTime->MilliSecond    = elapseTime.tv_nsec / (1000000L);
+    pSystemTime->MicroSecond    = elapseTime.tv_nsec / (1000L);
 }
 
 

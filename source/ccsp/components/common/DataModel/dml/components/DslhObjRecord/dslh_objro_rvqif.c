@@ -54,6 +54,7 @@
         *   DslhObjroRvqGetParamValueString
         *   DslhObjroRvqGetParamValueInt
         *   DslhObjroRvqGetParamValueUint32
+        *   DslhObjroRvqGetParamValueUint64
         *   DslhObjroRvqGetParamValueBool
         *   DslhObjroRvqGetParamValueUint32Array
         *   DslhObjroRvqGetParamValueUcharArray
@@ -397,6 +398,55 @@ DslhObjroRvqGetParamValueInt
     return:     parameter value.
 
 **********************************************************************/
+
+
+/**********************************************************************
+
+    caller:     owner of this object
+
+    prototype:
+
+        unsigned long long
+        DslhObjroRvqGetParamValueUint64
+            (
+                ANSC_HANDLE                 hThisObject,
+                char*                       pParamName
+            );
+
+    description:
+
+        Retrieve modified unsignedLong / uint64 parameter value.
+
+**********************************************************************/
+
+unsigned long long
+DslhObjroRvqGetParamValueUint64
+    (
+        ANSC_HANDLE                 hThisObject,
+        char*                       pParamName
+    )
+{
+    PDSLH_OBJ_RECORD_OBJECT         pMyObject       = (PDSLH_OBJ_RECORD_OBJECT)hThisObject;
+    PSLAP_VARIABLE                  pParamValue     = (PSLAP_VARIABLE         )NULL;
+    PDSLH_RVQ_INTERFACE             pDslhRvqIf      = (PDSLH_RVQ_INTERFACE    )pMyObject->hDslhRvqIf;
+
+    pParamValue =
+        (PSLAP_VARIABLE)pDslhRvqIf->GetParamValue
+            (
+                (ANSC_HANDLE)pMyObject,
+                pParamName
+            );
+
+    if ( !pParamValue )
+    {
+        return  0;
+    }
+
+    if ( pParamValue->Syntax == SLAP_VAR_SYNTAX_uint64 )
+        return (unsigned long long)pParamValue->Variant.varUint64;
+
+    return  (unsigned long long)pParamValue->Variant.varUint32;
+}
 
 ULONG
 DslhObjroRvqGetParamValueUint32
