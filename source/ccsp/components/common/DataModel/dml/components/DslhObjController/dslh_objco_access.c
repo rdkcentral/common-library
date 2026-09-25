@@ -1,3 +1,4 @@
+#include <stdlib.h>
 /*
  * If not stated otherwise in this file or this component's Licenses.txt file the
  * following copyright and licenses apply:
@@ -349,6 +350,26 @@ DslhObjcoValidate
                                 {
                                     *ppFaultParamName = AnscCloneString(pParamDescr->Name);
 
+                                    return FALSE;
+                                }
+                            }
+
+                            break;
+
+                    case    SLAP_VAR_SYNTAX_uint64 :
+
+                            if( pInterface->SetEntryParamUint64 != NULL)
+                            {
+                                unsigned long long ullVal = 0;
+                                if ( !pDslhRvqIf->GetParamValueUint64 )
+                                {
+                                    *ppFaultParamName = AnscCloneString(pParamDescr->Name);
+                                    return FALSE;
+                                }
+                                ullVal = pDslhRvqIf->GetParamValueUint64(pDslhRvqIf->hOwnerContext, pParamDescr->Name);
+                                if(!pInterface->SetEntryParamUint64(pMyObject->hInsContext, pCallingName, ullVal))
+                                {
+                                    *ppFaultParamName = AnscCloneString(pParamDescr->Name);
                                     return FALSE;
                                 }
                             }
@@ -1095,6 +1116,59 @@ DslhObjcoGetParamValueByName
                 if( pInterface->GetEntryParamUlong != NULL)
                 {
                     bReturn = pInterface->GetEntryParamUlong(pMyObject->hInsContext,pName, &pSlapVariable->Variant.varUint32);
+                }
+                else if( pInterface->GetEntryParamUint64 != NULL)
+                {
+                    /* uint32 param but only Uint64 getter registered */
+                    ULONG64 tmp64 = 0;
+                    bReturn = pInterface->GetEntryParamUint64(pMyObject->hInsContext, pName, &tmp64);
+                    if (bReturn)
+                    {
+                        pSlapVariable->Variant.varUint32 = (SLAP_UINT32)tmp64;
+                    }
+                }
+                else
+                {
+                    AnscTraceWarning(("GetParamValueByName '%s': GetEntryParamUlong/Uint64 are NULL\n", pName));
+                }
+
+                if (!bReturn)
+                {
+                    AnscTraceWarning(("GetParamValueByName '%s': uint32 getter returned FALSE (ptrUlong=%p ptrUint64=%p)\n",
+                                      pName,
+                                      (void*)pInterface->GetEntryParamUlong,
+                                      (void*)pInterface->GetEntryParamUint64));
+                }
+
+                break;
+
+        case    SLAP_VAR_SYNTAX_uint64 :
+
+                if( pInterface->GetEntryParamUint64 != NULL)
+                {
+                    bReturn = pInterface->GetEntryParamUint64(pMyObject->hInsContext, pName, &pSlapVariable->Variant.varUint64);
+                }
+                else if( pInterface->GetEntryParamUlong != NULL)
+                {
+                    /* uint64 param but only Ulong getter registered (legacy DML) */
+                    ULONG tmp32 = 0;
+                    bReturn = pInterface->GetEntryParamUlong(pMyObject->hInsContext, pName, &tmp32);
+                    if (bReturn)
+                    {
+                        pSlapVariable->Variant.varUint64 = (SLAP_UINT64)tmp32;
+                    }
+                }
+                else
+                {
+                    AnscTraceWarning(("GetParamValueByName '%s': GetEntryParamUint64/Ulong are NULL\n", pName));
+                }
+
+                if (!bReturn)
+                {
+                    AnscTraceWarning(("GetParamValueByName '%s': uint64 getter returned FALSE (ptrUint64=%p ptrUlong=%p)\n",
+                                      pName,
+                                      (void*)pInterface->GetEntryParamUint64,
+                                      (void*)pInterface->GetEntryParamUlong));
                 }
 
                 break;

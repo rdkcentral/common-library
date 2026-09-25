@@ -74,6 +74,8 @@ typedef struct _component_info {
     int size;
 } component_info;
 
+extern ANSC_HANDLE bus_handle;
+
 int   CcspBaseIf_timeout_seconds        = 60; //seconds
 int   CcspBaseIf_timeout_getval_seconds = 120; //seconds
 #define  CcspBaseIf_timeout_rbus  (CcspBaseIf_timeout_seconds * 1000) // in milliseconds
@@ -1036,7 +1038,54 @@ int CcspBaseIf_setParameterAttributes(
     return CcspBaseIf_setParameterAttributes_rbus(bus_handle, dst_component_id, dbus_path, sessionId, val, size);
 }
 
+#ifdef USE_NOTIFY_COMPONENT
+void Notify_change(char *event_name, void *new_value)
+{
+    char str[512] = {0};
+    parameterValStruct_t notif_val[1];
+    char param_name[256] = "Device.NotifyComponent.SetNotifi_ParamName";
+    char compo[256] = "eRT.com.cisco.spvtg.ccsp.notifycomponent";
+    char bus[256] = "/com/cisco/spvtg/ccsp/notifycomponent";
+    char *faultParam = NULL;
+    int ret = 0;
+    errno_t rc = -1;
 
+    if (!event_name || !new_value || !bus_handle)
+    {
+        return;
+    }
+
+    rc = sprintf_s(str, sizeof(str), "%s,%s", event_name, (char *)new_value);
+    if (rc < EOK)
+    {
+        ERR_CHK(rc);
+        return;
+    }
+
+    notif_val[0].parameterName = param_name;
+    notif_val[0].parameterValue = str;
+    notif_val[0].type = ccsp_string;
+    ret = CcspBaseIf_setParameterValues(
+            bus_handle,
+            compo,
+            bus,
+            0,
+            0,
+            notif_val,
+            1,
+            TRUE,
+            &faultParam);
+    if (ret != CCSP_SUCCESS)
+    {
+        CcspTraceError(("Set Parameter Values failed\n"));
+    }
+    if (faultParam)
+    {
+        CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+        bus_info->freefunc(faultParam);
+    }
+}
+#endif
 
 int CcspBaseIf_getParameterAttributes_rbus(
         void* bus_handle,

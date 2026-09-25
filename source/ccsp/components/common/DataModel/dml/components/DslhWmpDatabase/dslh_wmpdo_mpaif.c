@@ -772,6 +772,19 @@ DslhWmpdoMpaSetParameterValues
 					break;
 				}
 			}
+			else if( dataType == DSLH_CWMP_DATA_TYPE_unsignedLong)
+			{
+				if( pParameterValueArray[i].Value->Syntax != SLAP_VAR_SYNTAX_uint64)
+				{
+					bFaultEncountered = TRUE;
+
+					*ppInvalidParameterName = AnscCloneString(pParameterValueArray[i].Name);
+
+					returnStatus = CCSP_ERR_INVALID_PARAMETER_TYPE;
+
+					break;
+				}
+			}
 			else
 			{
 				if( pParameterValueArray[i].Value->Syntax != SLAP_VAR_SYNTAX_string)

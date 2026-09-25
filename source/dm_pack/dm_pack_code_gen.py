@@ -70,6 +70,9 @@ func_MemoryCheck=26
 func_MemoryUsage=27
 func_MemoryTable=28
 func_IsObjSupported=29
+func_GetParamUint64Value=30
+func_SetParamUint64Value=31
+func_TestParamUint64Value=32
 
 def initObjectNames(objectMap):
   objectMap["object"]=0
@@ -109,6 +112,9 @@ def initFuncNames(funcMap):
   funcMap["func_MemoryUsage"]=27
   funcMap["func_MemoryTable"]=28
   funcMap["func_IsObjSupported"]=29
+  funcMap["func_GetParamUint64Value"]=30
+  funcMap["func_SetParamUint64Value"]=31
+  funcMap["func_TestParamUint64Value"]=32
 
 #printElement is only for debugging that we know how to write code that walks the tree 
 def printElement(elem,depth):
