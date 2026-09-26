@@ -19,7 +19,8 @@
 [Unit]
 Description=PsmSsp service
 
-After=CcspCrSsp.service
+After=utopia.service CcspCrSsp.service
+Required=utopia.service
 
 [Service]
 Type=forking
