@@ -120,7 +120,9 @@ AnscDkuoRecv
     ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
     PANSC_DAEMON_SOCKET_UDP_OBJECT  pMyObject    = (PANSC_DAEMON_SOCKET_UDP_OBJECT)hThisObject;
     PANSC_DAEMON_SERVER_UDP_OBJECT  pServer      = (PANSC_DAEMON_SERVER_UDP_OBJECT)pMyObject->hDaemonServer;
+    AnscAcquireLock(&pMyObject->OpLock);
     PANSC_DSUO_PACKET_OBJECT        pPacket      = (PANSC_DSUO_PACKET_OBJECT      )pMyObject->hPacket;
+    AnscReleaseLock(&pMyObject->OpLock);
     ULONG                           ulPmode      = ANSC_DSUOWO_PMODE_DISCARD;
     BOOL                            bFreePacket  = TRUE;
 

@@ -109,8 +109,12 @@ AnscDsuoWorkerTask
     PANSC_DAEMON_SERVER_UDP_OBJECT  pMyObject    = (PANSC_DAEMON_SERVER_UDP_OBJECT)pSocket->hDaemonServer;
     PANSC_DAEMON_ENGINE_UDP_OBJECT  pEngine      = (PANSC_DAEMON_ENGINE_UDP_OBJECT)pSocket->hDaemonEngine;
     PANSC_DSUO_WORKER_OBJECT        pWorker      = (PANSC_DSUO_WORKER_OBJECT      )pMyObject->hWorker;
+   
+    AnscAcquireLock(&pSocket->OpLock);
     PANSC_DSUO_PACKET_OBJECT        pPacket      = (PANSC_DSUO_PACKET_OBJECT      )pSocket->hPacket;
+    AnscReleaseLock(&pSocket->OpLock);
 
+    
     if ( !pPacket )
     {
         return  ANSC_STATUS_UNAPPLICABLE;

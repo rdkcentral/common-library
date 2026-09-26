@@ -249,12 +249,13 @@ SysRboGetFolderByIndex
     PSYS_REPOSITORY_FOLDER_OBJECT   pRepFolder   = (PSYS_REPOSITORY_FOLDER_OBJECT)NULL;
     PSINGLE_LINK_ENTRY              pSLinkEntry  = NULL;
 
+    AnscAcquireLock(&pMyObject->FolderQueueLock);
     if ( ulIndex >= AnscQueueQueryDepth(&pMyObject->FolderQueue) )
     {
+	AnscReleaseLock(&pMyObject->FolderQueueLock);
         return  (ANSC_HANDLE)NULL;
     }
 
-    AnscAcquireLock(&pMyObject->FolderQueueLock);
     pSLinkEntry = AnscQueueSearchEntryByIndex(&pMyObject->FolderQueue, ulIndex);
     AnscReleaseLock(&pMyObject->FolderQueueLock);
 
@@ -355,12 +356,13 @@ SysRboGetRecordByIndex
     PSYS_REPOSITORY_RECORD_OBJECT   pRepRecord   = (PSYS_REPOSITORY_RECORD_OBJECT)NULL;
     PSINGLE_LINK_ENTRY              pSLinkEntry  = NULL;
 
+    AnscAcquireLock(&pMyObject->RecordQueueLock);
     if ( ulIndex >= AnscQueueQueryDepth(&pMyObject->RecordQueue) )
     {
+	AnscReleaseLock(&pMyObject->RecordQueueLock);
         return  (ANSC_HANDLE)NULL;
     }
 
-    AnscAcquireLock(&pMyObject->RecordQueueLock);
     pSLinkEntry = AnscQueueSearchEntryByIndex(&pMyObject->RecordQueue, ulIndex);
     AnscReleaseLock(&pMyObject->RecordQueueLock);
 

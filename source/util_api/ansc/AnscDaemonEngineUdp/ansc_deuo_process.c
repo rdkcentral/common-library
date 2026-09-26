@@ -113,7 +113,9 @@ AnscDeuoRecv
     UNREFERENCED_PARAMETER(hThisObject);
     ANSC_STATUS                     returnStatus = ANSC_STATUS_SUCCESS;
     PANSC_DAEMON_SOCKET_UDP_OBJECT  pSocket      = (PANSC_DAEMON_SOCKET_UDP_OBJECT)hSocket;
+    AnscAcquireLock(&pSocket->OpLock);
     PANSC_DSUO_PACKET_OBJECT        pPacket      = (PANSC_DSUO_PACKET_OBJECT      )pSocket->hPacket;
+    AnscReleaseLock(&pSocket->OpLock);
 
     pSocket->RecvBytesCount += pPacket->RecvPacketSize;
     pSocket->LastRecvAt      = AnscGetTickInSeconds();
