@@ -140,6 +140,7 @@
 #define  DSLH_CWMP_DATA_TYPE_boolean                5
 #define  DSLH_CWMP_DATA_TYPE_dateTime               6
 #define  DSLH_CWMP_DATA_TYPE_base64                 7
+#define  DSLH_CWMP_DATA_TYPE_unsignedLong           8
 
 #define  DSLH_CWMP_DATA_NAME_object                 "object"
 #define  DSLH_CWMP_DATA_NAME_string                 "string"
@@ -148,6 +149,7 @@
 #define  DSLH_CWMP_DATA_NAME_boolean                "boolean"
 #define  DSLH_CWMP_DATA_NAME_dateTime               "dateTime"
 #define  DSLH_CWMP_DATA_NAME_base64                 "base64"
+#define  DSLH_CWMP_DATA_NAME_unsignedLong           "unsignedLong"
 
 #define  DSLH_CWMP_DATA_INVALID_VALUE_TYPE          1
 
@@ -163,6 +165,7 @@
 typedef  SLAP_STRING         (*PFN_DSLHPARAM_GET_STRING)(ANSC_HANDLE  hThisObject);
 typedef  SLAP_INT            (*PFN_DSLHPARAM_GET_INT   )(ANSC_HANDLE  hThisObject);
 typedef  SLAP_UINT32         (*PFN_DSLHPARAM_GET_UINT32)(ANSC_HANDLE  hThisObject);
+typedef  SLAP_UINT64         (*PFN_DSLHPARAM_GET_UINT64)(ANSC_HANDLE  hThisObject);
 typedef  SLAP_BOOL           (*PFN_DSLHPARAM_GET_BOOL  )(ANSC_HANDLE  hThisObject);
 typedef  SLAP_HANDLE         (*PFN_DSLHPARAM_GET_HANDLE)(ANSC_HANDLE  hThisObject);
 typedef  SLAP_UCHAR_ARRAY*   (*PFN_DSLHPARAM_GET_BUFFER)(ANSC_HANDLE  hThisObject);
@@ -171,6 +174,7 @@ typedef  SLAP_UINT32_ARRAY*  (*PFN_DSLHPARAM_GET_ULLIST)(ANSC_HANDLE  hThisObjec
 typedef  BOOL                (*PFN_DSLHPARAM_TST_STRING)(ANSC_HANDLE  hThisObject, SLAP_STRING         var_string);
 typedef  BOOL                (*PFN_DSLHPARAM_TST_INT   )(ANSC_HANDLE  hThisObject, SLAP_INT            var_int   );
 typedef  BOOL                (*PFN_DSLHPARAM_TST_UINT32)(ANSC_HANDLE  hThisObject, SLAP_UINT32         var_uint32);
+typedef  BOOL                (*PFN_DSLHPARAM_TST_UINT64)(ANSC_HANDLE  hThisObject, SLAP_UINT64         var_uint64);
 typedef  BOOL                (*PFN_DSLHPARAM_TST_BOOL  )(ANSC_HANDLE  hThisObject, SLAP_BOOL           var_bool  );
 typedef  BOOL                (*PFN_DSLHPARAM_TST_HANDLE)(ANSC_HANDLE  hThisObject, SLAP_HANDLE         var_handle);
 typedef  BOOL                (*PFN_DSLHPARAM_TST_BUFFER)(ANSC_HANDLE  hThisObject, SLAP_UCHAR_ARRAY*   var_buffer);
@@ -179,6 +183,7 @@ typedef  BOOL                (*PFN_DSLHPARAM_TST_ULLIST)(ANSC_HANDLE  hThisObjec
 typedef  ANSC_STATUS         (*PFN_DSLHPARAM_SET_STRING)(ANSC_HANDLE  hThisObject, SLAP_STRING         var_string);
 typedef  ANSC_STATUS         (*PFN_DSLHPARAM_SET_INT   )(ANSC_HANDLE  hThisObject, SLAP_INT            var_int   );
 typedef  ANSC_STATUS         (*PFN_DSLHPARAM_SET_UINT32)(ANSC_HANDLE  hThisObject, SLAP_UINT32         var_uint32);
+typedef  ANSC_STATUS         (*PFN_DSLHPARAM_SET_UINT64)(ANSC_HANDLE  hThisObject, SLAP_UINT64         var_uint64);
 typedef  ANSC_STATUS         (*PFN_DSLHPARAM_SET_BOOL  )(ANSC_HANDLE  hThisObject, SLAP_BOOL           var_bool  );
 typedef  ANSC_STATUS         (*PFN_DSLHPARAM_SET_HANDLE)(ANSC_HANDLE  hThisObject, SLAP_HANDLE         var_handle);
 typedef  ANSC_STATUS         (*PFN_DSLHPARAM_SET_BUFFER)(ANSC_HANDLE  hThisObject, SLAP_UCHAR_ARRAY*   var_buffer);

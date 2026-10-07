@@ -85,7 +85,10 @@ typedef enum funcNameId {
   func_MemoryCheck,
   func_MemoryUsage,
   func_MemoryTable,
-  func_IsObjSupported
+  func_IsObjSupported,
+  func_GetParamUint64Value,
+  func_SetParamUint64Value,
+  func_TestParamUint64Value
 }funcNameId;
 
 static const char* funcName[] = {
@@ -118,7 +121,10 @@ static const char* funcName[] = {
   "MemoryCheck",
   "MemoryUsage",
   "MemoryTable",
-  "IsObjSupported"
+  "IsObjSupported",
+  "GetParamUint64Value",
+  "SetParamUint64Value",
+  "TestParamUint64Value"
 };
 static const unsigned char funcNameLen[] = {
   13,
@@ -150,7 +156,10 @@ static const unsigned char funcNameLen[] = {
   11,
   11,
   11,
-  14
+  14,
+  19,
+  19,
+  20
 };
 
 typedef enum paramTypeId

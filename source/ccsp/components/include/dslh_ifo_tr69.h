@@ -150,6 +150,22 @@ typedef  BOOL
     );
 
 typedef  BOOL
+(*PFN_DSLHTR69_SET_UINT64)
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG64                     uValue
+    );
+
+typedef  BOOL
+(*PFN_DSLHTR69_GET_UINT64)
+    (
+        ANSC_HANDLE                 hInsContext,
+        char*                       ParamName,
+        ULONG64*                    pValue
+    );
+
+typedef  BOOL
 (*PFN_DSLHTR69_SET_BOOL)
     (
         ANSC_HANDLE                 hInsContext,
@@ -342,6 +358,8 @@ _DSLH_TR69_INTERFACE
     PFN_DSLHTR69_SET_BOOL          SetEntryParamBool;                                   
     PFN_DSLHTR69_SET_INT           SetEntryParamInt;                                    
     PFN_DSLHTR69_SET_ULONG         SetEntryParamUlong;                                  
+    PFN_DSLHTR69_SET_UINT64        SetEntryParamUint64;
+    PFN_DSLHTR69_GET_UINT64        GetEntryParamUint64;
     PFN_DSLHTR69_SET_STRING        SetEntryParamString;                                 
     PFN_DSLHTR69_GET_BULK          GetEntryBulk;
     PFN_DSLHTR69_SET_BULK          SetEntryBulk;

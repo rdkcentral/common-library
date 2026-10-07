@@ -130,6 +130,13 @@ typedef  int
         char*                       pParamName
     );
 
+typedef  unsigned long long
+(*PFN_DSLHRVQIF_GET_UINT64)
+    (
+        ANSC_HANDLE                 hThisObject,
+        char*                       pParamName
+    );
+
 typedef  ULONG
 (*PFN_DSLHRVQIF_GET_UINT32)
     (
@@ -186,6 +193,7 @@ typedef  ANSC_HANDLE
     PFN_DSLHRVQIF_GET_STRING        GetParamValueString;                                    \
     PFN_DSLHRVQIF_GET_INT           GetParamValueInt;                                       \
     PFN_DSLHRVQIF_GET_UINT32        GetParamValueUint32;                                    \
+    PFN_DSLHRVQIF_GET_UINT64        GetParamValueUint64;                                    \
     PFN_DSLHRVQIF_GET_BOOL          GetParamValueBool;                                      \
     PFN_DSLHRVQIF_GET_UINT32A       GetParamValueUint32Array;                               \
     PFN_DSLHRVQIF_GET_UCHARA        GetParamValueUcharArray;                                \

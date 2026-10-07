@@ -351,6 +351,13 @@ DslhObjroRvqGetParamValueInt
         char*                       pParamName
     );
 
+unsigned long long
+DslhObjroRvqGetParamValueUint64
+    (
+        ANSC_HANDLE                 hThisObject,
+        char*                       pParamName
+    );
+
 ULONG
 DslhObjroRvqGetParamValueUint32
     (

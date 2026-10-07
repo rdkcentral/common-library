@@ -1431,6 +1431,14 @@ DslhDmagntParseObjFuncInfo
                 pDslhTr69If->SetEntryParamUlong = (PFN_DSLHTR69_SET_ULONG)hProc;
 
             }
+            else if( strcmp(pName, COSA_XML_NODE_func_SetParamUint64Value) == 0 )
+            {
+                pDslhTr69If->SetEntryParamUint64 = (PFN_DSLHTR69_SET_UINT64)hProc;
+            }
+            else if( strcmp(pName, COSA_XML_NODE_func_GetParamUint64Value) == 0 )
+            {
+                pDslhTr69If->GetEntryParamUint64 = (PFN_DSLHTR69_GET_UINT64)hProc;
+            }
             else if( strcmp(pName, COSA_XML_NODE_func_SetParamStringValue) == 0 )
             {
                 pDslhTr69If->SetEntryParamString = (PFN_DSLHTR69_SET_STRING)hProc;
@@ -1615,6 +1623,14 @@ DslhDmagntParseRootFuncInfo
             {
                 pDslhTr69If->SetEntryParamUlong = (PFN_DSLHTR69_SET_ULONG)hProc;
 
+            }
+            else if( strcmp(pName, COSA_XML_NODE_func_SetParamUint64Value) == 0 )
+            {
+                pDslhTr69If->SetEntryParamUint64 = (PFN_DSLHTR69_SET_UINT64)hProc;
+            }
+            else if( strcmp(pName, COSA_XML_NODE_func_GetParamUint64Value) == 0 )
+            {
+                pDslhTr69If->GetEntryParamUint64 = (PFN_DSLHTR69_GET_UINT64)hProc;
             }
             else if( strcmp(pName, COSA_XML_NODE_func_SetParamStringValue) == 0 )
             {
