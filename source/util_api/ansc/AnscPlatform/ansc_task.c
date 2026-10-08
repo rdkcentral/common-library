@@ -197,17 +197,19 @@ AnscFreeTaskRecord
         PANSC_TASK_RECORD           pTaskRecord
     )
 {
+    AnscAcquireSpinLock(&pTaskRecord->AccessSpinLock);
     if( pTaskRecord->RefCount == 1 )
     {
         pTaskRecord->RefCount = 0;
         pTaskRecord->Handle = 0;
+	AnscReleaseSpinLock(&pTaskRecord->AccessSpinLock);
         AnscFreeMemory(pTaskRecord);
     }
     else {
     	AnscTrace("WARNING - AnscFreeTaskRecord, task record %lu-%p reference count is %lu!\n",
     			pTaskRecord->Handle,pTaskRecord, pTaskRecord->RefCount);
+        AnscReleaseSpinLock(&pTaskRecord->AccessSpinLock);
     }
-
 }
 
 

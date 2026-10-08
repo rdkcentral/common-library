@@ -465,6 +465,7 @@ HttpMboSaveNonFileData
         }
     }
 
+    AnscAcquireLock(&pMyObject->BdoQueueLock);
     pSLinkEntry = AnscQueueGetLastEntry(&pMyObject->BdoQueue);
 
     if ( pSLinkEntry )
@@ -476,6 +477,7 @@ HttpMboSaveNonFileData
         pSavedBdo   = AnscAllocateBdo(HTTP_MBO_MP_PART_BDO_SIZE, 0, 0);
         if ( !pSavedBdo )
         {
+            AnscReleaseLock(&pMyObject->BdoQueueLock);
             return ANSC_STATUS_RESOURCES;
         }
         AnscQueuePushEntry(&pMyObject->BdoQueue, &pSavedBdo->Linkage);
@@ -493,10 +495,12 @@ HttpMboSaveNonFileData
         pSavedBdo   = AnscAllocateBdo(ulNewBdoSize, 0, 0);
         if ( !pSavedBdo )
         {
+            AnscReleaseLock(&pMyObject->BdoQueueLock);
             return ANSC_STATUS_RESOURCES;
         }
         AnscQueuePushEntry(&pMyObject->BdoQueue, &pSavedBdo->Linkage);
     }
+    AnscReleaseLock(&pMyObject->BdoQueueLock);
 
 #ifdef   _DEBUG /* kang debug */
     AnscTrace("Non file form data saved %lu bytes.\n", ulDataLen);
