@@ -867,6 +867,9 @@ WebVhoGetResourcePath
                 break;
             }
         }
+#if 0
+	/* Coverity CId:340277 - Logically dead code
+	 * At condition pReqInfo->RequestUri.Type == 2UL, the value of pReqInfo->RequestUri.Type must be equal to 4. */
         else if ( pReqInfo->RequestUri.Type == HTTP_URI_TYPE_ABSOLUTE_URI )
         {
             if ( !strcasecmp(pHttpHfoReferer->ReferrerUri.HostName,pReqInfo->RequestUri.HostName) == 0 )
@@ -874,6 +877,7 @@ WebVhoGetResourcePath
                 break;
             }
         }
+#endif
         else
         {
             break;

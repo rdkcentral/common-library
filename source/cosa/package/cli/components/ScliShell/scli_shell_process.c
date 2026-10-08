@@ -2879,6 +2879,10 @@ ScliShoValidateCmdArgs
                 ScliShoInitArgMatchResult(&pOptArgM[i]);
             }
         }
+	if ( !pReqArgM || !pOptArgM )
+	{
+	    goto EXIT;
+	}
 
         bMatched = 
             ScliShoMatchCommand

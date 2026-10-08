@@ -130,7 +130,7 @@ AnscReplaceChecksum
         {
             tempUshort++;
             tempUchar += 1;
-            oldLength -= 1;
+	    oldLength = (oldLength > 0) ? (oldLength - 1) : 0;
         }
     }
 
@@ -164,7 +164,7 @@ AnscReplaceChecksum
         {
             tempUshort++;
             tempUchar += 1;
-            newLength -= 1;
+	    newLength = (newLength > 0) ? (newLength - 1) : 0;
         }
     }
 

@@ -812,9 +812,12 @@ BspTemplateObjParseComment
 
     if (*pBuf != '/')
         return FALSE;
+#if 0
+    /* CID: 340473: Logically Dead code*/
     else
         if (*pBuf == '\0')
             return FALSE;
+#endif
 
     ch = *(pBuf+1);
 
