@@ -859,7 +859,7 @@ DslhWmpdoMpaSetParameterValues
             {
                 if(pVarRecord->Notification)
                 {
-                    vcSig.parameterName = pParameterValueArray[i].Name;
+		    vcSig.parameterName = AnscCloneString(pParameterValueArray[i].Name);
                     parseOldVal(pParameterValueArray[i].Value, &vcSig);
                     vcSig.newValue = vcSig.oldValue;
                     parseOldVal(pVarRecord->OldParamValue, &vcSig);
@@ -1718,6 +1718,13 @@ DslhWmpdoMpaGetParameterValues
              (AnscSizeOfString(pParamNameArray->Array.arrayString[i]) == 0) ||
              DslhCwmpIsPartialName(pParamNameArray->Array.arrayString[i]) )
         {
+	    if ((ulParameterIndex > ulParameterCount) && (ulParameterIndex < pParamNameArray->VarCount))
+            {
+                AnscTraceWarning(("ulParameterIndex:%lu is greater than ulParameterCount:%lu\n", ulParameterIndex, ulParameterCount));
+                AnscTraceWarning(("pParamNameArray->VarCount:%lu\n", pParamNameArray->VarCount));
+                AnscTraceWarning(("ulParamCopyCount:%lu\n", ulParamCopyCount));
+            }
+
             pObjRecord = (PDSLH_OBJ_RECORD_OBJECT)phAnyRecordArray[i];
 
             ulParamCopyCount = ulParameterCount - ulParameterIndex;
@@ -1730,6 +1737,16 @@ DslhWmpdoMpaGetParameterValues
                         bFromAcs,
                         writeID
                     );
+	    if ( returnStatus != ANSC_STATUS_SUCCESS )
+            {
+                goto  EXIT3;
+            }
+
+            if ( ulParamCopyCount > (ulParameterCount - ulParameterIndex) )
+            {
+                returnStatus = ANSC_STATUS_BAD_PARAMETER;
+                goto  EXIT3;
+            }
 
             ulParameterIndex += ulParamCopyCount;
         }
@@ -1784,8 +1801,11 @@ DslhWmpdoMpaGetParameterValues
 
                     if( ppValueArray[ulSameObj] == NULL)
                     {
-                        break;
+		        returnStatus = ANSC_STATUS_RESOURCES;
+                        goto  EXIT2;
                     }
+
+		    SlapInitVariable(ppValueArray[ulSameObj]);
 
                     pVarEntity = (PDSLH_VAR_ENTITY_OBJECT)pVarRecord->hDslhVarEntity;
 
@@ -1834,8 +1854,13 @@ DslhWmpdoMpaGetParameterValues
 
             for( j = 0 ; j < ulSameObj; j ++)
             {
+                if ( ulParameterIndex >= ulParameterCount )
+                {
+                    returnStatus = ANSC_STATUS_BAD_PARAMETER;
+                    goto  EXIT3;
+                }
                 /* copy the value back */
-                pParameterValueArray[ulParameterIndex].Name  = ppValueArray[j]->Name;
+                pParameterValueArray[ulParameterIndex].Name  = AnscCloneString(ppValueArray[j]->Name);
                 pParameterValueArray[ulParameterIndex].Value = ppValueArray[j];
                 ppValueArray[j]->Name                        = NULL;
 
