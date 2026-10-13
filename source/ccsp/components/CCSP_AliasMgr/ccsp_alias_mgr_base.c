@@ -1070,15 +1070,15 @@ CcspAliasMgrLookupAliasNode
                 pChildNode   = pChildNode->Sibling;
             }
         }
-
         if ( !pChildNode )
         {
+	    /* CID: 154680 - Logically Dead code */
             if ( bInsMatched )
             {
                 pChildNode = pInsNode;
                 pInsNode   = NULL;
             }
-        }
+	}
         else if ( !StringSListIsEmpty(&pChildNode->Aliases))
         {
             pAliasNode = pChildNode;
