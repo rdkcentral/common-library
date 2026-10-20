@@ -3800,7 +3800,7 @@ int PSM_Get_Record_Value2
     case CORD_TYPE_BOOL:
     {
         if (ulRecordType) *ulRecordType = ccsp_boolean;
-        const char *bstr = pCordValue->boolValue ? PSM_TRUE : PSM_FALSE;
+        const char *bstr = pCordValue->boolValue ? "TRUE" : "FALSE";
         *pValue = bus_info->mallocfunc(strlen(bstr) + 1);
         if (*pValue == NULL) { cord_free_values(pCordValue); return CCSP_ERR_MEMORY_ALLOC_FAIL; }
         strcpy(*pValue, bstr);
@@ -3890,31 +3890,18 @@ int PSM_Del_Record
 {
     PSM_CORD_COUNT(pRecordName);
 #ifdef CORD_ENABLED 
- char psmName[512] = "";
-    errno_t rc = -1;
+    UNREFERENCED_PARAMETER(bus_handle);
+    UNREFERENCED_PARAMETER(pSubSystemPrefix);
     cord_rc_t crc = CORD_RC_SUCCESS;
 
-    if (!pRecordName) {
+    if (!pRecordName || pRecordName[0] == '\0') {
         return CCSP_ERR_INVALID_PARAMETER_VALUE;
     }
 
-    if (pSubSystemPrefix && pSubSystemPrefix[0] != 0) {
-        rc = strcpy_s(psmName, sizeof(psmName), pSubSystemPrefix);
-        ERR_CHK(rc);
-    }
-    rc = strcat_s(psmName, sizeof(psmName), CCSP_DBUS_PSM);
-    ERR_CHK(rc);
-    rc = strcat_s(psmName, sizeof(psmName), ".");
-    ERR_CHK(rc);
-    rc = strcat_s(psmName, sizeof(psmName), pRecordName);
-    ERR_CHK(rc);
-
-    if ( pRecordName[strlen(pRecordName)-1] == '.' ) {
-        crc = cord_default_multi(psmName, CORD_FLAG_PERSIST_ASYNC);
-    }
-    else {
-        crc = cord_default(psmName, CORD_FLAG_PERSIST_ASYNC);
-    }
+    /* Keys are stored under their plain record name; a trailing '.' deletes the whole subtree.
+     * cord_unset_multi() treats a missing key as success, matching non-CORD PSM. */
+    const char *names[1] = { pRecordName };
+    crc = cord_unset_multi(names, 1, CORD_FLAG_PERSIST_ASYNC);
     switch (crc) {
     case CORD_RC_SUCCESS: return CCSP_SUCCESS;
     case CORD_RC_NOT_OPEN: return CCSP_Message_Bus_ERROR;
@@ -4076,7 +4063,7 @@ int PsmGroupGet(void *bus_handle, const char *subsys,
                             break;
                         case CORD_TYPE_BOOL:
                              val[i]->type = ccsp_boolean;
-                             const char *bstr = params[i].value.boolValue ? "true" : "false";
+                             const char *bstr = params[i].value.boolValue ? "TRUE" : "FALSE";
                              val[i]->parameterValue = bus_info->mallocfunc(strlen(bstr) + 1);
                              if(NULL == val[i]->parameterValue ){ret = CCSP_ERR_MEMORY_ALLOC_FAIL;break;}
                              memcpy(val[i]->parameterValue, bstr,strlen(bstr) + 1);
