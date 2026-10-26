@@ -397,8 +397,8 @@ HttpBmoReqCgiGetEnvVariableById
         case    CGI_ENV_CODE_REMOTE_ADDR :
         case    CGI_ENV_CODE_REMOTE_HOST :
 
-                AnscZeroMemory     (pMyObject->RcpIpad,        pMyObject->RcpIpadSize);
-                AnscGetIpAddrString(pMyObject->ClientAddr.Dot, pMyObject->RcpIpad    );
+                AnscZeroMemory     (pMyObject->RcpIpad,          pMyObject->RcpIpadSize);
+                AnscGetIpAddrString(pMyObject->ClientAddr.Value, pMyObject->RcpIpad    );
 
                 pCgiEnvVarValue = pMyObject->RcpIpad;
                 ulVarValueSize  = AnscSizeOfString(pCgiEnvVarValue);
@@ -1184,8 +1184,8 @@ HttpBmoReqCgiGetRemoteHost
 {
     PHTTP_BMO_REQ_OBJECT            pMyObject    = (PHTTP_BMO_REQ_OBJECT         )hThisObject;
     
-    AnscZeroMemory     (pMyObject->RcpIpad,        pMyObject->RcpIpadSize);
-    AnscGetIpAddrString(pMyObject->ClientAddr.Dot, pMyObject->RcpIpad    );
+    AnscZeroMemory     (pMyObject->RcpIpad,          pMyObject->RcpIpadSize);
+    AnscGetIpAddrString(pMyObject->ClientAddr.Value, pMyObject->RcpIpad    );
 
     return  pMyObject->RcpIpad;
 }
