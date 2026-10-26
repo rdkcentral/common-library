@@ -585,7 +585,7 @@ HttpPsoConnectToServer
 
                 if ( TRUE )
                 {
-                    AnscResolveHostName(pMyObject->ServerName, pMyObject->ServerAddr.Dot);
+                    AnscResolveHostName(pMyObject->ServerName, &pMyObject->ServerAddr.Value);
 
                     if ( pMyObject->ServerAddr.Value == 0 )
                     {
