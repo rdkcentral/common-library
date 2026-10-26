@@ -945,6 +945,8 @@ DslhVarroMacAddrListToString
                 if(rc < EOK)
                 {
                    ERR_CHK(rc);
+                   /* CID 62650: RESOURCE_LEAK fix */
+                   AnscFreeMemory(var_string);
                    return NULL;
                 }
             }
@@ -959,6 +961,8 @@ DslhVarroMacAddrListToString
                 if(rc < EOK)
                 {
                    ERR_CHK(rc);
+                   /* CID 62650: RESOURCE_LEAK fix */
+                   AnscFreeMemory(var_string);
                    return NULL;
                 }
             }
@@ -974,6 +978,8 @@ DslhVarroMacAddrListToString
         if(rc < EOK)
         {
             ERR_CHK(rc);
+            /* CID 62650: RESOURCE_LEAK fix */
+            AnscFreeMemory(var_string);
             return NULL;
         }
     }

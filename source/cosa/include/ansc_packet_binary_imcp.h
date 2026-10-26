@@ -143,12 +143,12 @@ _IMCP_HELLO_MESSAGE
 IMCP_HELLO_MESSAGE,  *PIMCP_HELLO_MESSAGE;
 
 #define  ImcpHelloGetPartyAddrDot(p)                ( p->PartyAddr.Dot                                  )
-#define  ImcpHelloGetPartyAddrValue(p)              ( AnscReadUlong(&p->PartyAddr.Value)                )
+#define  ImcpHelloGetPartyAddrValue(p)              ( AnscReadUlong32(&p->PartyAddr.Value)              ) /* CID 62932: OVERRUN fix */
 #define  ImcpHelloGetPartyPort(p)                   ( AnscUshortFromNToH(AnscReadUshort(&p->PartyPort)) )
 #define  ImcpHelloGetPartyName(p)                   ( p->PartyName                                      )
 
-#define  ImcpHelloSetPartyAddrDot(p, addr)          AnscWriteUlong (&p->PartyAddr.Dot[0], *(PULONG)addr    )
-#define  ImcpHelloSetPartyAddrValue(p, addr)        AnscWriteUlong (&p->PartyAddr.Value,  addr             )
+#define  ImcpHelloSetPartyAddrDot(p, addr)          AnscWriteUlong32(&p->PartyAddr.Dot[0], AnscReadUlong32(addr)) /* CID 62553: OVERRUN fix */
+#define  ImcpHelloSetPartyAddrValue(p, addr)        AnscWriteUlong32(&p->PartyAddr.Value, addr             ) /* CID 62553: OVERRUN fix */
 #define  ImcpHelloSetPartyPort(p, port)             AnscWriteUshort(&p->PartyPort, AnscUshortFromHToN(port))
 #define  ImcpHelloSetPartyName(p, name)             AnscCopyMemory(p->PartyName, name, AnscSizeOfString(name))
 
@@ -268,13 +268,13 @@ _IMCP_PARTY_INFO
 IMCP_PARTY_INFO,  *PIMCP_PARTY_INFO;
 
 #define  ImcpPartyInfoGetPartyAddrDot(p)            ( p->PartyAddr.Dot                                  )
-#define  ImcpPartyInfoGetPartyAddrValue(p)          ( AnscReadUlong(&p->PartyAddr.Value)                )
+#define  ImcpPartyInfoGetPartyAddrValue(p)          ( AnscReadUlong32(&p->PartyAddr.Value)              ) /* CIDs 62519, 62848, 62253, 63006: OVERRUN fix */
 #define  ImcpPartyInfoGetPartyProtocol(p)           ( p->PartyProtocol                                  )
 #define  ImcpPartyInfoGetPartyPort(p)               ( AnscUshortFromNToH(AnscReadUshort(&p->PartyPort)) )
 #define  ImcpPartyInfoGetPartyName(p)               ( p->PartyName                                      )
 
-#define  ImcpPartyInfoSetPartyAddrDot(p, a)         AnscWriteUlong (&p->PartyAddr.Dot[0], *(PULONG)a       )
-#define  ImcpPartyInfoSetPartyAddrValue(p, a)       AnscWriteUlong (&p->PartyAddr.Value,  a                )
+#define  ImcpPartyInfoSetPartyAddrDot(p, a)         AnscWriteUlong32(&p->PartyAddr.Dot[0], AnscReadUlong32(a)) /* CIDs 62848, 62253: OVERRUN fix */
+#define  ImcpPartyInfoSetPartyAddrValue(p, a)       AnscWriteUlong32(&p->PartyAddr.Value,  a                ) /* CIDs 62848, 62253: OVERRUN fix */
 #define  ImcpPartyInfoSetPartyProtocol(p, prot)     ( p->PartyProtocol = prot                              )
 #define  ImcpPartyInfoSetPartyPort(p, port)         AnscWriteUshort(&p->PartyPort, AnscUshortFromHToN(port))
 #define  ImcpPartyInfoSetPartyName(p, name)         AnscCopyMemory(p->PartyName, name, AnscSizeOfString(name))

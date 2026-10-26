@@ -305,7 +305,9 @@ TlsHsoServerSendServerHello
 
     TlsHsServerHelloSetMajorVersion(pTlsHsServerHello, pSecurityParams->MajorVersion);
     TlsHsServerHelloSetMinorVersion(pTlsHsServerHello, pSecurityParams->MinorVersion);
-    TlsHsServerHelloSetRandom      (pTlsHsServerHello, pSecurityParams->ServerRandom);
+    /* CID 25595: OVERRUN fix */
+    TlsHsRandomSetGmtUnixTime      (TlsHsServerHelloGetRandom(pTlsHsServerHello), AnscGetTickInSeconds());
+    TlsHsRandomSetRandomBytes      (TlsHsServerHelloGetRandom(pTlsHsServerHello), pSecurityParams->ServerRandom);
     TlsHsServerHelloSetSessionId   (pTlsHsServerHello, pSessionState->SessionIDSize, pSessionState->SessionID);
 
     /*

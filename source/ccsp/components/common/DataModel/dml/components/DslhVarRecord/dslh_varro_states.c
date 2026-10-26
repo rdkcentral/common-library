@@ -413,6 +413,8 @@ DslhVarroGetFullName
         if(rc < EOK)
         {
             ERR_CHK(rc);
+            /* CID 62410: RESOURCE_LEAK fix */
+            AnscFreeMemory(pFullName);
             return NULL;
         }
     }

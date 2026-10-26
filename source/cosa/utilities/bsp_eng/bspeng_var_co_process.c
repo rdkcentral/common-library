@@ -1936,6 +1936,11 @@ BspTemplateVarStrCat
 
             if (pMyObject->Size == 0)
             {
+                if (ulLen > ULONG_MAX - 16)
+                {
+                    /* CID 62657: INTEGER_OVERFLOW fix */
+                    goto STRCAT_LENGTH_OVERFLOW;
+                }
                 pMyObject->Size = ulLen + 16;
                 pBuf = (char *)AnscAllocateMemory(pMyObject->Size);
                 if (!pBuf)
@@ -2047,6 +2052,10 @@ BspTemplateVarStrCat
             }
 
             pBuf    = pVar->Value.str;
+            if (ulLen > ULONG_MAX - ulLenStr)
+            {
+                goto STRCAT_LENGTH_OVERFLOW;
+            }
             ulLen   += ulLenStr;
         }
         break;
@@ -2062,7 +2071,10 @@ BspTemplateVarStrCat
                 rc = sprintf_s(pBuf,16, "%ld", pVar->Value.num);
                 if(rc < EOK){
                     ERR_CHK(rc);
+                    goto STRCAT_LENGTH_OVERFLOW;
                 }
+                if (ulLen > ULONG_MAX - (ULONG)rc)
+                    goto STRCAT_LENGTH_OVERFLOW;
                 ulLen   += rc;
             }
             else
@@ -2070,7 +2082,10 @@ BspTemplateVarStrCat
                 rc = sprintf_s(pBuf,16, "%u", (UINT)pVar->Value.num);
                 if(rc < EOK){
                     ERR_CHK(rc);
+                    goto STRCAT_LENGTH_OVERFLOW;
                 }
+                if (ulLen > ULONG_MAX - (ULONG)rc)
+                    goto STRCAT_LENGTH_OVERFLOW;
                 ulLen   += rc;
             }
             else
@@ -2080,7 +2095,10 @@ BspTemplateVarStrCat
                 rc = sprintf_s(pBuf,16, "%f", pVar->Value.real);
                 if(rc < EOK){
                     ERR_CHK(rc);
+                    goto STRCAT_LENGTH_OVERFLOW;
                 }
+                if (ulLen > ULONG_MAX - (ULONG)rc)
+                    goto STRCAT_LENGTH_OVERFLOW;
                 ulLen   += rc;
 #endif
         }
@@ -2093,6 +2111,8 @@ BspTemplateVarStrCat
 
         if (pBuf)
         {
+            if (ulLen > ULONG_MAX - AnscSizeOfString(pBuf))
+                goto STRCAT_LENGTH_OVERFLOW;
             ulLen += AnscSizeOfString(pBuf);
         }
 
@@ -2106,12 +2126,7 @@ BspTemplateVarStrCat
     /*CID: 559534:Overflowed integer argument*/
     if (ulLen >= ULONG_MAX)
 	{
-        AnscTrace("Can't perform StrCat\r\n");
-		if (pBuf && pVar->Type != BspVar_String)
-        {
-            AnscFreeMemory(pBuf);
-        }
-        return hThisObject;
+		goto STRCAT_LENGTH_OVERFLOW;
 	}
 	if (++ulLen > pMyObject->Size)
 	{
@@ -2142,6 +2157,15 @@ BspTemplateVarStrCat
     pMyObject->Size = ulLen;
     ACCESS_BSP_TEMPLATE_VAR_CLEAR_TEMP_FLAG(pMyObject);
 
+    return hThisObject;
+
+/* CID 62657: INTEGER_OVERFLOW fix */
+STRCAT_LENGTH_OVERFLOW:
+    AnscTrace("Can't perform StrCat\r\n");
+    if (pBuf && pVar->Type != BspVar_String)
+    {
+        AnscFreeMemory(pBuf);
+    }
     return hThisObject;
 }
 

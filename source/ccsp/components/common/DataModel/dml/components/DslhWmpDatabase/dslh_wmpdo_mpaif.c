@@ -923,6 +923,11 @@ DslhWmpdoMpaSetParameterValues
 					*ppInvalidParameterName = AnscCloneString(pParameterValueArray[i].Name);
 					returnStatus = CCSP_ERR_INVALID_PARAMETER_VALUE;
 					pthread_mutex_unlock(&NotifyMutex);
+					/* CID 63451: RESOURCE_LEAK fix */
+					if(vcSig.newValue)
+						AnscFreeMemory((char*)vcSig.newValue);
+					if(vcSig.oldValue)
+						AnscFreeMemory((char*)vcSig.oldValue);
 					break;
 				}
 		               /*sensitive information like keyPassphrase should not print*/

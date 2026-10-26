@@ -305,6 +305,27 @@ ANSC_UINT64,  *PANSC_UINT64;
  * option below is enabled, any field in a packet will be accessed byte-by-byte, regardless actual
  * size of the data member.
  */
+/* CIDs 25505, 25510, 25515, 25535, 25558, 25559, 25516, 25522: OVERRUN fix */
+ANSC_FORCEINLINE
+ULONG
+AnscReadUlong32(void * addr)
+{
+    ULONG value = 0;
+
+    AnscCopyMemory(&value, addr, 4);
+
+    return value;
+}
+
+ANSC_FORCEINLINE
+/* CIDs 25505, 25510, 25515, 25598: OVERRUN fix */
+void
+AnscWriteUlong32(void * addr, ULONG value)
+{
+    AnscCopyMemory(addr, &value, 4);
+
+}
+
 #ifdef  _ANSC_BYTE_ACCESS_
 
     #ifdef _ANSC_NO_HALFWORD_ACCESS_

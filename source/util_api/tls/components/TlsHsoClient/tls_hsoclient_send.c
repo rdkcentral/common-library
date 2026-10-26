@@ -211,7 +211,9 @@ TlsHsoClientSendClientHello
 
     TlsHsClientHelloSetMajorVersion(pTlsHsClientHello, pSecurityParams->MajorVersion);
     TlsHsClientHelloSetMinorVersion(pTlsHsClientHello, pSecurityParams->MinorVersion);
-    TlsHsClientHelloSetRandom      (pTlsHsClientHello, pSecurityParams->ClientRandom);
+    /* CID 25532: OVERRUN fix */
+    TlsHsRandomSetGmtUnixTime      (TlsHsClientHelloGetRandom(pTlsHsClientHello), AnscGetTickInSeconds());
+    TlsHsRandomSetRandomBytes      (TlsHsClientHelloGetRandom(pTlsHsClientHello), pSecurityParams->ClientRandom);
     TlsHsClientHelloSetSessionId   (pTlsHsClientHello, pSessionState->SessionIDSize, pSessionState->SessionID);
 
     /*
