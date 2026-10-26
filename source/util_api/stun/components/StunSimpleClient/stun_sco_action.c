@@ -220,7 +220,6 @@ StunScoDiscoverBinding
     AnscWriteUlong(&pMyObject->TransID1[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransID1[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransID1[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransID1, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransID1, crypto_hash.Value, 16);
@@ -392,7 +391,6 @@ StunScoDiscoverBindingTimeoutA
     AnscWriteUlong(&pMyObject->TransIDA[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransIDA[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransIDA[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransIDA[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransIDA, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransIDA, crypto_hash.Value, 16);
@@ -549,7 +547,6 @@ StunScoDiscoverBindingTimeoutB
     AnscWriteUlong(&pMyObject->TransIDA[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransIDA[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransIDA[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransIDA[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransIDA, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransIDA, crypto_hash.Value, 16);
@@ -727,7 +724,6 @@ StunScoMaintainBinding
     AnscWriteUlong(&pMyObject->TransID1[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransID1[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransID1[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransID1, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransID1, crypto_hash.Value, 16);
@@ -900,7 +896,6 @@ StunScoNotifyBindingChange
     AnscWriteUlong(&pMyObject->TransID1[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransID1[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransID1[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransID1, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransID1, crypto_hash.Value, 16);
