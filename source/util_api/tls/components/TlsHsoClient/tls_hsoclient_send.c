@@ -211,7 +211,7 @@ TlsHsoClientSendClientHello
 
     TlsHsClientHelloSetMajorVersion(pTlsHsClientHello, pSecurityParams->MajorVersion);
     TlsHsClientHelloSetMinorVersion(pTlsHsClientHello, pSecurityParams->MinorVersion);
-    TlsHsClientHelloSetRandom      (pTlsHsClientHello, pSecurityParams->ClientRandom);
+    AnscCopyMemory(pTlsHsClientHello->Random, pSecurityParams->ClientRandom, TLS_OPAQUE_RANDOM_SIZE);
     TlsHsClientHelloSetSessionId   (pTlsHsClientHello, pSessionState->SessionIDSize, pSessionState->SessionID);
 
     /*
