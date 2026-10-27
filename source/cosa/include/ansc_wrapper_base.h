@@ -312,7 +312,7 @@ AnscReadUlong32(void * addr)
 {
     ULONG value = 0;
 
-    AnscCopyMemory(&value, addr, 4);
+    UserCopyMemory(&value, addr, 4);
 
     return value;
 }
@@ -322,7 +322,7 @@ ANSC_FORCEINLINE
 void
 AnscWriteUlong32(void * addr, ULONG value)
 {
-    AnscCopyMemory(addr, &value, 4);
+    UserCopyMemory(addr, &value, 4);
 
 }
 
