@@ -171,12 +171,24 @@ mbiIf_SendParameterValueChangeSignal
 
     if ( pOldValue )
     {
-        if ( pOldValue->Syntax == SLAP_VAR_SYNTAX_uint32 )
+        if ( pOldValue->Syntax == SLAP_VAR_SYNTAX_uint64 )
+        {
+            char value[32];
+            snprintf(value, sizeof(value), "%llu", (unsigned long long)pOldValue->Variant.varUint64);
+            pParamSignal->oldValue = AnscCloneString(value);
+            pParamSignal->type = ccsp_unsignedLong;
+        }
+        else if ( pOldValue->Syntax == SLAP_VAR_SYNTAX_uint32 )
         {
             if ( pOldValue->ContentType == SLAP_CONTENT_TYPE_IP4_ADDR )
             {
                 pParamSignal->oldValue = SlapVcoIp4AddrToString(NULL, pOldValue->Variant.varUint32);
                 pParamSignal->type = ccsp_string;
+            }
+            else if ( pOldValue->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG )
+            {
+                pParamSignal->oldValue = SlapVcoUint32ToString(NULL, pOldValue->Variant.varUint32);
+                pParamSignal->type     = ccsp_unsignedLong;
             }
             else
             {
@@ -215,10 +227,24 @@ mbiIf_SendParameterValueChangeSignal
 
     if ( pNewValue )
     {
-        if ( pNewValue->Syntax == SLAP_VAR_SYNTAX_uint32 )
+        if ( pNewValue->Syntax == SLAP_VAR_SYNTAX_uint64 )
+        {
+            char value[32];
+            snprintf(value, sizeof(value), "%llu", (unsigned long long)pNewValue->Variant.varUint64);
+            pParamSignal->newValue = AnscCloneString(value);
+            pParamSignal->type = ccsp_unsignedLong;
+        }
+        else if ( pNewValue->Syntax == SLAP_VAR_SYNTAX_uint32 )
         {
             pParamSignal->newValue = SlapVcoUint32ToString(NULL, pNewValue->Variant.varUint32);
-            pParamSignal->type     = ccsp_unsignedInt;
+            if ( pNewValue->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG )
+            {
+                pParamSignal->type = ccsp_unsignedLong;
+            }
+            else
+            {
+                pParamSignal->type = ccsp_unsignedInt;
+            }
         }
         else if ( pNewValue->Syntax == SLAP_VAR_SYNTAX_string )
         {

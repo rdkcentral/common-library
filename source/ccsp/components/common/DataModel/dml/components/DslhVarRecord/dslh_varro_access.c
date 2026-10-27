@@ -207,6 +207,10 @@ DslhVarroGetValue
                 {
                     pSlapVariable->Variant.varUint32 = 0;
                 }
+                else if( pSlapVariable->Syntax == SLAP_VAR_SYNTAX_uint64)
+                {
+                    pSlapVariable->Variant.varUint64 = 0;
+                }
             }
         }
 
@@ -329,6 +333,14 @@ DslhVarroGetValue
                             (
                                 (ANSC_HANDLE)pObjController
                             );
+
+                    break;
+
+            case    SLAP_VAR_SYNTAX_uint64 :
+
+                    pSlapVariable->Variant.varUint64 =
+                        ((PFN_DSLHPARAM_GET_UINT64)pfnGetValueMethod)
+                            ((ANSC_HANDLE)pObjController);
 
                     break;
 
@@ -664,6 +676,20 @@ DslhVarroTstValue
 
                 break;
 
+        case    DSLH_CWMP_DATA_TYPE_unsignedLong :
+
+                /* TR-181 unsignedLong is slap uint64 only (dmcli ulong). */
+                if ( pNewValue->Syntax != SLAP_VAR_SYNTAX_uint64 )
+                {
+                    return  FALSE;
+                }
+                if ( pNewValue->Variant.varUint64 < (SLAP_UINT64)pVarEntity->FormatValue1 )
+                {
+                    return  FALSE;
+                }
+
+                break;
+
         case    DSLH_CWMP_DATA_TYPE_boolean :
 
                 if ( (pNewValue->Syntax != SLAP_VAR_SYNTAX_bool  ) &&
@@ -712,7 +738,31 @@ DslhVarroTstValue
      *        (digits 0-9, letters A-F or a-f) displayed as six pairs of digits separated
      *        by colons.
      */
-    if ( pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSPECIFIED )
+    /*
+     * TR-181 unsignedLong uses ContentType UNSIGNED_LONG + slap uint64.
+     * Handle it alone so it never falls into the string ContentType path
+     * (that path's default returns FALSE → invalid parameter value).
+     */
+    if ( pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG )
+    {
+        if ( !bTestBypass )
+        {
+            if ( pNewValue->Syntax == SLAP_VAR_SYNTAX_uint64 )
+            {
+                bTestResult =
+                    ((PFN_DSLHPARAM_TST_UINT64)pfnTstValueMethod)
+                        (
+                            (ANSC_HANDLE)pObjController,
+                            pNewValue->Variant.varUint64
+                        );
+            }
+            else
+            {
+                bTestResult = FALSE;
+            }
+        }
+    }
+    else if ( pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSPECIFIED )
     {
         switch ( pVarEntity->Syntax )
         {
@@ -782,6 +832,18 @@ DslhVarroTstValue
                                     (ANSC_HANDLE)pObjController,
                                     pNewValue->Variant.varUint32
                                 );
+                    }
+
+                    break;
+
+            case    SLAP_VAR_SYNTAX_uint64 :
+
+                    if ( !bTestBypass )
+                    {
+                        bTestResult =
+                            ((PFN_DSLHPARAM_TST_UINT64)pfnTstValueMethod)
+                                ((ANSC_HANDLE)pObjController,
+                                 pNewValue->Variant.varUint64);
                     }
 
                     break;
@@ -1314,7 +1376,16 @@ DslhVarroSetValue
      */
 
 
-    if ( pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSPECIFIED )
+    if ( pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG )
+    {
+        returnStatus =
+            ((PFN_DSLHPARAM_SET_UINT64)pfnSetValueMethod)
+                (
+                    (ANSC_HANDLE)pObjController,
+                    pNewValue->Variant.varUint64
+                );
+    }
+    else if ( pVarEntity->ContentType == SLAP_CONTENT_TYPE_UNSPECIFIED )
     {
         switch ( pVarEntity->Syntax )
         {
@@ -1369,6 +1440,17 @@ DslhVarroSetValue
                             (
                                 (ANSC_HANDLE)pObjController,
                                 pNewValue->Variant.varUint32
+                            );
+
+                    break;
+
+            case    SLAP_VAR_SYNTAX_uint64 :
+
+                    returnStatus =
+                        ((PFN_DSLHPARAM_SET_UINT64)pfnSetValueMethod)
+                            (
+                                (ANSC_HANDLE)pObjController,
+                                pNewValue->Variant.varUint64
                             );
 
                     break;
