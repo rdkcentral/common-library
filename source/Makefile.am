@@ -244,3 +244,26 @@ libccsp_common_la_DEPENDENCIES = \
 
 
 libccsp_common_la_LIBADD = $(libccsp_common_la_DEPENDENCIES)
+
+# PSM API speed test: run on CORD and non-CORD images to compare per-API latency.
+bin_PROGRAMS = psm_api_speed_test
+psm_api_speed_test_SOURCES = psm_api_speed_test.c
+psm_api_speed_test_CPPFLAGS = \
+	-I$(top_srcdir)/source/cosa/include/linux \
+	-I$(top_srcdir)/source/debug_api/include \
+	-I$(top_srcdir)/source/cosa/include \
+	-I$(top_srcdir)/source/cosa/utilities/include \
+	-I$(top_srcdir)/source/cosa/custom \
+	-I$(top_srcdir)/source/cosa/package/system/include \
+	-I$(top_srcdir)/source/cosa/package/slap/include \
+	-I$(top_srcdir)/source/cosa/package/slap/services/dslh/include \
+	-I$(top_srcdir)/source/ccsp/include \
+	-I$(top_srcdir)/source/ccsp/components/include \
+	-I$(top_srcdir)/source/ccsp/components/common/MessageBusHelper/include \
+	-I$(top_srcdir)/source/ccsp/components/common/PoamIrepFolder \
+	-I$(top_srcdir)/source/ccsp/custom \
+	-I$(top_srcdir)/source/util_api/ansc/include
+psm_api_speed_test_LDADD = libccsp_common.la -ldbus-1 -lrbus -lrbuscore -lrtMessage -lpthread -lrt
+if WITH_CORD_SUPPORT
+psm_api_speed_test_LDADD += -lcord
+endif
