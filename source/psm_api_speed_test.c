@@ -18,7 +18,9 @@
  */
 
 /*
- * psm_api_speed_test [iterations]
+ * psm_api_speed_test [-f] [iterations]
+ *
+ * -f also prints the failed call count per API.
  *
  * Measures the average latency of each PSM helper API in libccsp_common.
  * The same source is built for CORD and non-CORD images (CORD_ENABLED is set
@@ -163,12 +165,19 @@ static void bench_group_get(uint64_t n, stats_t *st)
 
 static void bench_del_record(uint64_t n, stats_t *st)
 {
+    int reported = 0;
+
     for (uint64_t i = 0; i < n; i++) {
         /* Re-create the record so every delete has something to remove. */
-        PSM_Set_Record_Value2(g_bus, SUBSYS, KEY_DEL, ccsp_string, STR_VALUE);
+        int set_rc = PSM_Set_Record_Value2(g_bus, SUBSYS, KEY_DEL, ccsp_string, STR_VALUE);
         uint64_t t0 = now_ns();
         int rc = PSM_Del_Record(g_bus, SUBSYS, KEY_DEL);
         uint64_t t1 = now_ns();
+        if (rc != CCSP_SUCCESS && !reported) {
+            fprintf(stderr, "PSM_Del_Record: first failure rc=%d (preceding set rc=%d)\n",
+                    rc, set_rc);
+            reported = 1;
+        }
         stats_add(st, t1 - t0, rc);
     }
 }
@@ -277,14 +286,23 @@ int main(int argc, char *argv[])
 {
     static char component_id[] = COMPONENT_ID;
     uint64_t    iterations     = DEFAULT_ITERATIONS;
+    int         show_fails     = 0;
+    int         have_iters     = 0;
     int         rc;
 
-    if (argc > 2 || (argc == 2 && parse_iterations(argv[1], &iterations) != 0)) {
-        fprintf(stderr,
-                "Usage: %s [iterations]\n"
-                "  iterations: positive integer (default %llu)\n",
-                argv[0], DEFAULT_ITERATIONS);
-        return 1;
+    for (int a = 1; a < argc; a++) {
+        if (strcmp(argv[a], "-f") == 0) {
+            show_fails = 1;
+        } else if (!have_iters && parse_iterations(argv[a], &iterations) == 0) {
+            have_iters = 1;
+        } else {
+            fprintf(stderr,
+                    "Usage: %s [-f] [iterations]\n"
+                    "  -f          also print the failed call count per API\n"
+                    "  iterations: positive integer (default %llu)\n",
+                    argv[0], DEFAULT_ITERATIONS);
+            return 1;
+        }
     }
 
     rc = CCSP_Message_Bus_Init(component_id, CCSP_MSG_BUS_CFG, &g_bus, NULL, NULL);
@@ -307,20 +325,27 @@ int main(int argc, char *argv[])
     printf("Mode       : non-CORD\n");
 #endif
     printf("Iterations : %llu per API\n\n", (unsigned long long)iterations);
-    printf("%-26s %14s\n", "API", "Avg (ms)");
+    if (show_fails)
+        printf("%-26s %14s %10s\n", "API", "Avg (ms)", "Failed");
+    else
+        printf("%-26s %14s\n", "API", "Avg (ms)");
     fflush(stdout);
 
     int failed_any = 0;
     for (size_t i = 0; i < sizeof(k_bench) / sizeof(k_bench[0]); i++) {
         stats_t st;
+        char    avg[32];
         memset(&st, 0, sizeof(st));
         k_bench[i].fn(iterations, &st);
 
         if (st.ok > 0)
-            printf("%-26s %14.6f\n", k_bench[i].name,
-                   (double)st.total_ns / (double)st.ok / 1e6);
+            snprintf(avg, sizeof(avg), "%.6f", (double)st.total_ns / (double)st.ok / 1e6);
         else
-            printf("%-26s %14s\n", k_bench[i].name, "n/a");
+            snprintf(avg, sizeof(avg), "n/a");
+        printf("%-26s %14s", k_bench[i].name, avg);
+        if (show_fails)
+            printf(" %10llu", (unsigned long long)st.fails);
+        printf("\n");
         fflush(stdout);
 
         if (st.fails > 0) {
