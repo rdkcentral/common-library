@@ -45,7 +45,8 @@
 
 #define DEFAULT_ITERATIONS  1000000ULL
 #define COMPONENT_ID        "com.cisco.spvtg.ccsp.psm.apispeedtest"
-#define SUBSYS              ""
+/* Matches psmcli's default prefix; the empty prefix makes PSM_Del_Record fail. */
+#define SUBSYS              "eRT."
 
 #define PERF_ROOT           "dmsb.perftest."
 #define KEY_STR             PERF_ROOT "StringParam"
