@@ -70,6 +70,9 @@ func_MemoryCheck=26
 func_MemoryUsage=27
 func_MemoryTable=28
 func_IsObjSupported=29
+func_GetParamUint64Value=30
+func_SetParamUint64Value=31
+func_TestParamUint64Value=32
 
 def initObjectNames(objectMap):
   objectMap["object"]=0
@@ -109,6 +112,9 @@ def initFuncNames(funcMap):
   funcMap["func_MemoryUsage"]=27
   funcMap["func_MemoryTable"]=28
   funcMap["func_IsObjSupported"]=29
+  funcMap["func_GetParamUint64Value"]=30
+  funcMap["func_SetParamUint64Value"]=31
+  funcMap["func_TestParamUint64Value"]=32
 
 #printElement is only for debugging that we know how to write code that walks the tree 
 def printElement(elem,depth):
@@ -391,6 +397,10 @@ class Preprocessor():
             xml_str = xml_str.replace(group_ifdef_cond, "<?if " + str(result) + "?>")
         return xml_str
 
+    #Credit:
+    #Copyright (c) 2017-2019 Tony Su
+    #Copyright (c) 2023 Red Hat, Inc.
+    #Licensed under the MIT License
     def parse_if_else_if(self, xml_str):
         if_elif_else_regex = r"(<\?if\s(True|False)\?>\n((.(?!<\?))*)\n<\?elseif\s(True|False)\?>\n((.(?!<\?))*)\n<\?else\?>\n((.(?!<\?))*)\n<\?endif\?>\n)"
         if_else_regex = r"(<\?if\s(True|False)\?>\n((.(?!<\?))*)\n<\?else\?>\n((.(?!<\?))*)\n<\?endif\?>\n)"

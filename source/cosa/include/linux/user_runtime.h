@@ -91,6 +91,14 @@
 
 char *_ansc_itoa(int value, char *string, int radix);
 
+char*
+_ansc_ultoa
+    (
+        ULONG                       value,
+        char*                       pBuf,
+        int                         radix
+    );
+
 #define  _ansc_rand				rand
 #define  _ansc_srand				srand
 

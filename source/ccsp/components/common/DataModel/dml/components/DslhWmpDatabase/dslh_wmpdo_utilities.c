@@ -413,6 +413,17 @@ DslhWmpdoParseParamDataType
             AnscTcFree((ANSC_HANDLE)pFormatValueChain);
         }
     }
+    else if ( strcmp(pDataTypeToken->Name,DSLH_CWMP_DATA_NAME_unsignedLong) == 0 )
+    {
+        /*
+         * TR-181 unsignedLong / StatsCounter64 on ILP32+LP64.
+         * Use slap uint64 storage (not ULONG/uint32). FormatValue2 ULONG max is
+         * not used as an upper bound for this type (see dslh_varro_access).
+         */
+        *pulDataType     = DSLH_CWMP_DATA_TYPE_unsignedLong;
+        *pulFormatValue1 = (ULONG)0;
+        *pulFormatValue2 = (ULONG)0; /* 0 = no ULONG-range cap; uint64 path validates */
+    }
     else if ( strcmp(pDataTypeToken->Name,DSLH_CWMP_DATA_NAME_boolean) == 0 )
     {
         *pulDataType = DSLH_CWMP_DATA_TYPE_boolean;
@@ -535,6 +546,9 @@ DslhWmpdoParseParamSyntax
             *pulSyntax = SLAP_VAR_SYNTAX_TYPE_string;
     	else if ( _ansc_strcmp(SLAP_VAR_SYNTAX_NAME_uint32, pTokenSyntax->Name) == 0 )
             *pulSyntax = SLAP_VAR_SYNTAX_TYPE_uint32;
+        else if ( _ansc_strcmp(SLAP_VAR_SYNTAX_NAME_uint64, pTokenSyntax->Name) == 0 ||
+                  _ansc_strcmp("uint64", pTokenSyntax->Name) == 0 )
+            *pulSyntax = SLAP_VAR_SYNTAX_TYPE_uint64;
     	else if ( _ansc_strcmp(SLAP_VAR_SYNTAX_NAME_int, pTokenSyntax->Name) == 0 )
             *pulSyntax = SLAP_VAR_SYNTAX_TYPE_int;
     	else if ( _ansc_strcmp(SLAP_VAR_SYNTAX_NAME_handle, pTokenSyntax->Name) == 0 )

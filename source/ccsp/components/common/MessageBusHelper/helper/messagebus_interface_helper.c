@@ -79,6 +79,10 @@
 
 #include "messagebus_interface_global.h"
 #include "slap_vco_internal_api.h"
+#include <errno.h>
+#include <stdint.h>
+#include <stdlib.h>
+
 #if defined (_COSA_QCA_ARM_)
 static ULONG g_uMaxParamInResponse = 40000; /* DSLH_WMPDO_MAX_PARAM_VALUES_IN_RESPONSE */
 #else
@@ -112,6 +116,7 @@ CcspCcMbi_ValidateBoolean
 }
 
 
+
 static int CcspCcMbi_ValidateINT
 	(
     	const char * intStr,
@@ -121,8 +126,7 @@ static int CcspCcMbi_ValidateINT
     int len = strlen(intStr);
 	char* pNext;
 	char c;
-	char buf[12];
-	int num;
+	char buf[64] = {0};
 
     if(len <= 0) return -1;
 
@@ -146,15 +150,37 @@ static int CcspCcMbi_ValidateINT
 		pNext++;
 	}
 
-	num = _ansc_atoi(intStr);
-
 	if ( signedInt )
-		snprintf(buf, sizeof(buf), "%d", num);
+	{
+		int num = _ansc_atoi(intStr);
+		_ansc_itoa(num, buf, 10);
+	}
 	else
-		snprintf(buf, sizeof(buf), "%u", (unsigned int) num);
+	{
+		/* ULONG parse/format; unsignedLong uses CcspCcMbi_StringToUint64 */
+		ULONG unum = (ULONG)_ansc_atol(intStr);
+		_ansc_ultoa(unum, buf, 10);
+	}
 
-	if ( !strcmp(buf, (char*)intStr) == 0 ) return -1;
+	if ( strcmp(buf, (char*)intStr) != 0 ) return -1;
 
+    return 0;
+}
+
+static int CcspCcMbi_StringToUint64(const char* value, SLAP_UINT64* result)
+{
+    char* end = NULL;
+    unsigned long long parsed;
+
+    if ( value == NULL || *value == '\0' || *value == '-' )
+        return -1;
+
+    errno = 0;
+    parsed = strtoull(value, &end, 10);
+    if ( errno == ERANGE || end == value || *end != '\0' )
+        return -1;
+
+    *result = (SLAP_UINT64)parsed;
     return 0;
 }
 
@@ -318,12 +344,28 @@ CcspCcMbi_GetParameterValues
                 ppReturnVal[i]->parameterValue = SlapVcoIntToString(NULL, 0);
                 ppReturnVal[i]->type           = ccsp_unsignedInt;
             }
+            else if ( pParamValueArray[i].Value->Syntax == SLAP_VAR_SYNTAX_uint64 )
+            {
+                char ubuf[64];
+                snprintf(ubuf, sizeof(ubuf), "%llu",
+                         (unsigned long long)pParamValueArray[i].Value->Variant.varUint64);
+                ppReturnVal[i]->parameterValue = AnscCloneString(ubuf);
+                ppReturnVal[i]->type           = ccsp_unsignedLong;
+            }
             else if ( pParamValueArray[i].Value->Syntax == SLAP_VAR_SYNTAX_uint32 )
             {
                 if ( pParamValueArray[i].Value->ContentType == SLAP_CONTENT_TYPE_IP4_ADDR )
                 {
                     ppReturnVal[i]->parameterValue = SlapVcoIp4AddrToString(NULL, pParamValueArray[i].Value->Variant.varUint32);
                     ppReturnVal[i]->type = ccsp_string;
+                }
+                else if ( pParamValueArray[i].Value->ContentType == SLAP_CONTENT_TYPE_UNSIGNED_LONG )
+                {
+                    char ubuf[64];
+                    snprintf(ubuf, sizeof(ubuf), "%llu",
+                             (unsigned long long)pParamValueArray[i].Value->Variant.varUint32);
+                    ppReturnVal[i]->parameterValue = AnscCloneString(ubuf);
+                    ppReturnVal[i]->type           = ccsp_unsignedLong;
                 }
                 else
                 {
@@ -511,16 +553,30 @@ CcspCcMbi_SetParameterValues
             pSlapVariable->Syntax         = SLAP_VAR_SYNTAX_int;
             pSlapVariable->Variant.varInt = SlapVcoStringToInt(NULL, val[i].parameterValue);
         }
-        else if ( (val[i].type == ccsp_unsignedInt) || (val[i].type == ccsp_long) )
+        else if ( val[i].type == ccsp_unsignedLong )
         {
-			if ( CcspCcMbi_ValidateINT(val[i].parameterValue, 0) != 0 )
+            SLAP_UINT64 u64 = 0;
+
+			if ( CcspCcMbi_StringToUint64(val[i].parameterValue, &u64) != 0 )
 			{
 				returnStatus = CCSP_ERR_INVALID_PARAMETER_VALUE;
-		
 				goto EXIT1;
 			}
 
-            pSlapVariable->Syntax            = SLAP_VAR_SYNTAX_uint32;
+            pSlapVariable->Syntax              = SLAP_VAR_SYNTAX_uint64;
+            pSlapVariable->ContentType         = SLAP_CONTENT_TYPE_UNSIGNED_LONG;
+            pSlapVariable->Variant.varUint64   = u64;
+        }
+        else if ( (val[i].type == ccsp_unsignedInt) || (val[i].type == ccsp_long) )
+        {
+            /* ccsp_long historically shares the unsignedInt (uint32) set path. */
+            if ( CcspCcMbi_ValidateINT(val[i].parameterValue, 0) != 0 )
+            {
+                returnStatus = CCSP_ERR_INVALID_PARAMETER_VALUE;
+                goto EXIT1;
+            }
+
+            pSlapVariable->Syntax = SLAP_VAR_SYNTAX_uint32;
             pSlapVariable->Variant.varUint32 = SlapVcoStringToUint32(NULL, val[i].parameterValue);
         }
         else if ( val[i].type == ccsp_boolean )

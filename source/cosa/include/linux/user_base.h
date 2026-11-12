@@ -172,6 +172,7 @@ typedef  double                     DOUBLE,         *PDOUBLE;
 typedef  float                      FLOAT,          *PFLOAT;
 typedef  unsigned char              BOOLEAN,        *PBOOLEAN;
 typedef  unsigned char                              *PBOOL;
+/* Real 64-bit width for TR-181 unsignedLong / StatsCounter64 on ILP32 (OBDR-21600). */
 typedef  unsigned long long         ULONG64,        *PULONG64;
 
 #ifndef FALSE

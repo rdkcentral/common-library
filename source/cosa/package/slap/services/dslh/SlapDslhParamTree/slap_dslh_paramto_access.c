@@ -104,6 +104,7 @@
 
 
 #include "slap_dslh_paramto_global.h"
+#include <stdlib.h>
 #include "safec_lib_common.h"
 
 #define  TYPE_DSLH_PARAMETER_NAME						0
@@ -737,9 +738,13 @@ SlapDslhParamtoGetParamValue
 					break;
 
 			case ccsp_unsignedInt:
-			case ccsp_unsignedLong:
 				pRetSlapVal->Syntax            = SLAP_VAR_SYNTAX_uint32;
 				pRetSlapVal->Variant.varUint32 = SlapVcoStringToUint32(NULL, ppParamVal[0]->parameterValue);
+					break;
+			case ccsp_unsignedLong:
+				pRetSlapVal->Syntax            = SLAP_VAR_SYNTAX_uint64;
+				pRetSlapVal->ContentType       = SLAP_CONTENT_TYPE_UNSIGNED_LONG;
+				pRetSlapVal->Variant.varUint64 = (SLAP_UINT64)strtoull(ppParamVal[0]->parameterValue, NULL, 10);
 					break;
 
 			case ccsp_boolean:
@@ -903,8 +908,10 @@ SlapDslhParamtoGetParamTypeAndValue
 				break;
 
 			case ccsp_unsignedInt:
-			case ccsp_unsignedLong:
 				*ppType = AnscCloneString("unsignedInt");
+				break;
+			case ccsp_unsignedLong:
+				*ppType = AnscCloneString("unsignedLong");
 				break;
 
 			case ccsp_boolean:
