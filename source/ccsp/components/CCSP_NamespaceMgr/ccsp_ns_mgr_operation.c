@@ -690,8 +690,15 @@ CcspNsMgrDiscoverNamespace
 
     pNewSpace = CcspNsMgrChangeToRegNamespaceName(pMyObject->pContainerName, (char*)pNamespace, &bChange);
 
-    if( pNewSpace == NULL || pAtomNamespace == NULL )
+    if( pNewSpace == NULL )
     {
+        return CCSP_CR_ERR_INVALID_PARAM;
+    }
+
+    if( pAtomNamespace == NULL )
+    {
+        /* CID 63442: RESOURCE_LEAK fix */
+        CcspNsMgrFreeMemory(pMyObject->pContainerName, pNewSpace);
         return CCSP_CR_ERR_INVALID_PARAM;
     }
 
@@ -719,13 +726,15 @@ CcspNsMgrDiscoverNamespace
         {
             if( AnscSizeOfString(pNSComp->pPrefix) != 0)
             {
-                return CCSP_CR_ERR_UNSUPPORTED_NAMESPACE;
+                iStatus = CCSP_CR_ERR_UNSUPPORTED_NAMESPACE;
+                goto EXIT;
             }
         }
         else if((AnscSizeOfString(pNSComp->pPrefix) != 0  && !strcmp((char*)pPrefix, pNSComp->pPrefix) == 0 ) ||
                 (0 == AnscSizeOfString(pMyObject->SubsysPrefix)) )
         {
-            return CCSP_CR_ERR_UNSUPPORTED_NAMESPACE;
+            iStatus = CCSP_CR_ERR_UNSUPPORTED_NAMESPACE;
+            goto EXIT;
         }
 
         /* For parameter level name space, only one component is possible */
@@ -735,7 +744,8 @@ CcspNsMgrDiscoverNamespace
 
         if( pCompArray == NULL)
         {
-            return CCSP_ERR_MEMORY_ALLOC_FAIL;
+            iStatus = CCSP_ERR_MEMORY_ALLOC_FAIL;
+            goto EXIT;
         }
 
         pCompStruct = (componentStruct_t*)CcspNsMgrAllocateMemory(pMyObject->pContainerName, sizeof(componentStruct_t));
@@ -824,7 +834,8 @@ CcspNsMgrDiscoverNamespace
 
         if( pCompArray == NULL)
         {
-            return CCSP_ERR_MEMORY_ALLOC_FAIL;
+            iStatus = CCSP_ERR_MEMORY_ALLOC_FAIL;
+            goto EXIT;
         }
 
         for( i = 0; i < uCount; i ++)
@@ -863,7 +874,8 @@ CcspNsMgrDiscoverNamespace
                 }
 
                 CcspNsMgrFreeMemory(pMyObject->pContainerName,pCompArray);
-                return CCSP_ERR_MEMORY_ALLOC_FAIL;
+                iStatus = CCSP_ERR_MEMORY_ALLOC_FAIL;
+                goto EXIT;
             }
 
             pCompArray[i] = (PVOID)pCompStruct;

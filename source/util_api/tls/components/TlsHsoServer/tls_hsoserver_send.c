@@ -305,7 +305,8 @@ TlsHsoServerSendServerHello
 
     TlsHsServerHelloSetMajorVersion(pTlsHsServerHello, pSecurityParams->MajorVersion);
     TlsHsServerHelloSetMinorVersion(pTlsHsServerHello, pSecurityParams->MinorVersion);
-    TlsHsServerHelloSetRandom      (pTlsHsServerHello, pSecurityParams->ServerRandom);
+    /* CID 25595: OVERRUN fix */
+    AnscCopyMemory(TlsHsServerHelloGetRandom(pTlsHsServerHello), pSecurityParams->ServerRandom, TLS_OPAQUE_RANDOM_SIZE);
     TlsHsServerHelloSetSessionId   (pTlsHsServerHello, pSessionState->SessionIDSize, pSessionState->SessionID);
 
     /*

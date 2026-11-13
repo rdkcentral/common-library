@@ -154,7 +154,8 @@ ANSC_SOCKET_ADDRESS,  *PANSC_SOCKET_ADDRESS;
                                                                                             \
             if ( AnscIsValidIpString(name) )                                                \
             {                                                                               \
-                *(PULONG)address = _ansc_inet_addr(name);                                   \
+                /* CIDs 25505, 25598: OVERRUN fix */                                        \
+                AnscWriteUlong32(address, _ansc_inet_addr(name));                           \
             }                                                                               \
             else                                                                            \
             {                                                                               \
@@ -162,15 +163,18 @@ ANSC_SOCKET_ADDRESS,  *PANSC_SOCKET_ADDRESS;
                                                                                             \
                 if ( !resolved_hostent )                                                    \
                 {                                                                           \
-                    *(PULONG)address = 0;                                                   \
+                    /* CIDs 25505, 25598: OVERRUN fix */                                    \
+                    AnscWriteUlong32(address, 0);                                           \
                 }                                                                           \
                 else if ( resolved_hostent->h_length < IPV4_ADDRESS_SIZE )                  \
                 {                                                                           \
-                    *(PULONG)address = 0;                                                   \
+                    /* CIDs 25505, 25598: OVERRUN fix */                                    \
+                    AnscWriteUlong32(address, 0);                                           \
                 }                                                                           \
                 else                                                                        \
                 {                                                                           \
-                    *(PULONG)address = *(PULONG)resolved_hostent->h_addr;                   \
+                    /* CIDs 25505, 25598: OVERRUN fix */                                    \
+                    AnscWriteUlong32(address, AnscReadUlong32(resolved_hostent->h_addr));   \
                 }                                                                           \
             }                                                                               \
          }
@@ -202,8 +206,9 @@ ANSC_SOCKET_ADDRESS,  *PANSC_SOCKET_ADDRESS;
                     while ( resolved_hostent->h_addr_list[resolved_count] &&                \
                             (resolved_count < addr_value_count) )                           \
                     {                                                                       \
+                        /* CIDs 25505, 25598: OVERRUN fix */                                \
                         addr_value_array[resolved_count] =                                  \
-                            *(PULONG)resolved_hostent->h_addr_list[resolved_count];         \
+                            AnscReadUlong32(resolved_hostent->h_addr_list[resolved_count]); \
                         resolved_count++;                                                   \
                     }                                                                       \
                                                                                             \
@@ -234,7 +239,8 @@ ANSC_SOCKET_ADDRESS,  *PANSC_SOCKET_ADDRESS;
             char*                   tmp_string = addr_string;                               \
             ANSC_IPV4_ADDRESS       tmp_address;                                            \
                                                                                             \
-            tmp_address.Value = *(PULONG)address;                                           \
+            /* CIDs 25510, 25515: OVERRUN fix */                                            \
+            tmp_address.Value = AnscReadUlong32(address);                                   \
                                                                                             \
             for ( kk = 0; kk < IPV4_ADDRESS_SIZE; kk++ )                                    \
             {                                                                               \
