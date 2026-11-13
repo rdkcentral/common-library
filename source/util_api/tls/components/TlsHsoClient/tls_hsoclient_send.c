@@ -211,7 +211,8 @@ TlsHsoClientSendClientHello
 
     TlsHsClientHelloSetMajorVersion(pTlsHsClientHello, pSecurityParams->MajorVersion);
     TlsHsClientHelloSetMinorVersion(pTlsHsClientHello, pSecurityParams->MinorVersion);
-    TlsHsClientHelloSetRandom      (pTlsHsClientHello, pSecurityParams->ClientRandom);
+    /* CID 25532: OVERRUN fix */
+    AnscCopyMemory(TlsHsClientHelloGetRandom(pTlsHsClientHello), pSecurityParams->ClientRandom, TLS_OPAQUE_RANDOM_SIZE);
     TlsHsClientHelloSetSessionId   (pTlsHsClientHello, pSessionState->SessionIDSize, pSessionState->SessionID);
 
     /*

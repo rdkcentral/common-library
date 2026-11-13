@@ -220,7 +220,8 @@ StunScoDiscoverBinding
     AnscWriteUlong(&pMyObject->TransID1[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransID1[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransID1[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
+    /* CID 25558: OVERRUN fix */
+    AnscWriteUlong32(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransID1, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransID1, crypto_hash.Value, 16);
@@ -392,7 +393,8 @@ StunScoDiscoverBindingTimeoutA
     AnscWriteUlong(&pMyObject->TransIDA[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransIDA[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransIDA[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransIDA[12], pProperty->ClientAddr.Value);
+    /* CID 25559: OVERRUN fix */
+    AnscWriteUlong32(&pMyObject->TransIDA[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransIDA, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransIDA, crypto_hash.Value, 16);
@@ -549,7 +551,8 @@ StunScoDiscoverBindingTimeoutB
     AnscWriteUlong(&pMyObject->TransIDA[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransIDA[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransIDA[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransIDA[12], pProperty->ClientAddr.Value);
+    /* CID 25516: OVERRUN fix */
+    AnscWriteUlong32(&pMyObject->TransIDA[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransIDA, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransIDA, crypto_hash.Value, 16);
@@ -727,7 +730,8 @@ StunScoMaintainBinding
     AnscWriteUlong(&pMyObject->TransID1[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransID1[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransID1[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
+    /* CID 25522: OVERRUN fix */
+    AnscWriteUlong32(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransID1, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransID1, crypto_hash.Value, 16);
@@ -900,7 +904,8 @@ StunScoNotifyBindingChange
     AnscWriteUlong(&pMyObject->TransID1[ 0], (ULONG)pMyObject           );
     AnscWriteUlong(&pMyObject->TransID1[ 4], AnscGetTickInMilliSeconds());
     AnscWriteUlong(&pMyObject->TransID1[ 8], pProperty->ClientAddr.Value);
-    AnscWriteUlong(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
+    /* CID 25535: OVERRUN fix */
+    AnscWriteUlong32(&pMyObject->TransID1[12], pProperty->ClientAddr.Value);
 
     AnscCryptoMd5Digest(pMyObject->TransID1, 16, &crypto_hash     );
     AnscCopyMemory        (pMyObject->TransID1, crypto_hash.Value, 16);
