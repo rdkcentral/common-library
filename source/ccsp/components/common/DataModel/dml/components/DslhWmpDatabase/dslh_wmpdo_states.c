@@ -475,12 +475,14 @@ DslhWmpdoReset
 
     pMyObject->ResetObjVarArray(hThisObject);
 
+    AnscAcquireLock(&pMyObject->MpaWriteLock);
     if ( pMyObject->LockedEntity )
     {
         AnscFreeMemory(pMyObject->LockedEntity);
 
         pMyObject->LockedEntity = NULL;
     }
+    AnscReleaseLock(&pMyObject->MpaWriteLock);
 
     if ( pMyObject->pRootObjName)
     {
