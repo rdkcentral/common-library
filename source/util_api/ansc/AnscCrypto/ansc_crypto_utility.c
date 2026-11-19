@@ -1949,6 +1949,8 @@ AnscCryptoGenerateUuid
     if(rc < EOK)
     {
         ERR_CHK(rc);
+        /* CID 62337: RESOURCE_LEAK fix */
+        AnscFreeMemory(pUuidValue);
         return NULL;
     }
 
@@ -2151,6 +2153,8 @@ AnscCryptoGenerateUuid2
     if(rc < EOK)
     {
         ERR_CHK(rc);
+        /* CID 62227: RESOURCE_LEAK fix */
+        AnscFreeMemory(pUuidValue);
         return NULL;
     }
 

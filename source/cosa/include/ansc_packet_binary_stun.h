@@ -329,14 +329,14 @@ STUN_ATTRIB_MAPPED_ADDRESS,  *PSTUN_ATTRIB_MAPPED_ADDRESS;
 #define  AnscStunAttribMaGetReserved(p)             ( p->Reserved )
 #define  AnscStunAttribMaGetFamily(p)               ( p->Family   )
 #define  AnscStunAttribMaGetPort(p)                 ( AnscUshortFromNToH(AnscReadUshort(&p->Port)) )
-#define  AnscStunAttribMaGetAddressValue(p)         ( AnscReadUlong(&p->Address.Value) )
+#define  AnscStunAttribMaGetAddressValue(p)         ( AnscReadUlong32(&p->Address.Value) ) /* CIDs 62449, 62498: OVERRUN fix */
 
 #define  AnscStunAttribMaSetType(p, t)              AnscStunAttribSetType(p, t)
 #define  AnscStunAttribMaSetLength(p, l)            AnscStunAttribSetLength(p, l)
 #define  AnscStunAttribMaSetReserved(p, r)          ( p->Reserved = r )
 #define  AnscStunAttribMaSetFamily(p, f)            ( p->Family   = f )
 #define  AnscStunAttribMaSetPort(p, o)              AnscWriteUshort(&p->Port, AnscUshortFromHToN(o))
-#define  AnscStunAttribMaSetAddressValue(p, addr)   AnscWriteUlong (&p->Address.Value, addr)
+#define  AnscStunAttribMaSetAddressValue(p, addr)   AnscWriteUlong32(&p->Address.Value, addr) /* CID 62186: OVERRUN fix */
 
 /*
  * The RESPONSE-ADDRESS attribute indicates where the response to a Binding Request should be sent.

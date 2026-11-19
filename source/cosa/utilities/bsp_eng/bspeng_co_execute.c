@@ -5882,6 +5882,11 @@ BspTemplateEngDoObjectAccess
     	/* prevent double ownership / leak */
 	SlapReturnVal.Name = NULL;
     }
+    else
+    {
+        /* CID 60147: RESOURCE_LEAK fix */
+        SlapCleanVariable((&SlapReturnVal));
+    }
 
     return (ANSC_HANDLE)pReturnVal;
 }
