@@ -177,38 +177,38 @@ AnscAsn1GenSelfSignedCertificateWithCryptoAPI
 
     if( pPublicKeyInfo != NULL)
     {
-        pPublicKeyInfo->GenerateKey
-            (
-                pPublicKeyInfo,
-                keyType,
-                &genParams
-            );
-    }
+	pPublicKeyInfo->GenerateKey
+	    (
+	     pPublicKeyInfo,
+	     keyType,
+	     &genParams
+	    );
 
-    /*
-     *  set the serial number, it supposed to be the MD5 fingerprint of public key 
-     */
-    pInteger       = (PANSC_ASN1_INTEGER)pThisObject->GetSerialNumber(pThisObject);
-    pKeyObject     = (PANSC_ASN1_OBJECT)pPublicKeyInfo->GetExtraChild(pPublicKeyInfo);
+	/*
+	 *  set the serial number, it supposed to be the MD5 fingerprint of public key 
+	 */
+	pInteger       = (PANSC_ASN1_INTEGER)pThisObject->GetSerialNumber(pThisObject);
+	pKeyObject     = (PANSC_ASN1_OBJECT)pPublicKeyInfo->GetExtraChild(pPublicKeyInfo);
 
-    if( pKeyObject != NULL)
-    {
-        if( ANSC_STATUS_SUCCESS == 
-                AnscAsn1GetMD5FingerPrint(pKeyObject, &hash))
-        {
-            /* make it as an unnegative value */
-            if( hash.Value[0] > 0x80)
-            {
-               hash.Value[0] -= 0x80;
-            }
+	if( pKeyObject != NULL)
+	{
+	    if( ANSC_STATUS_SUCCESS == 
+		    AnscAsn1GetMD5FingerPrint(pKeyObject, &hash))
+	    {
+		/* make it as an unnegative value */
+		if( hash.Value[0] > 0x80)
+		{
+		    hash.Value[0] -= 0x80;
+		}
 
-            pInteger->SetStringValue
-                (
-                    pInteger,
-                    hash.Value,
-                    hash.Length
-                );
-        }
+		pInteger->SetStringValue
+		    (
+		     pInteger,
+		     hash.Value,
+		     hash.Length
+		    );
+	    }
+	}
     }
     
     /*
@@ -306,40 +306,40 @@ AnscAsn1GenerateSelfSignedCertificate
 
     if( pPublicKeyInfo != NULL)
     {
-        pPublicKeyInfo->GenerateKey
-            (
-                pPublicKeyInfo,
-                pAttrObject->KeyType,
-                hKeyPairHandle
-            );
+	pPublicKeyInfo->GenerateKey
+	    (
+	     pPublicKeyInfo,
+	     pAttrObject->KeyType,
+	     hKeyPairHandle
+	    );
+
+	/*
+	 *  set the serial number, it supposed to be the MD5 fingerprint of public key 
+	 */
+	pInteger       = (PANSC_ASN1_INTEGER)pThisObject->GetSerialNumber(pThisObject);
+	pKeyObject     = (PANSC_ASN1_OBJECT)pPublicKeyInfo->GetExtraChild(pPublicKeyInfo);
+
+	if( pKeyObject != NULL)
+	{
+	    if( ANSC_STATUS_SUCCESS == 
+		    AnscAsn1GetMD5FingerPrint(pKeyObject, &hash))
+	    {
+		/* make it as an unnegative value */
+		if( hash.Value[0] > 0x80)
+		{
+		    hash.Value[0] -= 0x80;
+		}
+
+		pInteger->SetStringValue
+		    (
+		     pInteger,
+		     hash.Value,
+		     hash.Length
+		    );
+	    }
+	}
+
     }
-
-    /*
-     *  set the serial number, it supposed to be the MD5 fingerprint of public key 
-     */
-    pInteger       = (PANSC_ASN1_INTEGER)pThisObject->GetSerialNumber(pThisObject);
-    pKeyObject     = (PANSC_ASN1_OBJECT)pPublicKeyInfo->GetExtraChild(pPublicKeyInfo);
-
-    if( pKeyObject != NULL)
-    {
-        if( ANSC_STATUS_SUCCESS == 
-                AnscAsn1GetMD5FingerPrint(pKeyObject, &hash))
-        {
-            /* make it as an unnegative value */
-            if( hash.Value[0] > 0x80)
-            {
-               hash.Value[0] -= 0x80;
-            }
-
-            pInteger->SetStringValue
-                (
-                    pInteger,
-                    hash.Value,
-                    hash.Length
-                );
-        }
-    }
-    
     /*
      *  If subKeyIden extension is required;
      */
