@@ -558,7 +558,9 @@ AnscDstoAssignEngine
         }
         else
         {
+	    AnscAcquireLock(&pMyObject->EngineQueueLock);
             pSLinkEntry = AnscQueueGetFirstEntry(&pMyObject->EngineQueue);
+	    AnscReleaseLock(&pMyObject->EngineQueueLock);
             pEngine     = ACCESS_ANSC_DAEMON_ENGINE_TCP_OBJECT(pSLinkEntry);
         }
     }
