@@ -27,11 +27,12 @@ Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/advsec
-ExecStartPre=/bin/sh -c "sleep 30"
+ExecStartPre=/bin/sh -c 'if [ "$(syscfg get Adv_LevlRFCEnable)" = "1" ]; then i=0; while [ ! -f /tmp/wifi_init_data_ready ] && [ $i -lt 300 ]; do sleep 1; i=$((i+1)); done; [ -f /tmp/wifi_init_data_ready ]; fi'
 ExecStart=/bin/sh -c '/usr/bin/CcspAdvSecuritySsp -subsys $Subsys'
 ExecStop=/bin/sh -c '/usr/ccsp/advsec/start_adv_security.sh -disable'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspAdvSecuritySsp" >> ${PROCESS_RESTART_LOG}'
 Restart=always
+TimeoutStartSec=330
 
 
 [Install]
